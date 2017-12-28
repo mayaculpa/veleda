@@ -1,5 +1,29 @@
 version: "3"
 services:
+#  nginx:
+#    image: nginx:latest
+#    ports:
+#      - "80:80"
+#    volumes:
+#      - ./nginx:/etc/nginx/conf.d
+#    depends_on:
+#      - web
+  web:
+    build: ./web
+    container_name: gunicorn
+    ports:
+      - "8001:8001"
+    environment:
+      - APP_CONFIG_FILE=../config/development.py
+    env_file:
+      - 'web/env.gunicorn'
+    networks:
+      - backend
+    command: gunicorn thymedata:app
+    depends_on:
+      - influxdb
+      - grafana
+  
   influxdb:
     image: influxdb:latest
     container_name: influxdb
@@ -25,6 +49,8 @@ services:
       - backend
     volumes:
       - grafana-data:/var/lib/grafana
+    depends_on:
+      - influxdb
 
 networks:
   backend:
