@@ -1,0 +1,34 @@
+version: "3"
+services:
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    env_file:
+      - 'influxdb/env.influxdb'
+      - 'influxdb/secrets.influxdb'
+    networks:
+      - backend
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+  
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    env_file:
+      - 'grafana/env.grafana'
+      - 'grafana/secrets.grafana'
+    networks:
+      - backend
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+networks:
+  backend:
+
+volumes:
+  influxdb-data:
+  grafana-data:
