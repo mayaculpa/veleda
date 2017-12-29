@@ -1,7 +1,11 @@
 import os
 import unittest
 
-from thymedata import app#, db, mail
+from thymedata import app, db, mail
+
+
+TEST_DB = 'test.db'
+
 
 class BasicTests(unittest.TestCase):
 
@@ -14,13 +18,13 @@ class BasicTests(unittest.TestCase):
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
         app.config['DEBUG'] = False
-#        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + \
-#            os.path.join(app.config['BASEDIR'], TEST_DB)
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + \
+            os.path.join(app.config['BASEDIR'], TEST_DB)
         self.app = app.test_client()
-#        db.drop_all()
-#        db.create_all()
+        db.drop_all()
+        db.create_all()
 
-#        mail.init_app(app)
+        mail.init_app(app)
         self.assertEqual(app.debug, False)
 
     # executed after each test
