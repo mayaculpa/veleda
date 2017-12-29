@@ -28,6 +28,24 @@ migrate = Migrate(app, db)
 auth = HTTPBasicAuth()
 auth_token = HTTPBasicAuth()
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "users.login"
+
+from thymedata.models import User
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.filter(User.id == int(user_id)).first()
+
+
+####################
+#### blueprints ####
+####################
+
+from thymedata.users.views import users_blueprint
+app.register_blueprint(users_blueprint)
+
 @app.route('/')
 def index():
   return "Hello World!"

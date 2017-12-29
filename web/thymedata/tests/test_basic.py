@@ -20,6 +20,7 @@ class BasicTests(unittest.TestCase):
         app.config['DEBUG'] = False
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + \
             os.path.join(app.config['BASEDIR'], TEST_DB)
+        app.config['SQLALCHEMY_ECHO'] = False
         self.app = app.test_client()
         db.drop_all()
         db.create_all()
@@ -30,6 +31,19 @@ class BasicTests(unittest.TestCase):
     # executed after each test
     def tearDown(self):
         pass
+
+
+    ########################
+    #### helper methods ####
+    ########################
+
+    def register(self, email, password, confirm):
+        return self.app.post(
+            '/register',
+            data=dict(email=email, password=password, confirm=confirm),
+            follow_redirects=True
+        )
+
 
     ###############
     #### Tests ####
