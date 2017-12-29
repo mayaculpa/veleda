@@ -41,8 +41,7 @@ class BasicTests(unittest.TestCase):
         return self.app.post(
             '/register',
             data=dict(email=email, password=password, confirm=confirm),
-            follow_redirects=True
-        )
+            follow_redirects=True)
 
 
     ###############
