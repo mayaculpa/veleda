@@ -1,4 +1,8 @@
+# Secret environment variables
+secrets.*
+
+# Python flask 
 venv
 instance/
-start.sh
 __pycache__/
+data-test.sqlite
