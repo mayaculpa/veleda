@@ -6,3 +6,6 @@ venv
 instance/
 __pycache__/
 data-test.sqlite
+
+# Postgres
+postgres/web-init.sql

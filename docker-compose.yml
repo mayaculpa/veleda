@@ -13,16 +13,27 @@ services:
     container_name: gunicorn
     ports:
       - "8001:8001"
-    environment:
-      - APP_CONFIG_FILE=../config/development.py
     env_file:
-      - 'web/env.gunicorn'
+      - 'web/secrets.flask'
     networks:
       - backend
-    command: gunicorn thymedata:app
+    command: bash -c "python manage.py db upgrade && gunicorn --bind=0.0.0.0:8001 --workers=3 manage:app"
     depends_on:
       - influxdb
       - grafana
+      - postgres
+  
+  postgres:
+    build: ./postgres
+    container_name: postgres
+    ports:
+      - "5431:5432"
+    env_file:
+      - 'postgres/secrets.postgres'
+    networks:
+      - backend
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
   
   influxdb:
     image: influxdb:latest
@@ -58,3 +69,4 @@ networks:
 volumes:
   influxdb-data:
   grafana-data:
+  postgres-data:

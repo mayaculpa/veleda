@@ -17,7 +17,6 @@ if os.path.exists('secrets.flask'):
         if len(var) == 2:
             os.environ[var[0]] = var[1].replace("\"", "")
 
-
 class Config:
     APP_NAME = os.environ.get('APP_NAME') or 'Flask-Base'
 
@@ -79,8 +78,8 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
+    assert SQLALCHEMY_DATABASE_URI, 'NO DATABASE URI IS NOT SET!'
     SSL_DISABLE = (os.environ.get('SSL_DISABLE') or 'True') == 'True'
 
     @classmethod
