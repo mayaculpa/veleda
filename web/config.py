@@ -27,7 +27,7 @@ class Config:
         print('SECRET KEY ENV VAR NOT SET! SHOULD NOT SEE IN PRODUCTION')
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 
-    MAIL_SERVER = 'smtp.mailgun.net'
+    MAIL_SERVER = 'smtp.mailgun.org'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
