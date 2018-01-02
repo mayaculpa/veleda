@@ -7,6 +7,7 @@ from flask_assets import Environment
 from flask_wtf import CsrfProtect
 from flask_compress import Compress
 from flask_rq import RQ
+from flask_oauthlib.provider import OAuth2Provider
 
 from config import config
 from .assets import app_css, app_js, vendor_css, vendor_js
@@ -17,6 +18,7 @@ mail = Mail()
 db = SQLAlchemy()
 csrf = CsrfProtect()
 compress = Compress()
+oauth_provider = OAuth2Provider()
 
 # Set up Flask-Login
 login_manager = LoginManager()
@@ -38,6 +40,7 @@ def create_app(config_name):
     login_manager.init_app(app)
     csrf.init_app(app)
     compress.init_app(app)
+    oauth_provider.init_app(app)
     RQ(app)
 
     # Register Jinja template functions
@@ -70,5 +73,8 @@ def create_app(config_name):
 
     from .admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint, url_prefix='/admin')
+    
+    from .oauth import oauth as oauth_blueprint
+    app.register_blueprint(oauth_blueprint, url_prefix='/oauth')
 
     return app

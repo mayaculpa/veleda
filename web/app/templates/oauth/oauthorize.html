@@ -1,0 +1,14 @@
+{% extends 'layouts/base.html' %}
+{% import 'macros/form_macros.html' as f %}
+
+{% block content %}
+    <div class="ui grid container">
+        <div class="eight wide computer sixteen wide mobile centered column">
+            <h2 class="ui dividing header">Authorize Application</h2>
+              <form action="" method="post">
+                <button name="confirm" value="yes">Confirm</button>
+                <button name="confirm" value="no">Cancel</button>
+              </form>
+        </div>
+    </div>
+{% endblock %}
