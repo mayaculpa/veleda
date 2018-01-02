@@ -5,6 +5,7 @@ from flask_login import current_user, login_required
 from . import oauth
 from .. import oauth_provider
 from ..models import Client
+from .forms import ConfirmForm
 
 
 ########################
@@ -80,11 +81,16 @@ def save_token(token, request, *args, **kwargs):
 @login_required
 @oauth_provider.authorize_handler
 def authorize(*args, **kwargs):
-    if request.method == 'GET':
-        client_id = kwargs.get('client_id')
-        client = Client.query.filter_by(client_id=client_id).first()
-        kwargs['client'] = client
-        return render_template('oauth/oauthorize.html', **kwargs)
+    form = ConfirmForm()
 
-    confirm = request.form.get('confirm', 'no')
-    return confirm == 'yes'
+    if form.validate_on_submit():
+        if form.confirm.data:
+            return True
+        else:
+            return False
+
+    client_id = kwargs.get('client_id')
+    client = Client.query.filter_by(client_id=client_id).first()
+    kwargs['client'] = client
+    return render_template('oauth/oauthorize.html', **kwargs, form=form)
+
