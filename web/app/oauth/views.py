@@ -3,8 +3,8 @@ from flask import request, render_template
 from flask_login import current_user, login_required
 
 from . import oauth
-from .. import oauth_provider
-from ..models import Client
+from .. import oauth_provider, db
+from ..models import Client, Grant
 from .forms import ConfirmForm
 
 
@@ -33,7 +33,7 @@ def save_grant(client_id, code, request, *args, **kwargs):
         code=code['code'],
         redirect_uri=request.redirect_uri,
         _scopes=' '.join(request.scopes),
-        user=get_current_user(),
+        user=current_user,
         expires=expires
     )
     db.session.add(grant)

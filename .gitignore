@@ -5,6 +5,7 @@ secrets.*
 venv
 instance/
 __pycache__/
+*.pyc
 data-test.sqlite
 
 # Postgres
