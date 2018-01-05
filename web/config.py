@@ -75,11 +75,12 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data-test.sqlite')
     WTF_CSRF_ENABLED = False
+    OAUTHLIB_INSECURE_TRANSPORT = True
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
-    assert SQLALCHEMY_DATABASE_URI, 'NO DATABASE URI IS NOT SET!'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')  or \
+        'sqlite:///' + os.path.join(basedir, 'data.sqlite')
     SSL_DISABLE = (os.environ.get('SSL_DISABLE') or 'True') == 'True'
 
     @classmethod

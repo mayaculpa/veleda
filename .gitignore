@@ -7,6 +7,8 @@ instance/
 __pycache__/
 *.pyc
 data-test.sqlite
+.coverage
+htmlcov
 
 # Postgres
 postgres/web-init.sql
