@@ -134,3 +134,23 @@ class OauthTestCase(unittest.TestCase):
         url = self.authorize_url + '&scope=email'
         rv = self.client.post(url, data={'cancel': True})
         assert 'access_denied' in rv.location
+
+    def test_invalid_token(self):
+        rv = self.client.get(url_for('oauth.access_token'))
+        assert b'unsupported_grant_type' in rv.data
+
+        rv = self.client.get('/oauth/token?grant_type=authorization_code')
+        assert b'error' in rv.data
+        assert b'code' in rv.data
+
+        url = (
+            '/oauth/token?grant_type=authorization_code'
+            '&code=nothing&client_id=%s'
+        ) % self.oauth_client.client_id
+        rv = self.client.get(url)
+        assert b'invalid_grant' in rv.data
+
+        url += '&client_secret=' + self.oauth_client.client_secret
+        rv = self.client.get(url)
+        assert b'invalid_client' not in rv.data
+        assert rv.status_code == 401

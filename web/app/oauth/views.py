@@ -94,3 +94,7 @@ def authorize(*args, **kwargs):
     kwargs['client'] = client
     return render_template('oauth/oauthorize.html', **kwargs, form=form)
 
+@oauth.route('/token', methods=['GET', 'POST'])
+@oauth_provider.token_handler
+def access_token():
+    return None
