@@ -33,8 +33,11 @@ class OauthTestCase(unittest.TestCase):
         User.generate_fake(1)
         
         oauth_client = Client(
-            name='ios', client_id='code-client', client_secret='code-secret',
-            _redirect_uris='http://localhost/authorized',
+            name='ios',
+            client_id='code-client',
+            client_secret='code-secret',
+            _redirect_uris='http://localhost/oauth/authorized',
+            _default_scopes='email'
         )
         db.session.add(oauth_client)
         db.session.commit()
@@ -91,8 +94,43 @@ class OauthTestCase(unittest.TestCase):
         rv = self.client.get(url)
         assert 'error' in rv.location
 
-    def test_get_authorize_correctly(self):
-        """Should return confirmation page"""
+    def test_get_authorize_successfully(self):
+        """Should return confirmation page."""
         self.login_default()
         rv = self.client.get(self.authorize_url)
         assert b'confirm' in rv.data
+
+    def test_get_invalid_scope(self):
+        """Should return invalid scope error."""
+        self.login_default()
+        url = self.authorize_url + '&scope=foo'
+        rv = self.client.post(url, data={'confirm': True})
+        assert 'invalid_scope' in rv.location
+
+    def test_post_authorize(self):
+        """Should return invalid scope error."""
+        self.login_default()
+        url = self.authorize_url + '&scope=email'
+        rv = self.client.post(url, data={'confirm': True})
+        assert 'code' in rv.location
+
+    def test_missing_scope(self):
+        """Should return invalid scope error."""
+        self.login_default()
+        url = self.authorize_url + '&scope='
+        rv = self.client.post(url, data={'confirm': True})
+        assert 'error=Scopes+must+be+set' in rv.location
+
+    def test_confirm_authorize_request(self):
+        """Should accept authorization request."""
+        self.login_default()
+        url = self.authorize_url + '&scope=email'
+        rv = self.client.post(url, data={'confirm': True})
+        assert 'code=' in rv.location
+
+    def test_cancel_authorize_request(self):
+        """Should accept authorization request."""
+        self.login_default()
+        url = self.authorize_url + '&scope=email'
+        rv = self.client.post(url, data={'cancel': True})
+        assert 'access_denied' in rv.location
