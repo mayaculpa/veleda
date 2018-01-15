@@ -1,5 +1,6 @@
 # Secret environment variables
 secrets.*
+!secrets.*.example
 
 # Python flask 
 venv
