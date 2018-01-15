@@ -1,9 +1,10 @@
 import unittest
 from flask import url_for
 from faker import Faker
+from datetime import datetime, timedelta
 
 from app import create_app, db
-from app.models import Client, User, Role, Permission
+from app.models import Client, Grant, User, Role, Permission
 
 class OauthTestCase(unittest.TestCase):
     def setUp(self):
@@ -135,11 +136,22 @@ class OauthTestCase(unittest.TestCase):
         rv = self.client.post(url, data={'cancel': True})
         assert 'access_denied' in rv.location
 
+    def test_invalid_redirect_uri(self):
+        self.login_default()
+        url = (
+            self.authorize_url +
+            '&redirect_uri=http://localhost:8000/unknown_url'
+            '&scope=email'
+        )
+        rv = self.client.get(url)
+        assert 'error=' in rv.location
+        assert 'Mismatching+redirect+URI' in rv.location
+
     def test_invalid_token(self):
-        rv = self.client.get(url_for('oauth.access_token'))
+        rv = self.client.post(url_for('oauth.access_token'))
         assert b'unsupported_grant_type' in rv.data
 
-        rv = self.client.get('/oauth/token?grant_type=authorization_code')
+        rv = self.client.post('/oauth/token?grant_type=authorization_code')
         assert b'error' in rv.data
         assert b'code' in rv.data
 
@@ -147,10 +159,63 @@ class OauthTestCase(unittest.TestCase):
             '/oauth/token?grant_type=authorization_code'
             '&code=nothing&client_id=%s'
         ) % self.oauth_client.client_id
-        rv = self.client.get(url)
+        rv = self.client.post(url)
         assert b'invalid_grant' in rv.data
 
         url += '&client_secret=' + self.oauth_client.client_secret
-        rv = self.client.get(url)
+        rv = self.client.post(url)
         assert b'invalid_client' not in rv.data
         assert rv.status_code == 401
+
+    def test_get_token(self):
+        expires = datetime.utcnow() + timedelta(seconds=100)
+        grant = Grant(
+            user_id=1,
+            client_id=self.oauth_client.client_id,
+            _scopes=self.oauth_client._default_scopes,
+            redirect_uri='http://localhost/oauth/authorized',
+            code='test-get-token',
+            expires=expires
+        )
+        db.session.add(grant)
+        db.session.commit()
+
+        url = (
+            '/oauth/token?grant_type=authorization_code&code=test-get-token'
+            '&redirect_uri=http://localhost:5000'
+        )
+        rv = self.client.post(
+            url + '&client_id=%s' % (self.oauth_client.client_id)
+        )
+        print(rv.data)
+        assert b'invalid_request' in rv.data
+
+        rv = self.client.post(
+            url + '&client_id=%s&client_secret=%s' % (
+                self.oauth_client.client_id,
+                self.oauth_client.client_secret
+            )
+        )
+        print(rv.data)
+        assert b'access_token' in rv.data
+
+        grant = Grant(
+            user_id=1,
+            client_id=self.oauth_client.client_id,
+            scopes='email',
+            redirect_uri='http://localhost/authorized',
+            code='test-get-token',
+            expires=expires,
+        )
+        db.session.add(grant)
+        db.session.commit()
+
+        rv = self.client.post(url, headers={
+            'authorization': 'Basic ' + to_base64(
+                    '%s:%s' % (
+                        self.oauth_client.client_id,
+                        self.oauth_client.client_secret
+                    )
+                )
+        })
+        assert b'access_token' in rv.data

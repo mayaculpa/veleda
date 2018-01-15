@@ -26,5 +26,5 @@ Start with:
 
 or
 
-    python -u manage.py webserver
+    python -u manage.py runserver
 

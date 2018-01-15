@@ -3,8 +3,8 @@ from flask import request, render_template
 from flask_login import current_user, login_required
 
 from . import oauth
-from .. import oauth_provider, db
-from ..models import Client, Grant
+from .. import oauth_provider, db, csrf
+from ..models import Client, Grant, Token
 from .forms import ConfirmForm
 
 
@@ -81,6 +81,7 @@ def save_token(token, request, *args, **kwargs):
 @login_required
 @oauth_provider.authorize_handler
 def authorize(*args, **kwargs):
+    """Provide authorization end-point for oauth2."""
     form = ConfirmForm()
 
     if form.validate_on_submit():
@@ -94,7 +95,16 @@ def authorize(*args, **kwargs):
     kwargs['client'] = client
     return render_template('oauth/oauthorize.html', **kwargs, form=form)
 
-@oauth.route('/token', methods=['GET', 'POST'])
+@oauth.route('/token', methods=['POST'])
 @oauth_provider.token_handler
+@csrf.exempt
 def access_token():
+    """Provide token end-point for oauth2"""
     return None
+
+#@oauth.route('/userinfo')
+#@oauth_provider.require_oauth('userinfo')
+#def userinfo():
+#    user = request.oauth.user
+#    return jsonify(email=user.email, username=user.username)
+
