@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mayaculpa/veleda.svg?branch=master)](https://travis-ci.org/mayaculpa/veleda)
+
 # Veleda
 
 ## Docker Compose
