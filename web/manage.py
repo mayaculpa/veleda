@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import sys
 import subprocess
 from config import Config
 
@@ -31,7 +32,8 @@ def test():
     import unittest
 
     tests = unittest.TestLoader().discover('tests')
-    unittest.TextTestRunner(verbosity=2).run(tests)
+    result = unittest.TextTestRunner(verbosity=2).run(tests)
+    sys.exit(not result.wasSuccessful())
 
 
 @manager.command
