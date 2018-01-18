@@ -1,0 +1,9 @@
+language: python
+python:
+  - "3.5"
+
+install:
+  - pip install -r web/requirements-test.txt
+
+script:
+  - cd web && python -u manage.py test
