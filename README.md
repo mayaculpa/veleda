@@ -40,3 +40,4 @@ or
 
     python -u manage.py runserver
 
+For more information, see the [web readme](web/README.md)
