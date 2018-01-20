@@ -1,10 +1,26 @@
+import base64
 import unittest
-from flask import url_for
-from faker import Faker
 from datetime import datetime, timedelta
 
+from faker import Faker
+from flask import url_for
+
 from app import create_app, db
-from app.models import Client, Grant, User, Role, Permission
+from app.models import Client, Grant, Permission, Role, User
+
+
+def to_unicode(text):
+    if not isinstance(text, str):
+        text = text.decode('utf-8')
+    return text
+
+def to_bytes(text):
+    if isinstance(text, str):
+        text = text.encode('utf-8')
+    return text
+
+def to_base64(text):
+    return to_unicode(base64.b64encode(to_bytes(text)))
 
 class OauthTestCase(unittest.TestCase):
     def setUp(self):
@@ -25,9 +41,7 @@ class OauthTestCase(unittest.TestCase):
 ###############
 
     def prepare_data(self):
-        admin_role = Role(name="Administrator", index="admin", permissions=Permission.ADMINISTER)
         general_role = Role(name="User", index="main", permissions=Permission.GENERAL)
-        db.session.add(admin_role)
         db.session.add(general_role)
         db.session.commit()
         
@@ -160,7 +174,7 @@ class OauthTestCase(unittest.TestCase):
             '&code=nothing&client_id=%s'
         ) % self.oauth_client.client_id
         rv = self.client.post(url)
-        assert b'invalid_grant' in rv.data
+        assert b'invalid_client' in rv.data
 
         url += '&client_secret=' + self.oauth_client.client_secret
         rv = self.client.post(url)
@@ -182,13 +196,12 @@ class OauthTestCase(unittest.TestCase):
 
         url = (
             '/oauth/token?grant_type=authorization_code&code=test-get-token'
-            '&redirect_uri=http://localhost:5000'
+            '&redirect_uri=http://localhost/oauth/authorized'
         )
         rv = self.client.post(
             url + '&client_id=%s' % (self.oauth_client.client_id)
         )
-        print(rv.data)
-        assert b'invalid_request' in rv.data
+        assert b'invalid_client' in rv.data
 
         rv = self.client.post(
             url + '&client_id=%s&client_secret=%s' % (
@@ -196,16 +209,18 @@ class OauthTestCase(unittest.TestCase):
                 self.oauth_client.client_secret
             )
         )
-        print(rv.data)
         assert b'access_token' in rv.data
+
+        # Prvious grant was deleted by last successful authentication
+        assert Grant.query.count() == 0
 
         grant = Grant(
             user_id=1,
             client_id=self.oauth_client.client_id,
-            scopes='email',
-            redirect_uri='http://localhost/authorized',
+            _scopes=self.oauth_client._default_scopes,
+            redirect_uri='http://localhost/oauth/authorized',
             code='test-get-token',
-            expires=expires,
+            expires=expires
         )
         db.session.add(grant)
         db.session.commit()

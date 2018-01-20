@@ -3,24 +3,16 @@ from .. import db
 class Client(db.Model):
     # human readable name, not required
     name = db.Column(db.String(40))
-
-    # human readable description, not required
-    description = db.Column(db.String(400))
-
-    # creator of the client, not required
-    user_id = db.Column(db.ForeignKey('users.id'))
-    # required if you need to support client credential
-    user = db.relationship('User')
-
     client_id = db.Column(db.String(40), primary_key=True)
     client_secret = db.Column(db.String(55), unique=True, index=True,
                               nullable=False)
 
-    # public or confidential
-    is_confidential = db.Column(db.Boolean)
 
     _redirect_uris = db.Column(db.Text)
     _default_scopes = db.Column(db.Text)
+    disallow_grant_type = db.Column(db.String(20))
+    is_confidential = db.Column(db.Boolean, default=True)
+
 
     @property
     def client_type(self):
