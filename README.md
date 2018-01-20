@@ -6,7 +6,7 @@
 
 Start the complete setup with:
 
-    docker-compose up -d
+    docker-compose build && docker-compose up -d
 
 Stop the setup with:
 
