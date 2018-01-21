@@ -40,16 +40,10 @@ class Config:
     EMAIL_SENDER = '{app_name} Admin <{email}>'.format(
         app_name=APP_NAME, email=MAIL_USERNAME)
 
-    # Throw error on missing variables
-    try:
-        GRAFANA_CLIENT_ID = os.environ['GF_AUTH_GENERIC_OAUTH_CLIENT_ID']
-        GRAFANA_CLIENT_SECRET = os.environ['GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET']
-        GRAFANA_REDIRECT_URI = os.environ['GRAFANA_REDIRECT_URI']
-        GRAFANA_SCOPES = os.environ['GF_AUTH_GENERIC_OAUTH_SCOPES']
-    except KeyError:
-        print("Missing Grafana OAuth variables. Check that Docker loads "
-              "grafana/secrets.grafana and grafana/env.grafana")
-        sys.exit(1)
+    GRAFANA_CLIENT_ID = os.environ.get('GF_AUTH_GENERIC_OAUTH_CLIENT_ID')
+    GRAFANA_CLIENT_SECRET = os.environ.get('GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET')
+    GRAFANA_REDIRECT_URI = os.environ.get('GRAFANA_REDIRECT_URI')
+    GRAFANA_SCOPES = os.environ.get('GF_AUTH_GENERIC_OAUTH_SCOPES')
 
     REDIS_URL = os.getenv('REDISTOGO_URL') or 'http://localhost:6379'
 
@@ -98,6 +92,10 @@ class ProductionConfig(Config):
     def init_app(cls, app):
         Config.init_app(app)
         assert os.environ.get('SECRET_KEY'), 'SECRET_KEY IS NOT SET!'
+        assert (cls.GRAFANA_CLIENT_ID and cls.GRAFANA_CLIENT_SECRET and
+                cls.GRAFANA_REDIRECT_URI and cls.GRAFANA_SCOPES), (
+               "Missing Grafana OAuth variables. Check that Docker loads "
+               "grafana/secrets.grafana and grafana/env.grafana")
 
         flask_raygun.Provider(app, app.config['RAYGUN_APIKEY']).attach()
 
