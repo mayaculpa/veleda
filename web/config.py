@@ -45,6 +45,7 @@ class Config:
         GRAFANA_CLIENT_ID = os.environ['GF_AUTH_GENERIC_OAUTH_CLIENT_ID']
         GRAFANA_CLIENT_SECRET = os.environ['GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET']
         GRAFANA_REDIRECT_URI = os.environ['GRAFANA_REDIRECT_URI']
+        GRAFANA_SCOPES = os.environ['GF_AUTH_GENERIC_OAUTH_SCOPES']
     except KeyError:
         print("Missing Grafana OAuth variables. Check that Docker loads "
               "grafana/secrets.grafana and grafana/env.grafana")

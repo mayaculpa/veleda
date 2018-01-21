@@ -38,3 +38,8 @@ To start the web server with a custom port and host binding:
 ## Recommended Development Process
 
 The secret configuration differs when using local and Docker configurations.
+
+To increase the logging level add the following code to the Config class
+
+    import logging
+    logging.basicConfig(level=logging.DEBUG)

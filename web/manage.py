@@ -97,7 +97,8 @@ def setup_general():
             name='grafana',
             client_id=Config.GRAFANA_CLIENT_ID,
             client_secret=Config.GRAFANA_CLIENT_SECRET,
-            _redirect_uris=Config.GRAFANA_REDIRECT_URI
+            _redirect_uris=Config.GRAFANA_REDIRECT_URI,
+            default_scopes=Config.GRAFANA_SCOPES
         )
         db.session.add(client)
         db.session.commit()
