@@ -6,7 +6,7 @@ from faker import Faker
 from flask import url_for
 
 from app import create_app, db
-from app.models import Client, Grant, Permission, Role, User
+from app.models import Client, Grant, Token, Permission, Role, User
 
 
 def to_unicode(text):
@@ -227,10 +227,39 @@ class OauthTestCase(unittest.TestCase):
 
         rv = self.client.post(url, headers={
             'authorization': 'Basic ' + to_base64(
-                    '%s:%s' % (
-                        self.oauth_client.client_id,
-                        self.oauth_client.client_secret
-                    )
+                '%s:%s' % (
+                    self.oauth_client.client_id,
+                    self.oauth_client.client_secret
                 )
+            )
         })
         assert b'access_token' in rv.data
+
+    def test_deny_user_info(self):
+        url = '/oauth/api/userinfo'
+        rv = self.client.get(url, follow_redirects=True)
+        assert rv.status_code == 401
+        assert b'Unauthorized' in rv.data
+
+    def test_allow_user_info(self):
+        url = '/oauth/api/userinfo'
+        expires = datetime.utcnow() + timedelta(seconds=100)
+
+        token = Token(
+            client_id='a_client_id',
+            user_id=User.query.first().id,
+            token_type='bearer',
+            access_token='an_access_token',
+            refresh_token='a_refresh_token',
+            expires=expires,
+            _scopes='email'
+        )
+        db.session.add(token)
+        db.session.commit()
+
+        rv = self.client.get(url, headers={
+            'authorization': 'Bearer ' + token.access_token
+        })
+        assert rv.status_code == 200
+        assert b'email' in rv.data
+        assert b'sub' in rv.data

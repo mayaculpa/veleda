@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import request, render_template
+from flask import request, render_template, jsonify
 from flask_login import current_user, login_required
 
 from . import oauth
@@ -102,9 +102,16 @@ def access_token():
     """Provide token end-point for oauth2"""
     return None
 
-#@oauth.route('/userinfo')
-#@oauth_provider.require_oauth('userinfo')
-#def userinfo():
-#    user = request.oauth.user
-#    return jsonify(email=user.email, username=user.username)
-
+@oauth.route('/api/userinfo', methods=['GET', 'POST'])
+@oauth_provider.require_oauth('email')
+@csrf.exempt
+def userinfo():
+    """Provide user info API with valid OAuth token"""
+    print(request)
+    user = request.oauth.user
+    return jsonify(sub=user.id,
+                   name=user.first_name + " " + user.last_name,
+                   given_name=user.first_name,
+                   family_name=user.last_name,
+                   email=user.email
+                  )
