@@ -1,10 +1,12 @@
+[![Build Status](https://travis-ci.org/mayaculpa/veleda.svg?branch=master)](https://travis-ci.org/mayaculpa/veleda)
+
 # Veleda
 
 ## Docker Compose
 
 Start the complete setup with:
 
-    docker-compose up -d
+    docker-compose build && docker-compose up -d
 
 Stop the setup with:
 
@@ -38,3 +40,4 @@ or
 
     python -u manage.py runserver
 
+For more information, see the [web readme](web/README.md)
