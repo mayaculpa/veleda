@@ -10,7 +10,7 @@ from redis import Redis
 from rq import Connection, Queue, Worker
 
 from app import create_app, db
-from app.models import Role, User
+from app.models import Role, User, Client
 
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
@@ -89,6 +89,22 @@ def setup_general():
             db.session.add(user)
             db.session.commit()
             print('Added administrator {}'.format(user.full_name()))
+
+    # Create a client for the Grafana instance
+    grafana_client = Client.query.filter_by(client_id=Config.GRAFANA_CLIENT_ID).first()
+    if grafana_client is None:
+        client = Client(
+            name='grafana',
+            client_id=Config.GRAFANA_CLIENT_ID,
+            client_secret=Config.GRAFANA_CLIENT_SECRET,
+            _redirect_uris=Config.GRAFANA_REDIRECT_URI,
+            default_scopes=Config.GRAFANA_SCOPES
+        )
+        db.session.add(client)
+        db.session.commit()
+        print('Added Grafana Oauth, Client ID: {}'.format(client.client_id))
+    else:
+        print('Existing Grafana Oauth Client ID: {}'.format(grafana_client.client_id))
 
 
 @manager.command
