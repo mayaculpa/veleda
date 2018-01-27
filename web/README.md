@@ -1,10 +1,22 @@
 # Flask Web Application
 
-To setup your environment:
+## Installation
+
+The web app is based on the Flask framework and is responisble for the user authentication.
+
+Local install:
 
     virtualenv venv
     source venv/bin/activate
-    pip install -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
+
+Start with:
+
+    gunicorn manage:app
+
+or
+
+    python -u manage.py runserver
 
 ## Tests
 
@@ -13,7 +25,7 @@ The command to run tests:
     pip install -r requirements-test.txt
     python -u manage.py test
 
-The command to calculate the line coverage:
+The command to create an HTML report of the test coverage:
 
     coverage html
 
@@ -38,8 +50,3 @@ To start the web server with a custom port and host binding:
 ## Recommended Development Process
 
 The secret configuration differs when using local and Docker configurations.
-
-To increase the logging level add the following code to the Config class
-
-    import logging
-    logging.basicConfig(level=logging.DEBUG)

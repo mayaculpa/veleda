@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 import os
 import sys
 import subprocess
@@ -17,6 +18,9 @@ app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)
 migrate = Migrate(app, db)
 
+gunicorn_error_logger = logging.getLogger('gunicorn.error')
+app.logger.handlers.extend(gunicorn_error_logger.handlers)
+app.logger.setLevel(logging.INFO)
 
 def make_shell_context():
     return dict(app=app, db=db, User=User, Role=Role)
@@ -98,7 +102,7 @@ def setup_general():
             client_id=Config.GRAFANA_CLIENT_ID,
             client_secret=Config.GRAFANA_CLIENT_SECRET,
             _redirect_uris=Config.GRAFANA_REDIRECT_URI,
-            default_scopes=Config.GRAFANA_SCOPES
+            _default_scopes=Config.GRAFANA_SCOPES
         )
         db.session.add(client)
         db.session.commit()
