@@ -1,6 +1,10 @@
 FROM python:3.5.2
 MAINTAINER Moritz Ulmer <moritz.ulmer@posteo.de>
 
+# Install packages
+RUN apt-get update && apt-get install -y \
+        netcat-openbsd
+
 # Create the group and user to be used in this container
 RUN groupadd flaskgroup && useradd -m -g flaskgroup -s /bin/bash flask
 

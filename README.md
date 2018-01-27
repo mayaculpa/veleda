@@ -12,32 +12,12 @@ Stop the setup with:
 
     docker-compose down
 
-The individual services can be reached on the following ports:
+Key data to the individual services:
 
-| Name     | Purpose              | Port |
-| -------- | -------------------- | ---- |
-| web      | User management      | 8001 |
-| postgres | User storage         | 5431 |
-| redis    | Async task storage   | 6379 |
-| influxdb | Time series storage  | 8086 |
-| grafana  | Time series analysis | 3000 |
-
-## Web
-
-The web app is based on the Flask framework and is responisble for the user authentication.
-
-Local install:
-
-    virtualenv venv
-    source venv/bin/activate
-    pip install --no-cache-dir -r requirements.txt
-
-Start with:
-
-    gunicorn manage:app
-
-or
-
-    python -u manage.py runserver
-
-For more information, see the [web readme](web/README.md)
+| Name     | Purpose              | Port | Documentation |
+| -------- | -------------------- | ---- |---------------|
+| web      | User management      | 8001 | [readme](web/README.md) |
+| postgres | User storage         | 5431 |  |
+| redis    | Async task storage   | 6379 |  |
+| influxdb | Time series storage  | 8086 |  |
+| grafana  | Time series analysis | 3000 | [readme](grafana/README.md) |
