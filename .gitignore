@@ -2,6 +2,9 @@
 secrets.*
 !secrets.*.example
 
+# Jekyll
+jekyll/web
+
 # Python flask 
 venv
 instance/

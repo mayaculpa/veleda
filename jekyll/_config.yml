@@ -1,0 +1,22 @@
+# Site settings
+title: Veleda
+email: moritz.ulmer@posteo.de
+
+source: app
+destination: web
+
+description: > # this means to ignore newlines until "baseurl:"
+  An open-source data analytics platform designed for hydroponic systems.
+  Scaling all the way from single DIY builds up to commercial scale setups. In
+  collaboration with HAPI (Hydroponic Automation Platform Initative), it
+  digitalizes and visualizes your grow system.
+
+url: "http://locahost:4000" # the base hostname & protocol for your site
+permalink: pretty
+encoding: utf-8
+
+twitter_username: moritz89
+github_username:  moritz89
+
+# Build settings
+markdown: kramdown
