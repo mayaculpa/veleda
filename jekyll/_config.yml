@@ -5,14 +5,13 @@ email: moritz.ulmer@posteo.de
 source: app
 destination: web
 
-description: > # this means to ignore newlines until "baseurl:"
+description: >
   An open-source data analytics platform designed for hydroponic systems.
   Scaling all the way from single DIY builds up to commercial scale setups. In
   collaboration with HAPI (Hydroponic Automation Platform Initative), it
   digitalizes and visualizes your grow system.
-
+baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://127.0.0.1" # the base hostname & protocol for your site
-permalink: pretty
 encoding: utf-8
 
 twitter_username: moritz89
