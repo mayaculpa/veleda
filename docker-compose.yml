@@ -1,13 +1,15 @@
 version: "3"
 services:
-#  nginx:
-#    image: nginx:latest
-#    ports:
-#      - "80:80"
-#    volumes:
-#      - ./nginx:/etc/nginx/conf.d
-#    depends_on:
-#      - web
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - jekyll-data:/usr/share/nginx/html:ro
+    depends_on:
+      - web
+
   web:
     build: ./web
     container_name: web
@@ -79,3 +81,4 @@ volumes:
   influxdb-data:
   grafana-data:
   postgres-data:
+  jekyll-data:

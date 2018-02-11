@@ -2,6 +2,8 @@
 
 # Veleda
 
+A data analytics platform for hydroponic setups. It visualizes and allows analysis of data covering the growth aspects of hydroponics. In combination with the [HAPI project][1], it creates a system that covers the data collection and automation to data storage and analysis.
+
 ## Docker Compose
 
 Start the complete setup with:
@@ -21,3 +23,6 @@ Key data to the individual services:
 | redis    | Async task storage   | 6379 |  |
 | influxdb | Time series storage  | 8086 |  |
 | grafana  | Time series analysis | 3000 | [readme](grafana/README.md) |
+
+
+[1](https://github.com/mayaculpa/hapi)
