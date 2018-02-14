@@ -6,7 +6,13 @@ A data analytics platform for hydroponic setups. It visualizes and allows analys
 
 ## Requirements
 
+### Required
+
 - **Docker:** available for [Ubuntu][2], [Mac](3), [Windows][4] and other [Linux flavors][5]. Note that currently only Ubuntu is supported.
+- **Secrets:** Secrets have to be provided for the grafana, influxdb, postgres and web services. Templates are provided and *should* be modified
+
+### Optional
+
 - **SMTP server:** To enable user registration, credentials to an SMTP server are required. For testing purposes, the admin account may be used.
 
 ## Starting the Services
