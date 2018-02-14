@@ -60,7 +60,7 @@ services:
       - influxdb-data:/var/lib/influxdb
   
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:4.6.3
     container_name: grafana
     ports:
       - "3000:3000"
