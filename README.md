@@ -8,8 +8,11 @@ A data analytics platform for hydroponic setups. It visualizes and allows analys
 
 ### Required
 
-- **Docker:** available for [Ubuntu][2], [Mac](3), [Windows][4] and other [Linux flavors][5]. Note that currently only Ubuntu is supported.
+- **Docker:** available for [Ubuntu][2], [Mac][3], [Windows][4] and other [Linux flavors][5]. Note that currently only Ubuntu is supported.
+- **Docker Compose:** the official [installation guide][6]
 - **Secrets:** Secrets have to be provided for the grafana, influxdb, postgres and web services. Templates are provided and *should* be modified
+
+For detailed instructions see the [server setup guide][7].
 
 ### Optional
 
@@ -43,3 +46,5 @@ The data is stored in volumes. List all active volumes with `docker volume ls`. 
 [3]: https://docs.docker.com/docker-for-mac/install/
 [4]: https://docs.docker.com/docker-for-windows/install/
 [5]: https://docs.docker.com/install/
+[6]: https://docs.docker.com/compose/install/#install-compose
+[7]: server_setup.md
