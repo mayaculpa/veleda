@@ -27,13 +27,14 @@
     - `git clone https://github.com/mayaculpa/veleda.git`
     - `cd veleda`
 - Setup the secrets
-    - Files to be modified have example appended to them
+    - Files where they have to be set
     - `grafana/secrets.grafana`
     - `influxdb/secrets.influxdb`
     - `postgres/secrets.postgres`
     - `postgres/web-init.sql`
     - `web/secrets.flask`
-- Optional: Configure Nginx
+- Optional: Set server name
+    - Replace *localhost* in `grafana/secrets.grafana`
     - Set the *server_name* in `nginx/nginx.conf`
 
 ## Start
