@@ -2,10 +2,10 @@ bold=$(tput bold)
 normal=$(tput sgr0)
 
 echo "${bold}veleda: Creating data volumes${normal}"
-docker volume create influxdb-data
-docker volume create grafana-data
-docker volume create postgres-data
-docker volume create jekyll-data
+docker volume create veleda_influxdb-data
+docker volume create veleda_grafana-data
+docker volume create veleda_postgres-data
+docker volume create veleda_jekyll-data
 
 echo "${bold}veleda: Building Jekyll site${normal}"
 docker run --rm \
@@ -17,7 +17,7 @@ docker run --rm \
 echo "${bold}veleda: Copying site to jekyll-data volume${normal}"
 docker run \
   --name helper \
-  --volume="jekyll-data:/web" \
+  --volume="veleda_jekyll-data:/web" \
   -it busybox \
   true
 docker cp jekyll/web/. helper:/web
