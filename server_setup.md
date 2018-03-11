@@ -26,6 +26,7 @@
 - Clone the Veleda Git repository
     - `git clone https://github.com/mayaculpa/veleda.git`
     - `cd veleda`
+    - `git config receive.denyCurrentBranch updateInstead`
 - Setup the secrets
     - Files where they have to be set
     - `grafana/secrets.grafana`
