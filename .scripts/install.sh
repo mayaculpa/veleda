@@ -7,4 +7,4 @@ echo '|1|BqdQKtUnA/AtCT/p2M7wgMq3wlY=|lH39cRtAE64wd6EG3ry2J9ewXic= ecdsa-sha2-ni
 echo '|1|+Z7oOsZ+zdL6u8o8VSWp+bRzd2g=|XMw2HyJIHoekOYlJYw1n75plL2E= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCJ/fa/mr577/qCuRXqUNccfmhpUtmi46LSyE7nDbOgxv8kZFs7yQ/sh6TM5npR+ZIbe9I0qmdvA+cE1QfvN21E=' >> $HOME/.ssh/known_hosts
 
 # Install Python dependencies
-pip install -r web/requirements-test.txt
+pip install -r core/requirements-test.txt
