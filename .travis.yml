@@ -13,7 +13,7 @@ install:
 - bash .scripts/install.sh
 
 script:
-- python -u web/manage.py test
+- python -u core/manage.py test
 
 after_success:
 - bash .scripts/deploy.sh
