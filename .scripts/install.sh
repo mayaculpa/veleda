@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# exit with nonzero exit code if anything fails
+set -e
+
 # Configure SSH deploy setup
 chmod 600 veleda-deploy-key
 mv veleda-deploy-key ~/.ssh/id_rsa
