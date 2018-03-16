@@ -75,24 +75,29 @@ services:
     networks:
       - frontend
 
-#  core:
-#    build: ./core
-#    container_name: core
-#    ports:
-#      - "8001:8001"
-#    env_file:
-#      - 'web/secrets.flask'
-#      - 'grafana/secrets.grafana'
-#      - 'grafana/env.grafana'
-#    networks:
-#      - backend
-#      - frontend
-#    command: bash -c "./start.sh"
-#    depends_on:
-#      - influxdb
-#      - grafana
-#      - postgres
-#      - redis
+  core:
+    build: ./core
+    container_name: core
+    ports:
+      - '8000'
+    env_file:
+      - 'core/secrets.flask'
+      - 'grafana/secrets.grafana'
+      - 'grafana/env.grafana'
+    environment:
+      - VIRTUAL_HOST=core.staging.veleda.io
+      - LETSENCRYPT_HOST=core.staging.veleda.io
+      - LETSENCRYPT_EMAIL=moritz.ulmer@posteo.de
+      - LETSENCRYPT_TEST=true
+    networks:
+      - backend
+      - frontend
+    command: bash -c "./start.sh"
+    depends_on:
+      - influxdb
+      - grafana
+      - postgres
+      - redis
 
   grafana:
     image: grafana/grafana:4.6.3
@@ -114,23 +119,23 @@ services:
       - influxdb
 
 ## Veleda Backend
-#  postgres:
-#    build: ./postgres
-#    container_name: postgres
-#    ports:
-#      - "5432:5432"
-#    env_file:
-#      - 'postgres/secrets.postgres'
-#    networks:
-#      - backend
-#    volumes:
-#      - postgres-data:/var/lib/postgresql/data
+  postgres:
+    build: ./postgres
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - 'postgres/secrets.postgres'
+    networks:
+      - backend
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
 
-#  redis:
-#    image: redis:3.2
-#    container_name: redis
-#    networks:
-#      - backend
+  redis:
+    image: redis:3.2
+    container_name: redis
+    networks:
+      - backend
 
   influxdb:
     image: influxdb:latest

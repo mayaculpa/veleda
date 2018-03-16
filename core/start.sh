@@ -12,5 +12,5 @@ done
 export FLASK_CONFIG=production
 python manage.py db upgrade
 python manage.py setup_prod
-gunicorn --bind=0.0.0.0:8001 --workers=3 --log-level=INFO manage:app &
+gunicorn --bind=0.0.0.0:8000 --workers=3 --log-level=INFO manage:app &
 python -u manage.py run_worker
