@@ -94,24 +94,24 @@ services:
 #      - postgres
 #      - redis
 
-#  grafana:
-#    image: grafana/grafana:4.6.3
-#    container_name: grafana
-#    env_file:
-#      - 'grafana/env.grafana'
-#      - 'grafana/secrets.grafana'
-#    environment:
-#      - VIRTUAL_HOST=data.staging.veleda.io
-#      - LETSENCRYPT_HOST=data.staging.veleda.io
-#      - LETSENCRYPT_EMAIL=moritz.ulmer@posteo.de
-#      - LETSENCRYPT_TEST=true
-#    networks:
-#      - backend
-#      - frontend
-#    volumes:
-#      - grafana-data:/var/lib/grafana
-#    depends_on:
-#      - influxdb
+  grafana:
+    image: grafana/grafana:4.6.3
+    container_name: grafana
+    env_file:
+      - 'grafana/env.grafana'
+      - 'grafana/secrets.grafana'
+    environment:
+      - VIRTUAL_HOST=data.staging.veleda.io
+      - LETSENCRYPT_HOST=data.staging.veleda.io
+      - LETSENCRYPT_EMAIL=moritz.ulmer@posteo.de
+      - LETSENCRYPT_TEST=true
+    networks:
+      - backend
+      - frontend
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - influxdb
 
 ## Veleda Backend
 #  postgres:
@@ -132,21 +132,21 @@ services:
 #    networks:
 #      - backend
 
-#  influxdb:
-#    image: influxdb:latest
-#    container_name: influxdb
-#    ports:
-#      - "8086:8086"
-#    env_file:
-#      - 'influxdb/env.influxdb'
-#      - 'influxdb/secrets.influxdb'
-#    networks:
-#      - backend
-#    volumes:
-#      - influxdb-data:/var/lib/influxdb
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    env_file:
+      - 'influxdb/env.influxdb'
+      - 'influxdb/secrets.influxdb'
+    networks:
+      - backend
+    volumes:
+      - influxdb-data:/var/lib/influxdb
 
 networks:
-#  backend:
+  backend:
   frontend:
 
 volumes:
