@@ -2,6 +2,10 @@
 secrets.*
 !secrets.*.example
 
+# DNS environment variables
+dns.*
+!dns.*.example
+
 # Jekyll
 jekyll/web
 

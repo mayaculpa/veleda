@@ -65,7 +65,7 @@ services:
     build: nginx
     container_name: nginx-web
     env_file:
-      - 'nginx/env.nginx'
+      - 'nginx/dns.nginx'
     volumes:
       - jekyll-data:/usr/share/nginx/html
     logging:
@@ -79,16 +79,12 @@ services:
     build: ./core
     container_name: core
     ports:
-      - '8000'
+      - '8000:8000'
     env_file:
+      - 'core/dns.flask'
       - 'core/secrets.flask'
-      - 'grafana/secrets.grafana'
       - 'grafana/env.grafana'
-    environment:
-      - VIRTUAL_HOST=core.staging.veleda.io
-      - LETSENCRYPT_HOST=core.staging.veleda.io
-      - LETSENCRYPT_EMAIL=moritz.ulmer@posteo.de
-      - LETSENCRYPT_TEST=true
+      - 'grafana/secrets.grafana'
     networks:
       - backend
       - frontend
@@ -102,14 +98,12 @@ services:
   grafana:
     image: grafana/grafana:4.6.3
     container_name: grafana
+    ports:
+      - '3000:3000'
     env_file:
+      - 'grafana/dns.grafana'
       - 'grafana/env.grafana'
       - 'grafana/secrets.grafana'
-    environment:
-      - VIRTUAL_HOST=data.staging.veleda.io
-      - LETSENCRYPT_HOST=data.staging.veleda.io
-      - LETSENCRYPT_EMAIL=moritz.ulmer@posteo.de
-      - LETSENCRYPT_TEST=true
     networks:
       - backend
       - frontend
