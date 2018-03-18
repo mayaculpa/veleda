@@ -81,8 +81,8 @@ services:
     ports:
       - '8000:8000'
     env_file:
-      - 'core/dns.flask'
-      - 'core/secrets.flask'
+      - 'core/dns.core'
+      - 'core/secrets.core'
       - 'grafana/env.grafana'
       - 'grafana/secrets.grafana'
     networks:
