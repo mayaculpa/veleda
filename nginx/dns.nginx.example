@@ -1,0 +1,4 @@
+VIRTUAL_HOST=example.com
+LETSENCRYPT_HOST=example.com
+LETSENCRYPT_EMAIL=veleda@example.com
+LETSENCRYPT_TEST=true

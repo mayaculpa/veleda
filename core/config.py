@@ -10,9 +10,9 @@ else:
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-if os.path.exists('secrets.flask'):
-    print('Importing environment from secrets.flask file')
-    for line in open('secrets.flask'):
+if os.path.exists('secrets.core'):
+    print('Importing environment from secrets.core file')
+    for line in open('secrets.core'):
         var = line.strip().split('=')
         if len(var) == 2:
             os.environ[var[0]] = var[1].replace("\"", "")
