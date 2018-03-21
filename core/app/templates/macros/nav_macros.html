@@ -22,7 +22,8 @@
 {% macro header_items(current_user) %}
     {% set endpoints = [
       ('main.index', config.APP_NAME, 'home'),
-      ('main.about', 'About', 'info')
+      ('main.about', 'About', 'info'),
+      ('main.data', 'Data', 'sun')
     ]%}
     {% set user = [] %}
     {% if current_user.is_authenticated %}
