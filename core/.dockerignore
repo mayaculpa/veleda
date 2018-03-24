@@ -1,1 +1,6 @@
-secrets.flask
+secrets.core
+venv
+dns.core
+**/*.pyc
+
+.vscode
