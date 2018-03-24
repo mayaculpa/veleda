@@ -27,6 +27,7 @@ The command to run tests:
 
 The command to create an HTML report of the test coverage:
 
+    coverage run --source=app manage.py test
     coverage html
 
 ## Local Development
