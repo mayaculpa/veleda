@@ -11,7 +11,7 @@ description: >
   collaboration with HAPI (Hydroponic Automation Platform Initative), it
   digitalizes and visualizes your grow system.
 baseurl: "" # the subpath of your site, e.g. /blog/
-url: "http://veleda.io" # the base hostname & protocol for your site
+url: "https://veleda.io" # the base hostname & protocol for your site
 encoding: utf-8
 
 twitter_username: moritz89
