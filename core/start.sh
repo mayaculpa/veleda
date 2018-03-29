@@ -9,7 +9,6 @@ while ! nc -z postgres 5432; do
   sleep 0.5 # wait for 1/10 of the second before check again
 done
 
-export FLASK_CONFIG=production
 python manage.py db upgrade
 python manage.py setup_prod
 gunicorn --bind=0.0.0.0:8000 --workers=3 --log-level=INFO manage:app &

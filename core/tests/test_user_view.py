@@ -69,6 +69,6 @@ class UserViewTestCase(unittest.TestCase):
                     email='hi@example.com',
                     password='password2',
                     password2='password2'
-                ))
+                ), follow_redirects=True)
         self.assertIn(str.encode('A confirmation link has been sent to hi@example.com'),
                       rv.data)

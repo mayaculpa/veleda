@@ -30,14 +30,17 @@ Stop the setup with:
 
 List the individual services with `docker ps`. Key data to the individual services:
 
-| Name     | Purpose              | Port | Documentation |
-| -------- | -------------------- | ---- |---------------|
-| nginx    | Landing page         | 80   | N/A  |
-| web      | User management      | 8001 | [readme](web/README.md) |
-| grafana  | Time series analysis | 3000 | [readme](grafana/README.md) |
-| postgres | User storage         | 5431 | N/A |
-| influxdb | Time series storage  | 8086 | N/A |
-| redis    | Async task storage   | 6379 | N/A |
+| Name              | Purpose                  | Port | Documentation               |
+| ----------------- | ------------------------ | ---- | --------------------------- |
+| nginx-proxy       | Reverse-proxy services   | 80   | N/A                         |
+| nginx-web         | Landing page             |      | N/A                         |
+| nginx-gen         | Dynamically update proxy |      | N/A                         |
+| nginx-letsencrypt | Manage SSL certificates  |      | N/A                         |
+| core              | User management          | 8000 | [readme](web/README.md)     |
+| grafana           | Time series analysis     | 3000 | [readme](grafana/README.md) |
+| postgres          | User storage             | 5432 | N/A                         |
+| influxdb          | Time series storage      | 8086 | N/A                         |
+| redis             | Async task storage       |      | N/A                         |
 
 The data is stored in volumes. List all active volumes with `docker volume ls`. To access Grafana, visit [localhost:3000](localhost:3000) after starting the services. The admin login credentials are defined in `web/secrets.flask`.
 
