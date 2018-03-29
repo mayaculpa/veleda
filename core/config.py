@@ -2,11 +2,7 @@ import os
 import sys
 from raygun4py.middleware import flask as flask_raygun
 
-PYTHON_VERSION = sys.version_info[0]
-if PYTHON_VERSION == 3:
-    import urllib.parse
-else:
-    import urlparse
+import urllib.parse
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -45,17 +41,13 @@ class Config:
     GRAFANA_REDIRECT_URI = os.environ.get('GRAFANA_REDIRECT_URI')
     GRAFANA_SCOPES = os.environ.get('GF_AUTH_GENERIC_OAUTH_SCOPES')
 
-    REDIS_URL = os.getenv('REDISTOGO_URL') or 'http://localhost:6379'
+    RQ_REDIS_URL = os.getenv('REDISTOGO_URL') or 'http://localhost:6379'
 
     RAYGUN_APIKEY = os.environ.get('RAYGUN_APIKEY')
 
     # Parse the REDIS_URL to set RQ config variables
-    if PYTHON_VERSION == 3:
-        urllib.parse.uses_netloc.append('redis')
-        url = urllib.parse.urlparse(REDIS_URL)
-    else:
-        urlparse.uses_netloc.append('redis')
-        url = urlparse.urlparse(REDIS_URL)
+    urllib.parse.uses_netloc.append('redis')
+    url = urllib.parse.urlparse(RQ_REDIS_URL)
 
     RQ_DEFAULT_HOST = url.hostname
     RQ_DEFAULT_PORT = url.port
@@ -72,7 +64,12 @@ class DevelopmentConfig(Config):
     ASSETS_DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
-    print('THIS APP IS IN DEBUG MODE. YOU SHOULD NOT SEE THIS IN PRODUCTION.')
+    RQ_CONNECTION_CLASS = 'fakeredis.FakeStrictRedis'
+
+    @classmethod
+    def init_app(cls, app):
+        print('THIS APP IS IN DEBUG MODE. ' +
+              'YOU SHOULD NOT SEE THIS IN PRODUCTION.')
 
 
 class TestingConfig(Config):
@@ -81,6 +78,12 @@ class TestingConfig(Config):
         'sqlite:///' + os.path.join(basedir, 'data-test.sqlite')
     WTF_CSRF_ENABLED = False
     OAUTHLIB_INSECURE_TRANSPORT = True
+    RQ_CONNECTION_CLASS = 'fakeredis.FakeStrictRedis'
+
+    @classmethod
+    def init_app(cls, app):
+        print('THIS APP IS IN TESTING MODE.  \
+                YOU SHOULD NOT SEE THIS IN PRODUCTION.')
 
 
 class ProductionConfig(Config):

@@ -6,7 +6,7 @@ from flask_login import LoginManager
 from flask_assets import Environment
 from flask_wtf import CsrfProtect
 from flask_compress import Compress
-from flask_rq import RQ
+from flask_rq2 import RQ
 from flask_oauthlib.provider import OAuth2Provider
 
 from config import config
@@ -19,18 +19,18 @@ db = SQLAlchemy()
 csrf = CsrfProtect()
 compress = Compress()
 oauth_provider = OAuth2Provider()
+rq = RQ()
 
 # Set up Flask-Login
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 login_manager.login_view = 'account.login'
 
-
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     # not using sqlalchemy event system, hence disabling it
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     config[config_name].init_app(app)
 
@@ -41,7 +41,7 @@ def create_app(config_name):
     csrf.init_app(app)
     compress.init_app(app)
     oauth_provider.init_app(app)
-    RQ(app)
+    rq.init_app(app)
 
     # Register Jinja template functions
     from .utils import register_template_utils
