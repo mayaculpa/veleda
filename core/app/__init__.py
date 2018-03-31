@@ -77,4 +77,7 @@ def create_app(config_name):
     from .oauth import oauth as oauth_blueprint
     app.register_blueprint(oauth_blueprint, url_prefix='/oauth')
 
+    from .sensors import sensors as sensors_blueprint
+    app.register_blueprint(sensors_blueprint, url_prefix='/sensors')
+
     return app
