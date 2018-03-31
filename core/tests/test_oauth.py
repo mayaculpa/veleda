@@ -63,7 +63,6 @@ class OauthTestCase(unittest.TestCase):
         ) % oauth_client.client_id
 
     def login(self, email, password):
-        self.client.get('/login', follow_redirects=True)
         return self.client.post(
             url_for('account.login'),
             data=dict(email=email, password=password),

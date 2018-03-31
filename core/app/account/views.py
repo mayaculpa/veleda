@@ -1,10 +1,10 @@
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import (current_user, login_required, login_user,
                          logout_user)
-from flask_rq import get_queue
 
 from . import account
 from .. import db
+from .. import rq
 from ..email import send_email
 from ..models import User
 from .forms import (ChangeEmailForm, ChangePasswordForm, CreatePasswordForm,
@@ -42,7 +42,7 @@ def register():
         db.session.commit()
         token = user.generate_confirmation_token()
         confirm_link = url_for('account.confirm', token=token, _external=True)
-        get_queue().enqueue(
+        rq.get_queue().enqueue(
             send_email,
             recipient=user.email,
             subject='Confirm Your Account',
@@ -83,7 +83,7 @@ def reset_password_request():
             token = user.generate_password_reset_token()
             reset_link = url_for(
                 'account.reset_password', token=token, _external=True)
-            get_queue().enqueue(
+            rq.get_queue().enqueue(
                 send_email,
                 recipient=user.email,
                 subject='Reset Your Password',

@@ -1,11 +1,11 @@
 from flask import abort, flash, redirect, render_template, url_for, request
 from flask_login import current_user, login_required
-from flask_rq import get_queue
 
 from .forms import (ChangeAccountTypeForm, ChangeUserEmailForm, InviteUserForm,
                     NewUserForm)
 from . import admin
 from .. import db
+from .. import rq
 from ..decorators import admin_required
 from ..email import send_email
 from ..models import Role, User, EditableHTML
@@ -59,7 +59,7 @@ def invite_user():
             user_id=user.id,
             token=token,
             _external=True)
-        get_queue().enqueue(
+        rq.get_queue().enqueue(
             send_email,
             recipient=user.email,
             subject='You Are Invited To Join',
