@@ -59,6 +59,11 @@ def create_app(config_name):
     assets_env.register('vendor_css', vendor_css)
     assets_env.register('vendor_js', vendor_js)
 
+    app_css.build()
+    app_js.build()
+    vendor_css.build()
+    vendor_js.build()
+
     # Configure SSL if platform supports it
     if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
         from flask.ext.sslify import SSLify
