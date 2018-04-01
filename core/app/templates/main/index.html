@@ -2,9 +2,9 @@
 
 {% block content %}
     <div class="ui text container">
-      <h1>Welcome{% if current_user.is_authenticated %}{{ " " + current_user.full_name() }}{% endif %},</h1>
+        <h1>Welcome{% if current_user.is_authenticated %}{{ " " + current_user.full_name() }}{% endif %},</h1>
 
-        <p>Manage your registered <em>sensors</em> or order new ones from our <em>shop</em>.</p>
+            <p>Manage your registered <em>sensors</em> or order new ones from our <em>shop</em>.</p>
 
     </div>
 {% endblock %}

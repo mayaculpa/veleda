@@ -1,8 +1,45 @@
 {% extends 'layouts/base.html' %}
+{% import 'macros/form_macros.html' as f %}
+
+{% set endpoints = [
+    ('sensors.index', 'Database information')
+] %}
+
+{% macro navigation(items) %}
+    <div class="ui vertical fluid secondary menu">
+        {% for route, name in items %}
+            {% set href = url_for(route) %}
+            <a class="item {% if request.endpoint == route %}active{% endif %}" href="{{ href }}">
+                {{ name }}
+            </a>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{% macro database_info(influx_dbs) %}
+    <table class="ui compact celled table">
+        <thead><tr><th>Name</th><th>Owner</th></tr></thead>
+        {% for name, owner in influx_dbs %}
+            <tr><td>{{ name }}</td><td>{{ owner }}</td></tr>
+        {% endfor %}
+    </table>
+{% endmacro %}
 
 {% block content %}
-    <div class="ui text container">
-        <h1>Manage Databases</h1>
-
+    <div class="ui stackable centered grid container">
+        <div class="twelve wide column">
+            <h2 class="ui header">
+                Database Settings
+                <div class="sub header">Manage your databases and add users.</div>
+            </h2>
+        </div>
+        <div class="stretched divided very relaxed row">
+            <div class="four wide column">
+                {{ navigation(endpoints) }}
+            </div>
+            <div class="eight wide column">
+                {{ database_info(influx_dbs) }}
+            </div>
+        </div>
     </div>
 {% endblock %}
