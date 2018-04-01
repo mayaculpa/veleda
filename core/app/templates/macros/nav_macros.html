@@ -23,7 +23,8 @@
     {% set endpoints = [
       ('main.index', config.APP_NAME, 'home'),
       ('main.about', 'About', 'info'),
-      ('main.data', 'Data', 'sun')
+      ('main.data', 'Data', 'sun'),
+      ('sensors.index', 'Sensors', 'microchip')
     ]%}
     {% set user = [] %}
     {% if current_user.is_authenticated %}
