@@ -81,8 +81,7 @@ class TestingConfig(Config):
 
     @classmethod
     def init_app(cls, app):
-        print('THIS APP IS IN TESTING MODE.  \
-                YOU SHOULD NOT SEE THIS IN PRODUCTION.')
+        pass
 
 
 class ProductionConfig(Config):

@@ -3,7 +3,10 @@ language: python
 python:
 - '3.5'
 
-cache: pip
+cache:
+  pip: true
+  directories:
+    - core/app/static/.webassets-cache
 
 before_install:
 - openssl aes-256-cbc -K $encrypted_c06b03728789_key -iv $encrypted_c06b03728789_iv

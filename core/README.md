@@ -6,7 +6,7 @@ The web app is based on the Flask framework and is responisble for the user auth
 
 Local install:
 
-    virtualenv venv
+    virtualenv -p python3 venv
     source venv/bin/activate
     pip install --no-cache-dir -r requirements.txt
 
