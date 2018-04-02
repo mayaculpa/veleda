@@ -57,7 +57,7 @@ Then, to create a new migration use:
 
     python manage.py db migrate
 
-This will create a diff from the previous database in migrations/versions.
+This will create a diff from the previous database in migrations/versions. Note that SQLite is *not* supported. For development that does not require schema changes, i.e., no changes or new models, SQLite may be used.
 
 ## Options
 

@@ -24,4 +24,5 @@ class InfluxDBModelTestCase(unittest.TestCase):
         db.session.add(influxDB)
         db.session.commit()
 
+        self.assertIsNotNone(user)
         self.assertEqual(influxDB.owner, user)

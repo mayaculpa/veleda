@@ -11,7 +11,7 @@ from redis import Redis
 from rq import Connection, Queue, Worker
 
 from app import create_app, db
-from app.models import Role, User, Client
+from app.models import Role, User, Client, InfluxDB
 
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
@@ -109,6 +109,16 @@ def setup_general():
         print('Added Grafana Oauth, Client ID: {}'.format(client.client_id))
     else:
         print('Existing Grafana Oauth Client ID: {}'.format(grafana_client.client_id))
+
+    influx_db = InfluxDB.query.order_by(InfluxDB.id.asc()).first()
+    if influx_db is None:
+        influx_db = InfluxDB(
+            name='default_db',
+            owner_id=User.query.filter_by(email=Config.ADMIN_EMAIL).first().id
+        )
+        db.session.add(influx_db)
+        db.session.commit()
+        print('Added default_db InfluxDB')
 
 
 @manager.command

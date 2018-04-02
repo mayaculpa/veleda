@@ -19,8 +19,8 @@
 {% macro database_info(influx_dbs) %}
     <table class="ui compact celled table">
         <thead><tr><th>Name</th><th>Owner</th></tr></thead>
-        {% for name, owner in influx_dbs %}
-            <tr><td>{{ name }}</td><td>{{ owner }}</td></tr>
+        {% for i in influx_dbs %}
+            <tr><td>{{ i.name }}</td><td>{{ i.owner.full_name() }}</td></tr>
         {% endfor %}
     </table>
 {% endmacro %}
