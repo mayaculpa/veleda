@@ -16,18 +16,17 @@ def index():
 @login_required
 def edit_influx_db(influx_db_id):
     """Modify Influx databases"""
+    print("influx_db_client: " + influx_db_client._username)
     influx_db=InfluxDB.query.get(influx_db_id)
     form=EditInfluxDBForm()
     if form.validate_on_submit():
         # Check which button was pressed
         if form.reset.data:
-            influx_db_client.drop_database(influx_db.name)
-            influx_db_client.create_database(influx_db.name)
-            influx_db_client.grant_privilege('all', influx_db.name, influx_db.owner)
+            influx_db.reset_database(influx_db_client)
             flash('Database {} successfully reset'.format(influx_db.name),
                   'form-success')
         if form.delete.data:
-            influx_db_client.drop_database(influx_db.name)
+            influx_db.drop_database(influx_db_client)
             flash('Database {} successfully deleted'.format(influx_db.name),
                   'form-success')
     return render_template('sensors/index.html',

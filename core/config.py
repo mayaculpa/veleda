@@ -1,6 +1,5 @@
 import os
 import sys
-from raygun4py.middleware import flask as flask_raygun
 
 import urllib.parse
 
@@ -12,6 +11,7 @@ if os.path.exists('secrets.core'):
         var = line.strip().split('=')
         if len(var) == 2:
             os.environ[var[0]] = var[1].replace("\"", "")
+
 
 class Config:
     APP_NAME = os.environ.get('APP_NAME') or 'Flask-Base'
@@ -37,13 +37,12 @@ class Config:
         app_name=APP_NAME, email=MAIL_USERNAME)
 
     GRAFANA_CLIENT_ID = os.environ.get('GF_AUTH_GENERIC_OAUTH_CLIENT_ID')
-    GRAFANA_CLIENT_SECRET = os.environ.get('GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET')
+    GRAFANA_CLIENT_SECRET = os.environ.get(
+        'GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET')
     GRAFANA_REDIRECT_URI = os.environ.get('GRAFANA_REDIRECT_URI')
     GRAFANA_SCOPES = os.environ.get('GF_AUTH_GENERIC_OAUTH_SCOPES')
 
     RQ_REDIS_URL = os.getenv('REDISTOGO_URL') or 'http://localhost:6379'
-
-    RAYGUN_APIKEY = os.environ.get('RAYGUN_APIKEY')
 
     # Parse the REDIS_URL to set RQ config variables
     urllib.parse.uses_netloc.append('redis')
@@ -89,7 +88,7 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')  or \
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI') or \
         'sqlite:///' + os.path.join(basedir, 'data.sqlite')
     SSL_DISABLE = (os.environ.get('SSL_DISABLE') or 'True') == 'True'
 
@@ -103,10 +102,8 @@ class ProductionConfig(Config):
         assert os.environ.get('SECRET_KEY'), 'SECRET_KEY IS NOT SET!'
         assert (cls.GRAFANA_CLIENT_ID and cls.GRAFANA_CLIENT_SECRET and
                 cls.GRAFANA_REDIRECT_URI and cls.GRAFANA_SCOPES), (
-               "Missing Grafana OAuth variables. Check that Docker loads "
-               "grafana/secrets.grafana and grafana/env.grafana")
-
-        flask_raygun.Provider(app, app.config['RAYGUN_APIKEY']).attach()
+            "Missing Grafana OAuth variables. Check that Docker loads "
+            "grafana/secrets.grafana and grafana/env.grafana")
 
 
 class HerokuConfig(ProductionConfig):

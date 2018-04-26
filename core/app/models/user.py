@@ -55,6 +55,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     influx_dbs = db.relationship('InfluxDB', back_populates='owner')
+    influx_db_access_key = db.Column(db.String(64))
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)

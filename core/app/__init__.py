@@ -28,6 +28,7 @@ login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 login_manager.login_view = 'account.login'
 
+
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
@@ -67,7 +68,8 @@ def create_app(config_name):
     vendor_js.build()
 
     # Connect to InfluxDB
-    influx_db_client = InfluxDBClient(
+    influx_db_client.close()
+    influx_db_client.__init__(
         host=app.config['INFLUXDB_HOST'],
         username=app.config['INFLUXDB_ADMIN_USER'],
         password=app.config['INFLUXDB_ADMIN_PASSWORD'])
