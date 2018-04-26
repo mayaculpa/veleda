@@ -2,7 +2,7 @@
 {% import 'macros/form_macros.html' as f %}
 
 {% set endpoints = [
-    ('sensors.index', 'Database information')
+    ('sensors.index', 'List Databases')
 ] %}
 
 {% macro navigation(items) %}
@@ -18,12 +18,37 @@
 
 {% macro database_info(influx_dbs) %}
     <table class="ui compact celled table">
-        <thead><tr><th>Name</th><th>Owner</th></tr></thead>
+        <thead><tr><th>Name</th><th>Owner</th><th>Action</th></tr></thead>
         {% for i in influx_dbs %}
-            <tr><td>{{ i.name }}</td><td>{{ i.owner.full_name() }}</td></tr>
+            <tr>
+                <td>{{ i.name }}</td>
+                <td>{{ i.owner.full_name() }}</td>
+                <td><a class="ui compact button" href=
+                    "{{ url_for('sensors.edit_influx_db', influx_db_id=i.id) }}">Manage</a></td>
+            </tr>
         {% endfor %}
     </table>
 {% endmacro %}
+
+{% macro edit_database(form, influx_db) %}
+    <h3>Operations for <em>{{ influx_db.name }}</em></h3>
+{#
+    {{ f.render_form(form) }}
+#}
+    {{ f.begin_form(form, flashes=None) }}
+        {% for field in form %}
+            {{ field(class='ui button') }}
+        {% endfor %}
+    {{ f.end_form(form) }}
+
+{% endmacro %}
+
+{% set flashes = {
+    'error':   get_flashed_messages(category_filter=['form-error']),
+    'warning': get_flashed_messages(category_filter=['form-check-email']),
+    'info':    get_flashed_messages(category_filter=['form-info']),
+    'success': get_flashed_messages(category_filter=['form-success'])
+} %}
 
 {% block content %}
     <div class="ui stackable centered grid container">
@@ -32,13 +57,21 @@
                 Database Settings
                 <div class="sub header">Manage your databases and add users.</div>
             </h2>
+            {{ f.form_message(flashes['error'], header='Something went wrong.', class='error') }}
+            {{ f.form_message(flashes['warning'], header='Check your email.', class='warning') }}
+            {{ f.form_message(flashes['info'], header='Information', class='info') }}
+            {{ f.form_message(flashes['success'], header='Success!', class='success') }}
         </div>
         <div class="stretched divided very relaxed row">
             <div class="four wide column">
                 {{ navigation(endpoints) }}
             </div>
             <div class="eight wide column">
-                {{ database_info(influx_dbs) }}
+                {% if form %}
+                    {{ edit_database(form, influx_db) }}
+                {% else %}
+                    {{ database_info(influx_dbs) }}
+                {% endif %}
             </div>
         </div>
     </div>

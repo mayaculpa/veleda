@@ -65,6 +65,10 @@ class DevelopmentConfig(Config):
         'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
     RQ_CONNECTION_CLASS = 'fakeredis.FakeStrictRedis'
 
+    INFLUXDB_HOST = 'localhost'
+    INFLUXDB_ADMIN_USER = os.environ.get('INFLUXDB_ADMIN_USER')
+    INFLUXDB_ADMIN_PASSWORD = os.environ.get('INFLUXDB_ADMIN_PASSWORD')
+
     @classmethod
     def init_app(cls, app):
         print('THIS APP IS IN DEBUG MODE. ' +
@@ -88,6 +92,10 @@ class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')  or \
         'sqlite:///' + os.path.join(basedir, 'data.sqlite')
     SSL_DISABLE = (os.environ.get('SSL_DISABLE') or 'True') == 'True'
+
+    INFLUXDB_HOST = 'influxdb'
+    INFLUXDB_ADMIN_USER = os.environ.get('INFLUXDB_ADMIN_USER')
+    INFLUXDB_ADMIN_PASSWORD = os.environ.get('INFLUXDB_ADMIN_PASSWORD')
 
     @classmethod
     def init_app(cls, app):

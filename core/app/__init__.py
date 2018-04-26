@@ -8,6 +8,7 @@ from flask_wtf import CsrfProtect
 from flask_compress import Compress
 from flask_rq2 import RQ
 from flask_oauthlib.provider import OAuth2Provider
+from influxdb import InfluxDBClient
 
 from config import config
 from .assets import app_css, app_js, vendor_css, vendor_js
@@ -20,6 +21,7 @@ csrf = CsrfProtect()
 compress = Compress()
 oauth_provider = OAuth2Provider()
 rq = RQ()
+influx_db_client = InfluxDBClient()
 
 # Set up Flask-Login
 login_manager = LoginManager()
@@ -47,7 +49,7 @@ def create_app(config_name):
     from .utils import register_template_utils
     register_template_utils(app)
 
-    # Set up asset pipeline
+    # Set up and build asset pipeline
     assets_env = Environment(app)
     dirs = ['assets/styles', 'assets/scripts']
     for path in dirs:
@@ -64,6 +66,12 @@ def create_app(config_name):
     vendor_css.build()
     vendor_js.build()
 
+    # Connect to InfluxDB
+    influx_db_client = InfluxDBClient(
+        host=app.config['INFLUXDB_HOST'],
+        username=app.config['INFLUXDB_ADMIN_USER'],
+        password=app.config['INFLUXDB_ADMIN_PASSWORD'])
+
     # Configure SSL if platform supports it
     if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
         from flask.ext.sslify import SSLify
@@ -78,7 +86,7 @@ def create_app(config_name):
 
     from .admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint, url_prefix='/admin')
-    
+
     from .oauth import oauth as oauth_blueprint
     app.register_blueprint(oauth_blueprint, url_prefix='/oauth')
 
