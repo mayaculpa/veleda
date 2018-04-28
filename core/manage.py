@@ -13,7 +13,6 @@ from rq import Connection, Queue, Worker
 from app import create_app, db
 from app.models import Role, User, Client, InfluxDB
 
-
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)
 migrate = Migrate(app, db)

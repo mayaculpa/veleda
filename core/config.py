@@ -42,6 +42,10 @@ class Config:
     GRAFANA_REDIRECT_URI = os.environ.get('GRAFANA_REDIRECT_URI')
     GRAFANA_SCOPES = os.environ.get('GF_AUTH_GENERIC_OAUTH_SCOPES')
 
+    INFLUXDB_HOST = 'localhost'
+    INFLUXDB_ADMIN_USER = os.environ.get('INFLUXDB_ADMIN_USER') or None
+    INFLUXDB_ADMIN_PASSWORD = os.environ.get('INFLUXDB_ADMIN_PASSWORD') or None
+
     RQ_REDIS_URL = os.getenv('REDISTOGO_URL') or 'http://localhost:6379'
 
     # Parse the REDIS_URL to set RQ config variables
@@ -63,10 +67,6 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
     RQ_CONNECTION_CLASS = 'fakeredis.FakeStrictRedis'
-
-    INFLUXDB_HOST = 'localhost'
-    INFLUXDB_ADMIN_USER = os.environ.get('INFLUXDB_ADMIN_USER')
-    INFLUXDB_ADMIN_PASSWORD = os.environ.get('INFLUXDB_ADMIN_PASSWORD')
 
     @classmethod
     def init_app(cls, app):
@@ -93,8 +93,6 @@ class ProductionConfig(Config):
     SSL_DISABLE = (os.environ.get('SSL_DISABLE') or 'True') == 'True'
 
     INFLUXDB_HOST = 'influxdb'
-    INFLUXDB_ADMIN_USER = os.environ.get('INFLUXDB_ADMIN_USER')
-    INFLUXDB_ADMIN_PASSWORD = os.environ.get('INFLUXDB_ADMIN_PASSWORD')
 
     @classmethod
     def init_app(cls, app):

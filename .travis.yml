@@ -16,6 +16,7 @@ install:
 - bash .scripts/install.sh
 
 script:
+- export FLASK_CONFIG=testing
 - python -u core/manage.py test
 
 after_success:
