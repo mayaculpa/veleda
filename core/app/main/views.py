@@ -1,5 +1,4 @@
 from flask import render_template, redirect
-from ..models import EditableHTML
 
 from . import main
 
