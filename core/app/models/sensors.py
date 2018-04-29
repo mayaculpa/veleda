@@ -12,6 +12,14 @@ class InfluxDB(db.Model):
     owner = db.relationship('User', back_populates='influx_dbs')
     missing_owner = db.Column(db.Boolean, default=False)
 
+    def create_database(self, influx_db_client):
+        """Create an InfluxDB"""
+        influx_db_client.create_database(self.name)
+        self.check_and_create_valid_owner(influx_db_client)
+        influx_db_client.grant_privilege('all', self.name, str(self.owner_id))
+        db.session.add(self)
+        db.session.commit()
+
     def drop_database(self, influx_db_client):
         """Drop the influx database"""
         influx_db_client.drop_database(self.name)

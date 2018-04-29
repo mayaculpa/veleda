@@ -2,7 +2,8 @@
 {% import 'macros/form_macros.html' as f %}
 
 {% set endpoints = [
-    ('sensors.index', 'List Databases')
+    ('sensors.index', 'List Databases'),
+    ('sensors.new_influx_db', 'Create database')
 ] %}
 
 {% macro navigation(items) %}
@@ -32,15 +33,16 @@
 
 {% macro edit_database(form, influx_db) %}
     <h3>Operations for <em>{{ influx_db.name }}</em></h3>
-{#
-    {{ f.render_form(form) }}
-#}
     {{ f.begin_form(form, flashes=None) }}
         {% for field in form %}
             {{ field(class='ui button') }}
         {% endfor %}
     {{ f.end_form(form) }}
+{% endmacro %}
 
+{% macro create_database(form) %}
+    <h3>Create a new database</h3>
+    {{ f.render_form(form) }}
 {% endmacro %}
 
 {% set flashes = {
@@ -67,8 +69,10 @@
                 {{ navigation(endpoints) }}
             </div>
             <div class="eight wide column">
-                {% if form %}
+                {% if view == 'edit' %}
                     {{ edit_database(form, influx_db) }}
+                {% elif view == 'new' %}
+                    {{ create_database(form) }}
                 {% else %}
                     {{ database_info(influx_dbs) }}
                 {% endif %}

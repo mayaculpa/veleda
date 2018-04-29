@@ -22,11 +22,6 @@
             {{ render_form_field(field) }}
         {% endfor %}
 
-        {{ form_message(flashes['error'], header='Something went wrong.', class='error') }}
-        {{ form_message(flashes['warning'], header='Check your email.', class='warning') }}
-        {{ form_message(flashes['info'], header='Information', class='info') }}
-        {{ form_message(flashes['success'], header='Success!', class='success') }}
-
         {% for field in form | selectattr('type', 'equalto', 'SubmitField') %}
             {{ render_form_field(field) }}
         {% endfor %}
