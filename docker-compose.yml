@@ -117,8 +117,8 @@ services:
   postgres:
     build: ./postgres
     container_name: postgres
-    ports:
-      - "5432:5432"
+#    ports:
+#      - "5432:5432"
     env_file:
       - 'postgres/secrets.postgres'
     networks:

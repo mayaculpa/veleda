@@ -3,6 +3,11 @@ language: python
 python:
 - '3.5'
 
+sudo: required
+
+services:
+  - docker
+
 cache:
   pip: true
   directories:
@@ -16,8 +21,9 @@ install:
 - bash .scripts/install.sh
 
 script:
-- export FLASK_CONFIG=testing
-- python -u core/manage.py test
+- grep -q INTEGRATION_TESTS=True core/secrets.core
+- ./start.sh
+- docker exec core python manage.py test
 
 after_success:
 - bash .scripts/deploy.sh

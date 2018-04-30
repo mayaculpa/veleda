@@ -57,6 +57,11 @@ class Config:
     RQ_DEFAULT_PASSWORD = url.password
     RQ_DEFAULT_DB = 0
 
+    if(os.environ.get('INTEGRATION_TESTS') == 'True'):
+        INTEGRATION_TESTS = True
+    else:
+        INTEGRATION_TESTS = False
+
     @staticmethod
     def init_app(app):
         pass

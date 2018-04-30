@@ -21,6 +21,7 @@ gunicorn_error_logger = logging.getLogger('gunicorn.error')
 app.logger.handlers.extend(gunicorn_error_logger.handlers)
 app.logger.setLevel(logging.INFO)
 
+
 def make_shell_context():
     return dict(app=app, db=db, User=User, Role=Role)
 
@@ -94,7 +95,8 @@ def setup_general():
             print('Added administrator {}'.format(user.full_name()))
 
     # Create a client for the Grafana instance
-    grafana_client = Client.query.filter_by(client_id=Config.GRAFANA_CLIENT_ID).first()
+    grafana_client = Client.query.filter_by(
+        client_id=Config.GRAFANA_CLIENT_ID).first()
     if grafana_client is None:
         client = Client(
             name='grafana',
@@ -107,7 +109,8 @@ def setup_general():
         db.session.commit()
         print('Added Grafana Oauth, Client ID: {}'.format(client.client_id))
     else:
-        print('Existing Grafana Oauth Client ID: {}'.format(grafana_client.client_id))
+        print('Existing Grafana Oauth Client ID: {}'.format(
+            grafana_client.client_id))
 
     influx_db = InfluxDB.query.order_by(InfluxDB.id.asc()).first()
     if influx_db is None:

@@ -3,6 +3,12 @@
 # exit with nonzero exit code if anything fails
 set -e
 
+# Clear default configurations
+while IFS= read -r var
+do
+  rm "$var"
+done < './scripts/configuration-files.txt'
+
 # Add the SSH login key
 chmod 600 veleda-deploy-key
 mv veleda-deploy-key ~/.ssh/id_rsa

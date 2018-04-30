@@ -30,14 +30,19 @@ The command to create an HTML report of the test coverage:
     coverage run --source=app manage.py test
     coverage html
 
+Integration tests are also available that test InfluxDB. To run them add `INTEGRATION_TESTS=True` to `secrets.core`
+
 ## Local Development
 
-Set `FLASK_CONFIG` to `development` and extend the secrets file with:
+Set `FLASK_CONFIG` to `development` and extend the secrets file with the following. The *GF* prefixed variables are used directly by Grafana. The *GRAFANA* prefix is used by the *core* component to interact with Grafana. The prefix *INFLUXDB* denotes variables used by InfluxDB.
 
     GF_AUTH_GENERIC_OAUTH_CLIENT_ID=ab12
     GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=secret
     GRAFANA_REDIRECT_URI=http://localhost:3000/login/generic_oauth
-    GRAFANA_SCOPES=email
+    GF_AUTH_GENERIC_OAUTH_SCOPES=email
+
+    INFLUXDB_ADMIN_USER=admin
+    INFLUXDB_ADMIN_PASSWORD=SuperS3cretPassword
 
 Create a development database (SQLite) with:
 

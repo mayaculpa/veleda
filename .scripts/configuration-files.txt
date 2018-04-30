@@ -1,0 +1,7 @@
+core/dns.core
+grafana/dns.grafana
+grafana/secrets.grafana
+influxdb/secrets.influxdb
+nginx/dns.nginx
+postgres/secrets.postgres
+postgres/web-init.sql
