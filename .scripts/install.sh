@@ -15,4 +15,4 @@ echo 'FLASK_CONFIG=production' >> core/secrets.core
 while IFS= read -r var
 do
   cp "$var"".example" "$var"
-done < './scripts/configuration-files.txt'
+done < './.scripts/configuration-files.txt'

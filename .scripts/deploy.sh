@@ -7,7 +7,7 @@ set -e
 while IFS= read -r var
 do
   rm "$var"
-done < './scripts/configuration-files.txt'
+done < './.scripts/configuration-files.txt'
 
 # Add the SSH login key
 chmod 600 veleda-deploy-key
