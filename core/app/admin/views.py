@@ -5,9 +5,8 @@ from .forms import (ChangeAccountTypeForm, ChangeUserEmailForm, InviteUserForm,
                     NewUserForm)
 from . import admin
 from ..models import db
-from .. import rq
+from ..services import rq, send_email
 from ..decorators import admin_required
-from ..email import send_email
 from ..models import Role, User, EditableHTML
 
 

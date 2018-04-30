@@ -9,7 +9,6 @@ influx_db_client = InfluxDBClient()
 
 def init_app(app):
     # Connect to InfluxDB
-    print("configuring influx")
     influx_db_client.close()
     influx_db_client.__init__(
         host=app.config['INFLUXDB_HOST'],

@@ -6,7 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-# from . import user, miscellaneous, oauth, sensors
 from .user import *  # noqa
 from .miscellaneous import *  # noqa
 from .oauth import * # noqa

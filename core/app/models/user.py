@@ -5,7 +5,7 @@ from itsdangerous import BadSignature, SignatureExpired
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db
-from .. import login_manager
+from ..services import login_manager
 
 
 class Permission:

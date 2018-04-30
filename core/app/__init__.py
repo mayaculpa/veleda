@@ -1,28 +1,11 @@
 import os
 from flask import Flask
-from flask_mail import Mail
-from flask_login import LoginManager
 from flask_assets import Environment
-from flask_wtf import CsrfProtect
-from flask_compress import Compress
-from flask_rq2 import RQ
-from flask_oauthlib.provider import OAuth2Provider
 
 from config import config
 from .assets import app_css, app_js, vendor_css, vendor_js
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-
-mail = Mail()
-csrf = CsrfProtect()
-compress = Compress()
-oauth_provider = OAuth2Provider()
-rq = RQ()
-
-# Set up Flask-Login
-login_manager = LoginManager()
-login_manager.session_protection = 'strong'
-login_manager.login_view = 'account.login'
 
 
 def create_app(config_name):
@@ -32,16 +15,8 @@ def create_app(config_name):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     config[config_name].init_app(app)
-
-    # Set up extensions
-    mail.init_app(app)
-    login_manager.init_app(app)
-    csrf.init_app(app)
-    compress.init_app(app)
-    oauth_provider.init_app(app)
-    rq.init_app(app)
-
     models.init_app(app)
+    services.init_app(app)
 
     # Register Jinja template functions
     from .utils import register_template_utils

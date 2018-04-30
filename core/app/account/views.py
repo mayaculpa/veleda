@@ -4,8 +4,7 @@ from flask_login import (current_user, login_required, login_user,
 
 from . import account
 from ..models import db
-from .. import rq
-from ..email import send_email
+from ..services import rq, send_email
 from ..models import User
 from .forms import (ChangeEmailForm, ChangePasswordForm, CreatePasswordForm,
                     LoginForm, RegistrationForm, RequestResetPasswordForm,

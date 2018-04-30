@@ -3,8 +3,8 @@ import fakeredis
 
 from flask import url_for
 
-from app import create_app, db
-from app.models import Permission, Role, User
+from app import create_app
+from app.models import db, Permission, Role, User
 
 class UserViewTestCase(unittest.TestCase):
     def setUp(self):
@@ -45,7 +45,7 @@ class UserViewTestCase(unittest.TestCase):
             email=username,
             password=password
             ), follow_redirects=True)
-    
+
     def test_valid_login(self):
         user = User.query.first()
         rv = self.login(user.email, 'password')
@@ -60,7 +60,7 @@ class UserViewTestCase(unittest.TestCase):
     def test_get_registration(self):
         rv = self.client.get(url_for('account.register'))
         self.assertIn(str.encode('Create an account'), rv.data)
-    
+
     def test_create_registration(self):
         rv = self.client.post(url_for('account.register'),
                 data=dict(

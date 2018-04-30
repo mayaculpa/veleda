@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from faker import Faker
 from flask import url_for
 
-from app import create_app, db
-from app.models import Client, Grant, Token, Permission, Role, User
+from app import create_app
+from app.models import db, Client, Grant, Token, Permission, Role, User
 
 
 def to_unicode(text):
@@ -44,9 +44,9 @@ class OauthTestCase(unittest.TestCase):
         general_role = Role(name="User", index="main", permissions=Permission.GENERAL)
         db.session.add(general_role)
         db.session.commit()
-        
+
         User.generate_fake(1)
-        
+
         oauth_client = Client(
             name='ios',
             client_id='code-client',
@@ -96,7 +96,7 @@ class OauthTestCase(unittest.TestCase):
         self.login_default()
         rv = self.client.get(url_for('oauth.authorize'))
         assert 'client_id' in rv.location
-        
+
         rv = self.client.get(url_for('oauth.authorize') + '?client_id=no')
         assert 'client_id' in rv.location
 
