@@ -4,7 +4,6 @@ from flask_login import login_required, current_user
 from . import sensors
 from .forms import EditInfluxDBForm, NewInfluxDBForm
 from ..models import InfluxDB
-from .. import influx_db_client
 
 
 @sensors.route('/influx_db')
@@ -23,11 +22,11 @@ def edit_influx_db(influx_db_id):
     if form.validate_on_submit():
         # Check which button was pressed
         if form.reset.data:
-            influx_db.reset_database(influx_db_client)
+            influx_db.reset_database()
             flash('Database <em>{}</em> successfully reset'.format(influx_db.name),
                   'form-success')
         if form.delete.data:
-            influx_db.drop_database(influx_db_client)
+            influx_db.drop_database()
             flash('Database <em>{}</em> was successfully deleted'.format(influx_db.name),
                   'form-success')
             return redirect(url_for('sensors.index'))
@@ -44,7 +43,7 @@ def new_influx_db():
     form = NewInfluxDBForm()
     if form.validate_on_submit():
         influx_db = InfluxDB(name=form.name.data, owner_id=current_user.id)
-        influx_db.create_database(influx_db_client)
+        influx_db.create_database()
         flash('Database <em>{}</em> successfully created'.format(influx_db.name),
               'form-success')
         return redirect(url_for('sensors.index'))

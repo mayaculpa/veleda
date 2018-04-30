@@ -5,8 +5,7 @@ from wtforms.fields import PasswordField, StringField, SubmitField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import Email, EqualTo, InputRequired, Length
 
-from .. import db
-from ..models import Role, User
+from ..models import db, Role, User
 
 
 class ChangeUserEmailForm(Form):

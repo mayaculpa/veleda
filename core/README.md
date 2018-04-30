@@ -47,6 +47,7 @@ Set `FLASK_CONFIG` to `development` and extend the secrets file with the followi
 Create a development database (SQLite) with:
 
     python -u manage.py recreate_db
+    python -u manage.py setup_dev
 
 Then start the development server. Changes to the code are automatically reloaded
 

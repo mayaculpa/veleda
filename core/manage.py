@@ -10,8 +10,8 @@ from flask_script import Manager, Shell
 from redis import Redis
 from rq import Connection, Queue, Worker
 
-from app import create_app, db
-from app.models import Role, User, Client, InfluxDB
+from app import create_app
+from app.models import db, Role, User, Client, InfluxDB
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)

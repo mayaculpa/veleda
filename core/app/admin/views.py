@@ -4,7 +4,7 @@ from flask_login import current_user, login_required
 from .forms import (ChangeAccountTypeForm, ChangeUserEmailForm, InviteUserForm,
                     NewUserForm)
 from . import admin
-from .. import db
+from ..models import db
 from .. import rq
 from ..decorators import admin_required
 from ..email import send_email

@@ -1,14 +1,12 @@
 import os
 from flask import Flask
 from flask_mail import Mail
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_assets import Environment
 from flask_wtf import CsrfProtect
 from flask_compress import Compress
 from flask_rq2 import RQ
 from flask_oauthlib.provider import OAuth2Provider
-from influxdb import InfluxDBClient
 
 from config import config
 from .assets import app_css, app_js, vendor_css, vendor_js
@@ -16,12 +14,10 @@ from .assets import app_css, app_js, vendor_css, vendor_js
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 mail = Mail()
-db = SQLAlchemy()
 csrf = CsrfProtect()
 compress = Compress()
 oauth_provider = OAuth2Provider()
 rq = RQ()
-influx_db_client = InfluxDBClient()
 
 # Set up Flask-Login
 login_manager = LoginManager()
@@ -39,12 +35,13 @@ def create_app(config_name):
 
     # Set up extensions
     mail.init_app(app)
-    db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
     compress.init_app(app)
     oauth_provider.init_app(app)
     rq.init_app(app)
+
+    models.init_app(app)
 
     # Register Jinja template functions
     from .utils import register_template_utils
@@ -66,13 +63,6 @@ def create_app(config_name):
     app_js.build()
     vendor_css.build()
     vendor_js.build()
-
-    # Connect to InfluxDB
-    influx_db_client.close()
-    influx_db_client.__init__(
-        host=app.config['INFLUXDB_HOST'],
-        username=app.config['INFLUXDB_ADMIN_USER'],
-        password=app.config['INFLUXDB_ADMIN_PASSWORD'])
 
     # Configure SSL if platform supports it
     if not app.debug and not app.testing and not app.config['SSL_DISABLE']:

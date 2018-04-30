@@ -3,8 +3,8 @@ from flask import request, render_template, jsonify
 from flask_login import current_user, login_required
 
 from . import oauth
-from .. import oauth_provider, db, csrf
-from ..models import Client, Grant, Token
+from .. import oauth_provider, csrf
+from ..models import db, Client, Grant, Token
 from .forms import ConfirmForm
 
 
