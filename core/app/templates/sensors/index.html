@@ -3,7 +3,8 @@
 
 {% set endpoints = [
     ('sensors.index', 'List Databases'),
-    ('sensors.new_influx_db', 'Create database')
+    ('sensors.new_influx_db', 'Create database'),
+    ('sensors.access', 'Access')
 ] %}
 
 {% macro navigation(items) %}
@@ -45,6 +46,17 @@
     {{ f.render_form(form) }}
 {% endmacro %}
 
+{% macro database_access(form, user) %}
+    <h3>View and update access to databases</h3>
+    <p>Username: {{ user.id }}</p>
+    <p>Access key: {{user.influx_db_access_key }}</p>
+    {{ f.begin_form(form, flashes=None) }}
+        {% for field in form %}
+            {{ field(class='negative ui button') }}
+        {% endfor %}
+    {{ f.end_form(form) }}
+{% endmacro %}
+
 {% set flashes = {
     'error':   get_flashed_messages(category_filter=['form-error']),
     'warning': get_flashed_messages(category_filter=['form-check-email']),
@@ -73,6 +85,8 @@
                     {{ edit_database(form, influx_db) }}
                 {% elif view == 'new' %}
                     {{ create_database(form) }}
+                {% elif view == 'access' %}
+                    {{ database_access(form, user) }}
                 {% else %}
                     {{ database_info(influx_dbs) }}
                 {% endif %}

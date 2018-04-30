@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for
 from flask_login import login_required, current_user
 
 from . import sensors
-from .forms import EditInfluxDBForm, NewInfluxDBForm
+from .forms import EditInfluxDBForm, NewInfluxDBForm, UpdateInfluxDBAccessForm
 from ..models import InfluxDB
 
 
@@ -48,3 +48,15 @@ def new_influx_db():
               'form-success')
         return redirect(url_for('sensors.index'))
     return render_template('sensors/index.html', form=form, view='new')
+
+
+@sensors.route('/influx_db/access', methods=['GET', 'POST'])
+@login_required
+def access():
+    """Show and update user access to InfluxDB"""
+    form = UpdateInfluxDBAccessForm()
+    if form.validate_on_submit():
+        if form.update.data:
+            current_user.reset_influx_db_access_key()
+            flash('Database access key successully reset', 'form-success')
+    return render_template('sensors/index.html', form=form, user=current_user, view='access')

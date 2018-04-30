@@ -12,3 +12,6 @@ class NewInfluxDBForm(Form):
     name = StringField('Database name', validators=[Length(min=1, max=64, message="Name must be between 1 and 64 characters"),
                                                     Regexp('^[a-zA-Z0-9_-]*$', message="Name may only contain letters, numbers, '-' and '_'")])
     submit = SubmitField('Create')
+
+class UpdateInfluxDBAccessForm(Form):
+    update = SubmitField('Reset Access Key')

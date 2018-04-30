@@ -5,6 +5,7 @@ from itsdangerous import BadSignature, SignatureExpired
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db
+from .sensors import InfluxDB
 from ..services import login_manager
 
 
@@ -152,6 +153,12 @@ class User(UserMixin, db.Model):
         db.session.add(self)
         db.session.commit()
         return True
+
+    def reset_influx_db_access_key(self):
+        """Generate a new InfluxDB access key"""
+        self.influx_db_access_key = InfluxDB.generate_access_key()
+        db.session.add(self)
+        db.session.commit()
 
     @staticmethod
     def generate_fake(count=100, **kwargs):

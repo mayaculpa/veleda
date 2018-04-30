@@ -53,10 +53,15 @@ class InfluxDB(db.Model):
             db.session.commit()
             return False
         if(self.owner.influx_db_access_key is None):
-            access_key = ''.join(random.SystemRandom().choice(
-                string.ascii_uppercase + string.digits) for _ in range(20))
+            access_key = generate_access_key()
             influx_db_client.set_user_password(str(self.owner_id), access_key)
             self.owner.influx_db_access_key = access_key
             db.session.add(self.owner)
             db.session.commit()
         return True
+
+    @staticmethod
+    def generate_access_key():
+        access_key = ''.join(random.SystemRandom().choice(
+            string.ascii_uppercase + string.digits) for _ in range(20))
+        return access_key
