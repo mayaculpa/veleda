@@ -85,6 +85,7 @@ services:
       - 'core/secrets.core'
       - 'grafana/env.grafana'
       - 'grafana/secrets.grafana'
+      - 'influxdb/secrets.influxdb'
     networks:
       - backend
       - frontend
@@ -132,7 +133,7 @@ services:
       - backend
 
   influxdb:
-    image: influxdb:latest
+    image: influxdb:1.5
     container_name: influxdb
     ports:
       - "8086:8086"

@@ -61,6 +61,7 @@
 {% macro form_message(messages, header=none, class='') %}
     {% if messages %}
         <div class="ui {{ class }} message">
+            <i class="close icon"></i>
             {% if header is not none %}
                 <div class="header">{{ header }}</div>
             {% endif %}

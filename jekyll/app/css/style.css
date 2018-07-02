@@ -273,6 +273,7 @@
 			.image.featured img {
 				display: block;
 				width: 100%;
+				box-shadow: 5px 5px 10px 1px #1b1b1b93;
 			}
 
 /* Icon */

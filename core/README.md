@@ -6,7 +6,7 @@ The web app is based on the Flask framework and is responisble for the user auth
 
 Local install:
 
-    virtualenv venv
+    virtualenv -p python3 venv
     source venv/bin/activate
     pip install --no-cache-dir -r requirements.txt
 
@@ -57,7 +57,7 @@ Then, to create a new migration use:
 
     python manage.py db migrate
 
-This will create a diff from the previous database in migrations/versions.
+This will create a diff from the previous database in migrations/versions. Note that SQLite is *not* supported. For development that does not require schema changes, i.e., no changes or new models, SQLite may be used.
 
 ## Options
 
@@ -65,6 +65,25 @@ To start the web server with a custom port and host binding:
 
     python -u manage.py runserver -p 8001 -h 0.0.0.0
 
+## Upgrading Semantic-UI
+
+The [Semantic-UI][1] is used for web icons and flags. For a list of all available icons, visit their [icon page][2]. To upgrade Semantic-UI, download the [latest pre-compiled artefact][3]. Extract the following files to their appropriate locations:
+
+- `semantic.min.js` to `app/assets/scripts/vendor`
+- `semantic.css` to `app/assets/styles/vendor`
+- `themes/default/assets/images/` to `app/static/images/vendor/semantic`
+- `themes/default/assets/fonts/` to `app/static/fonts/vendor/semantic`
+
+Then, in `semantic.css` replace:
+
+- `./themes/default/assets/images` with `../images/vendor/semantic/`
+- `./themes/default/assets/fonts/` with `../fonts/vendor/semantic/`
+
 ## Recommended Development Process
 
 The secret configuration differs when using local and Docker configurations.
+
+
+[1]: https://semantic-ui.com/
+[2]: https://semantic-ui.com/elements/icon.html
+[3]: https://github.com/Semantic-Org/Semantic-UI-CSS/archive/master.zip
