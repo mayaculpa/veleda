@@ -357,7 +357,25 @@
 
 				.icon.circle.fa-dribbble:hover {
 					background: #df93b8;
-				}
+        }
+
+      .icon.circle.fa-instagram {
+        background: #e48497;
+        color: white;
+      }
+
+        .icon.circle.fa-instagram:hover {
+          background: #fd93a8;
+        }
+
+      .icon.circle.fa-home {
+        background: #367ab3;
+        color: white;
+      }
+
+        .icon.circle.fa-home:hover {
+          background: #3e8bcd;
+        }
 
 		.icon.featured {
 			cursor: default;
