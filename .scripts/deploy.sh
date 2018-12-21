@@ -16,20 +16,24 @@ echo '|1|iu4b5h1OW+OpP8M796mUJFoVEhI=|fwUJjq4g4CBx3zqjf6k0sprcTKI= ssh-rsa AAAAB
 
 # Select the remote to push to depending on the branch
 if [ $TRAVIS_BRANCH != 'production' ] ; then
-    echo "Pushing to staging"
+    echo "Pushing to staging: Merge of $TRAVIS_PULL_REQUEST_BRANCH into $TRAVIS_BRANCH"
     export REMOTE="staging.$BASE_URL"
 else
-    echo "Pushing to production"
+    echo "Pushing to production: Merge of $TRAVIS_PULL_REQUEST_BRANCH into $TRAVIS_BRANCH"
     export REMOTE="$BASE_URL"
 fi
 
 # Push to the remote server
 git remote add deploy "deploy@$REMOTE:/home/deploy/repo/"
-git push -f deploy $TRAVIS_BRANCH
+echo "Creating new branch $TRAVIS_PULL_REQUEST_BRANCH" 
+git checkout -b $TRAVIS_PULL_REQUEST_BRANCH
+echo "Pushing branch to server"
+git push -f deploy $TRAVIS_PULL_REQUEST_BRANCH
 
 # Unpack and update the Docker services
 ssh -t deploy@"$REMOTE" "\
     mkdir -p $REPO_NAME &&
-    git --work-tree=./$REPO_NAME --git-dir=./repo checkout -f $TRAVIS_BRANCH &&
+    git --work-tree=./$REPO_NAME --git-dir=./repo checkout -f $TRAVIS_PULL_REQUEST_BRANCH &&
     cd $REPO_NAME &&
     ./start.sh"
+
