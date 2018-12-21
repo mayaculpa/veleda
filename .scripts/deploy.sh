@@ -11,8 +11,8 @@ chmod 600 flowleaf-deploy-key
 mv flowleaf-deploy-key ~/.ssh/id_rsa
 
 # Register the FlowLeaf staging and production server SSH keys
-echo '|1|BqdQKtUnA/AtCT/p2M7wgMq3wlY=|lH39cRtAE64wd6EG3ry2J9ewXic= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBH3antqwy3D4NVVfHQX3SQc/g4wl/SAVC9w9QEry7hhQmB0SJIprwNAq8Hy2DzVCS7kTj/q7fCiiL7oAznrax+0=' >> $HOME/.ssh/known_hosts
-echo '|1|+Z7oOsZ+zdL6u8o8VSWp+bRzd2g=|XMw2HyJIHoekOYlJYw1n75plL2E= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCJ/fa/mr577/qCuRXqUNccfmhpUtmi46LSyE7nDbOgxv8kZFs7yQ/sh6TM5npR+ZIbe9I0qmdvA+cE1QfvN21E=' >> $HOME/.ssh/known_hosts
+echo '|1|v2IIOykLxZAuYvftBc3fyoZKQMY=|pYT/ExmN20Z9rkIyFSoo+NBm4lY= ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC1k/w9ySC0cic8PnrxXxW3ceo/Mm9Euja8NyHtQggjFXbZY0GH9pY155BozKOTq5WaeuTBzU5QsLsVLUAxrEKXwsie4AxiCYqlChxNaVxxQMEyBcuqcy3AMocDudNEGz9hOWfEU6VMMf6HHiZsExqBy1s5pEfxmfQvOOkRmcHRmv1KSuQ0+TOqPXRn49BwjGYff0URhHn1rFlcEDAvGjamwXqMNm0ACjYK8JcEAFzSkWHazL/nw9q7ZPWFAVQIMUAeh3d3/79HuVae9T3IIVRccpEbMnUK4M9sc48SaJXUxvylWXPIkJ7Xjc7ibsEWxQt/kUxOVtvs9YhGwdmec1ID' >> $HOME/.ssh/known_hosts
+echo '|1|iu4b5h1OW+OpP8M796mUJFoVEhI=|fwUJjq4g4CBx3zqjf6k0sprcTKI= ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC4zVUlbnMAdLLwfhlbnSRcFXwr08iFdov/xNAaP6ErBFdPjZVUOpUgC8MVuEotgRgi3QbggSJqhhD5v965bIECi8KfYX8socrNCMOb7lNuW/BwkkKQykbyvzSLxYgixqjgDgNl6jsRAcqOIiTFcifu/oEL8GFO5/Fu10AMMFsQzGWsq9pV/SBHn2uehqNXNjltj7RNpd0XSmCzX7zQYS2e+3eSwRp6HupzOvIXvJpyXG8fz5jJRHXHXu3Z471djO7S+NEKzfNobLV0d7atBSr7jVdOv5g9whrqfoygFLrvKZe4CRx2QM1pwlYT2ZZV3huKOmoJ577HP3uv2C+KY1Bz' >> $HOME/.ssh/known_hosts
 
 # Select the remote to push to depending on the branch
 if [ $TRAVIS_BRANCH != 'production' ] ; then
