@@ -32,8 +32,8 @@ fi
 # Push to the remote server
 git remote add deploy "deploy@$REMOTE:/home/deploy/repo/"
 
-# Required when pushing a feature branch
-if [[ $(git rev-parse --abbrev-ref HEAD) == 'HEAD' ]]; then
+# Required when deploying a feature branch
+if ! $(git show-ref -q --heads $TRAVIS_PULL_REQUEST_BRANCH); then
   echo "Creating new branch $TRAVIS_PULL_REQUEST_BRANCH" 
   git checkout -b $TRAVIS_PULL_REQUEST_BRANCH
 fi
