@@ -25,8 +25,8 @@ fi
 
 # Push to the remote server
 git remote add deploy "deploy@$REMOTE:/home/deploy/repo/"
-echo "Creating new branch $TRAVIS_PULL_REQUEST_BRANCH" 
-git checkout -b $TRAVIS_PULL_REQUEST_BRANCH
+#echo "Creating new branch $TRAVIS_PULL_REQUEST_BRANCH" 
+#git checkout -b $TRAVIS_PULL_REQUEST_BRANCH
 echo "Pushing branch to server"
 git push -f deploy $TRAVIS_PULL_REQUEST_BRANCH
 
