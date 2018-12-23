@@ -9,7 +9,7 @@ croniter==0.3.25
 cssmin==0.2.0
 Faker==0.7.7
 fakeredis==0.10.1
-Flask==0.12
+Flask==0.12.3
 Flask-Assets==0.12
 Flask-Compress==1.4.0
 Flask-Login==0.4.0
@@ -46,7 +46,7 @@ rq==0.10.0
 rq-scheduler==0.8.3
 six==1.10.0
 SQLAlchemy==1.1.5
-urllib3==1.22
+urllib3==1.23
 webassets==0.12.1
 Werkzeug==0.11.15
 WTForms==2.1
