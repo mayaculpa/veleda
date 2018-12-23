@@ -1,12 +1,12 @@
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-# Prefix 'flow-leaf-server' has to match the parent deploy folder on the server
+# Prefix 'flowleafserver' has to match the parent deploy folder on the server. Hyphens are removed from filenames
 echo "${bold}flow-leaf-server: Creating data volumes${normal}"
-docker volume create flow-leaf-server_influxdb-data
-docker volume create flow-leaf-server_grafana-data
-docker volume create flow-leaf-server_postgres-data
-docker volume create flow-leaf-server_jekyll-data
+docker volume create flowleafserver_influxdb-data
+docker volume create flowleafserver_grafana-data
+docker volume create flowleafserver_postgres-data
+docker volume create flowleafserver_jekyll-data
 
 echo "${bold}flow-leaf-server: Building Jekyll site${normal}"
 docker run --rm \
@@ -18,7 +18,7 @@ docker run --rm \
 echo "${bold}flow-leaf-server: Copying site to jekyll-data volume${normal}"
 docker run \
   --name helper \
-  --volume="flow-leaf-server_jekyll-data:/web" \
+  --volume="flowleafserver_jekyll-data:/web" \
   -it busybox \
   true
 docker cp jekyll/web/. helper:/web
