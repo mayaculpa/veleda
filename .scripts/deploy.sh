@@ -6,6 +6,12 @@ BASE_URL=flowleaf.co
 # exit with nonzero exit code if anything fails
 set -e
 
+# Only deploy merge request builds
+if [[ $TRAVIS_PULL_REQUEST == "false" ]]; then
+  echo "Aborting deploy as not a pull request"
+  exit 0;
+fi
+
 # Add the SSH login key
 chmod 600 flowleaf-deploy-key
 mv flowleaf-deploy-key ~/.ssh/id_rsa
@@ -25,8 +31,13 @@ fi
 
 # Push to the remote server
 git remote add deploy "deploy@$REMOTE:/home/deploy/repo/"
-#echo "Creating new branch $TRAVIS_PULL_REQUEST_BRANCH" 
-#git checkout -b $TRAVIS_PULL_REQUEST_BRANCH
+
+# Required when pushing a feature branch
+if [[ $(git rev-parse --abbrev-ref HEAD) == 'HEAD' ]]; then
+  echo "Creating new branch $TRAVIS_PULL_REQUEST_BRANCH" 
+  git checkout -b $TRAVIS_PULL_REQUEST_BRANCH
+fi
+
 echo "Pushing branch to server"
 git push -f deploy $TRAVIS_PULL_REQUEST_BRANCH
 
