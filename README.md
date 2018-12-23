@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/mayaculpa/veleda.svg?branch=master)](https://travis-ci.org/mayaculpa/veleda)
+[![Build Status](https://travis-ci.org/FlowLeaf/flow-leaf-server.svg?branch=master)](https://travis-ci.org/FlowLeaf/flow-leaf-server)
 
-# Veleda
+# FlowLeaf Server
 
 A data analytics platform for hydroponic setups. It visualizes and allows analysis of data covering the growth aspects of hydroponics. In combination with the [HAPI project][1], it creates a system that covers the data collection and automation to data storage and analysis.
 
