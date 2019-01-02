@@ -10,8 +10,8 @@ def index():
 
 @main.route('/about')
 def about():
-    return redirect('https://veleda.io')
+    return redirect('https://flowleaf.co')
 
 @main.route('/data')
 def data():
-    return redirect('https://data.veleda.io')
+    return redirect('https://data.flowleaf.co')

@@ -1,4 +1,4 @@
-FROM python:3.5.2
+FROM python:3.6.6
 MAINTAINER Moritz Ulmer <moritz.ulmer@posteo.de>
 
 # Install packages

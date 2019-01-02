@@ -1,7 +1,7 @@
 language: python
 
 python:
-- '3.5'
+- '3.6'
 
 cache:
   pip: true
@@ -9,8 +9,8 @@ cache:
     - core/app/static/.webassets-cache
 
 before_install:
-- openssl aes-256-cbc -K $encrypted_c06b03728789_key -iv $encrypted_c06b03728789_iv
-  -in veleda-deploy-key.enc -out veleda-deploy-key -d
+- openssl aes-256-cbc -K $encrypted_22a80512e0f7_key -iv $encrypted_22a80512e0f7_iv
+  -in flowleaf-deploy-key.enc -out flowleaf-deploy-key -d
 
 install:
 - bash .scripts/install.sh
