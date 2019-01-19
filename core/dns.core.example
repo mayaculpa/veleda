@@ -1,4 +1,0 @@
-VIRTUAL_HOST=core.example.com
-LETSENCRYPT_HOST=core.example.com
-LETSENCRYPT_EMAIL=admin@example.com
-LETSENCRYPT_TEST=true
