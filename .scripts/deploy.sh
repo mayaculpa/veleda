@@ -33,18 +33,18 @@ fi
 git remote add deploy "deploy@$REMOTE:/home/deploy/repo/"
 
 # Required when deploying a feature branch
-if ! $(git show-ref -q --heads $TRAVIS_PULL_REQUEST_BRANCH); then
-  echo "Creating new branch $TRAVIS_PULL_REQUEST_BRANCH" 
-  git checkout -b $TRAVIS_PULL_REQUEST_BRANCH
-fi
+#if ! $(git show-ref -q --heads $TRAVIS_PULL_REQUEST_BRANCH); then
+#  echo "Creating new branch $TRAVIS_PULL_REQUEST_BRANCH" 
+#  git checkout -b $TRAVIS_PULL_REQUEST_BRANCH
+#fi
 
 echo "Pushing branch to server"
-git push -f deploy $TRAVIS_PULL_REQUEST_BRANCH
+git push -f deploy $TRAVIS_BRANCH
 
 # Unpack and update the Docker services
 ssh -t deploy@"$REMOTE" "\
     mkdir -p $REPO_NAME &&
-    git --work-tree=./$REPO_NAME --git-dir=./repo checkout -f $TRAVIS_PULL_REQUEST_BRANCH &&
+    git --work-tree=./$REPO_NAME --git-dir=./repo checkout -f $TRAVIS_BRANCH &&
     cd $REPO_NAME &&
     ./start.sh"
 

@@ -98,10 +98,10 @@ class ProductionConfig(Config):
     def init_app(cls, app):
         Config.init_app(app)
         assert os.environ.get('SECRET_KEY'), 'SECRET_KEY IS NOT SET!'
-        assert (cls.GRAFANA_CLIENT_ID and cls.GRAFANA_CLIENT_SECRET and
-                cls.GRAFANA_REDIRECT_URI and cls.GRAFANA_SCOPES), (
-            "Missing Grafana OAuth variables. Check that Docker loads "
-            "grafana/secrets.grafana and grafana/env.grafana")
+        assert (cls.GRAFANA_CLIENT_ID), ("Missing GRAFANA_CLIENT_ID")
+        assert (cls.GRAFANA_CLIENT_SECRET), ("Missing GRAFANA_CLIENT_SECRET")
+        assert (cls.GRAFANA_REDIRECT_URI), ("Missing GRAFANA_REDIRECT_URI") 
+        assert (cls.GRAFANA_SCOPES), ("Missing GRAFANA_SCOPES")
 
 
 class HerokuConfig(ProductionConfig):
