@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from oauth2_provider.views.generic import ScopedProtectedResourceView
 
 def index(request):

@@ -1,3 +1,5 @@
+core_old
+
 # Secret environment variables
 secrets.*
 !secrets.*.example
@@ -15,6 +17,7 @@ instance/
 __pycache__/
 *.pyc
 data-test.sqlite
+db.sqlite3
 .coverage
 htmlcov
 core/app/static/webassets-external
