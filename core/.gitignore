@@ -1,0 +1,12 @@
+# Python cache
+venv
+__pycache__/
+*.pyc
+
+# Django temporary files
+db.sqlite3
+
+# Semantic UI
+node_modules
+semantic
+static/semantic

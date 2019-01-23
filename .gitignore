@@ -11,25 +11,6 @@ dns.*
 # Jekyll
 jekyll/web
 
-# Python flask 
-venv
-instance/
-__pycache__/
-*.pyc
-data-test.sqlite
-db.sqlite3
-.coverage
-htmlcov
-core/app/static/webassets-external
-core/app/static/scripts
-core/app/static/styles
-core/app/static/.webassets-cache
-data-dev.sqlite
-# Core/Semantic UI
-node_modules
-core/semantic
-core/static/semantic
-
 # Postgres
 postgres/web-init.sql
 
