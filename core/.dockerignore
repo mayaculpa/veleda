@@ -1,6 +1,10 @@
 secrets.core
-venv
 dns.core
+
+venv
 **/*.pyc
+
+node_modules
+semantic
 
 .vscode

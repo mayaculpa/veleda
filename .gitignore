@@ -25,6 +25,10 @@ core/app/static/scripts
 core/app/static/styles
 core/app/static/.webassets-cache
 data-dev.sqlite
+# Core/Semantic UI
+node_modules
+core/semantic
+core/static/semantic
 
 # Postgres
 postgres/web-init.sql

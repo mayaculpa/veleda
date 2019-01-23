@@ -10,6 +10,8 @@ A data analytics platform for hydroponic setups. It visualizes and allows analys
 
 - **Docker:** available for [Ubuntu][2], [Mac][3], [Windows][4] and other [Linux flavors][5]. Note that currently only Ubuntu is supported.
 - **Docker Compose:** the official [installation guide][6]
+- **Python:** Version 3.5 and above (Django in core)
+- **NPM and NodeJS:** Used to build Django's css/js ([Semantic UI][8])
 - **Secrets:** Secrets have to be provided for the grafana, influxdb, postgres and web services. Templates are provided and *should* be modified
 
 For detailed instructions see the [server setup guide][7].
@@ -51,3 +53,4 @@ The data is stored in volumes. List all active volumes with `docker volume ls`. 
 [5]: https://docs.docker.com/install/
 [6]: https://docs.docker.com/compose/install/#install-compose
 [7]: server_setup.md
+[8]: https://semantic-ui.com/introduction/getting-started.html#installing
