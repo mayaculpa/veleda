@@ -18,22 +18,26 @@ from django.views.generic.base import RedirectView
 
 from django.contrib import admin
 from django.contrib.staticfiles.storage import staticfiles_storage
-
-import oauth2_provider.views as oauth2_views
-
 from . import views as root_views
+from . import oauth2_views
+
 
 urlpatterns = [
-    path('', root_views.index, name='index'),
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
-
+    path("", root_views.index, name="index"),
+    path("admin/", admin.site.urls, name="admin"),
+    path("accounts/", include("django.contrib.auth.urls")),
     # OAuth2 Endpoints
-    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
-    path('api/v1/userinfo/', root_views.UserInfo.as_view()),
-
+    path(
+        "o/",
+        include(
+            (oauth2_views.urlpatterns, "oauth2_provider"), namespace="oauth2_provider"
+        ),
+    ),
+    path("api/v1/userinfo/", root_views.UserInfo.as_view(), name="api-v1-userinfo"),
     # Static files
-    path('favicon.ico',
-         RedirectView.as_view(url=staticfiles_storage.url('img/favicon.ico')),
-         name="favicon"),
+    path(
+        "favicon.ico",
+        RedirectView.as_view(url=staticfiles_storage.url("img/favicon.ico")),
+        name="favicon",
+    ),
 ]
