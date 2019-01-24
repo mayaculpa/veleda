@@ -49,6 +49,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # "oauth2_provider.middleware.OAuth2TokenMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -115,17 +116,22 @@ USE_TZ = True
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 STATIC_URL = "/static/"
 
+AUTHENTICATION_BACKENDS = (
+    "oauth2_provider.backends.OAuth2Backend",
+    "django.contrib.auth.backends.ModelBackend",
+)
+
 # Authentication related settings
 OAUTH2_PROVIDER = {
     # this is the list of available scopes
     "SCOPES": {"userinfo-v1": "Userinfo API v1"}
 }
 
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
-    ),
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-}
+# REST_FRAMEWORK = {
+#     "DEFAULT_AUTHENTICATION_CLASSES": (
+#         "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+#     ),
+#     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+# }
 
 LOGIN_REDIRECT_URL = "/"
