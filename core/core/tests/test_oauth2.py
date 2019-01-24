@@ -167,10 +167,16 @@ class Oauth2AuthenticationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("access_token", token_json)
 
-        # Request user data with obtained token
+        # Request user data with obtained token and verify identity
         userinfo_client = Client()
-        userinfo_client.defaults["Authorization"] = (
+        userinfo_client.defaults["HTTP_AUTHORIZATION"] = (
             "Bearer " + token_json["access_token"]
         )
+
         response = userinfo_client.get(reverse("api-v1-userinfo"))
         self.assertEqual(response.status_code, 200)
+        userinfo_json = json.loads(response.content)
+        self.assertEqual(userinfo_json["username"], self.a_user.username)
+        self.assertEqual(userinfo_json["email"], self.a_user.email)
+        self.assertNotEqual(userinfo_json["email"], self.super_user.email)
+
