@@ -25,6 +25,7 @@ from . import oauth2_views
 urlpatterns = [
     path("", root_views.index, name="index"),
     path("admin/", admin.site.urls, name="admin"),
+    path("accounts/", include("accounts.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     # OAuth2 Endpoints
     path(

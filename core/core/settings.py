@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "oauth2_provider",
     "rest_framework",
+    "semanticuiforms",
+    "accounts.apps.AccountsConfig",
 ]
 
 MIDDLEWARE = [

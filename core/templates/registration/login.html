@@ -1,8 +1,25 @@
 {% extends "base_generic.html" %}
+{% load semanticui %}
 
 {% block content %}
+
 <div class="ui main text container">
-  {% if form.errors %}
+  <h1 class="ui header">Log in</h1>
+  <form class="ui form" method="post">
+    {% csrf_token %}
+    {% render_form form %}
+    <div class="ui items">
+      <div class="item">
+        <div class="content">
+          <button class="ui button" type="submit">Log in</button>
+        </div>
+        <div class="ui right floated basic button">
+          <a href="{% url 'password_reset' %}">Lost password?</a>
+        </div>
+      </div>
+    </div>
+  </form>
+  <!-- {% if form.errors %}
     <p>Your username and password didn't match. Please try again.</p>
   {% endif %}
 
@@ -31,7 +48,6 @@
   <input type="submit" value="login" />
   <input type="hidden" value="next" value="{{ next }}" />
 
-  </form>
-  <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+  </form> -->
 </div>
 {% endblock %}
