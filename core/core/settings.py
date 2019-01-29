@@ -52,6 +52,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "oauth2_provider.middleware.OAuth2TokenMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -104,7 +105,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "CET"
 
 USE_I18N = True
 
@@ -117,6 +118,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 STATIC_URL = "/static/"
+
+# Authentication
+AUTH_USER_MODEL = "accounts.User"
 
 AUTHENTICATION_BACKENDS = (
     "oauth2_provider.backends.OAuth2Backend",

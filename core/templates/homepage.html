@@ -4,7 +4,7 @@
 
 {% block content%}
 <div class="ui main text container">
-  <h1 class="ui header">Hello there {% if user.is_authenticated %}{{ user.first_name }}{% endif %}</h1>
+  <h1 class="ui header">Hello there {% if user.is_authenticated %}{{ user.email }}{% endif %}</h1>
   {% if user.is_authenticated %}
   <a href="{%url 'logout' %}?next={{request.path}}">Logout</a>
   {% else %}

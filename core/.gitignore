@@ -1,5 +1,6 @@
 # Python cache
 venv
+venv_flask
 __pycache__/
 *.pyc
 
