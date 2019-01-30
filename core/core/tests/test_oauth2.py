@@ -1,4 +1,3 @@
-from rest_framework.test import APIClient
 import base64
 import urllib
 import json

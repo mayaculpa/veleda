@@ -11,3 +11,7 @@ db.sqlite3
 node_modules
 semantic
 static/semantic
+
+# Coverage report
+.coverage
+htmlcov

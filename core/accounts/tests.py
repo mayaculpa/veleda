@@ -1,21 +1,102 @@
-from django.test import RequestFactory, TestCase
+from django.test import Client, TestCase
+from django.urls import reverse
 from django.contrib.auth import get_user_model
 
 
 class LoginTests(TestCase):
     def setUp(self):
-        self.factory = RequestFactory()
+        self.client = Client()
 
-        User = get_user_model()
-        self.a_user = User.objects.create_user(
+    def test_integration_create_user(self):
+        """Test successfully creating a new user"""
+
+        response = self.client.get(reverse("accounts:signup"))
+        self.assertEqual(response.status_code, 200)
+        fields = response.context_data["form"].fields
+        self.assertIn("email", fields)
+        self.assertIn("password1", fields)
+        self.assertIn("password2", fields)
+
+        user_data = {
+            "email": "jake@example.com",
+            "password1": "jakes_passwd",
+            "password2": "jakes_passwd",
+        }
+        reponse = self.client.post(reverse("accounts:signup"), data=user_data)
+        self.assertRedirects(reponse, reverse("login"))
+
+        jake = get_user_model().objects.get(email=user_data["email"])
+        self.assertEqual(jake.email, user_data["email"])
+
+    def test_integration_create_user_errors(self):
+        """Test data verification when creating a new user"""
+        # import ipdb
+
+        a_user = get_user_model().objects.create_user(
             email="jake.john@example.com", password="jakes_passwd"
         )
-        self.staff_user = User.objects.create_user(
-            email="staffy@example.com", password="staffys_passwd", is_staff=True
-        )
-        self.super_user = User.objects.create_superuser(
-            email="super@example.com", password="super_passwd"
-        )
 
-    def test_fail_login_only_email(self):
-        pass
+        user_data = {
+            "email": a_user.email,
+            "password1": "jakes_passwd",
+            "password2": "jakes_passwd",
+        }
+        reponse = self.client.post(reverse("accounts:signup"), data=user_data)
+        self.assertIn("email", reponse.context_data["form"].errors)
+
+        # ipdb.set_trace()
+        user_data = {
+            "email": "not_jake@example.com",
+            "password1": "jakes_passwd",
+            "password2": "not_jakes_passwd",
+        }
+        reponse = self.client.post(reverse("accounts:signup"), data=user_data)
+        self.assertIn("password2", reponse.context_data["form"].errors)
+
+        user_data["password2"] = ""
+        reponse = self.client.post(reverse("accounts:signup"), data=user_data)
+        self.assertIn("password2", reponse.context_data["form"].errors)
+
+    def test_create_users(self):
+        """Test creating different types of users"""
+
+        user_manager = get_user_model().objects
+        jake = user_manager.create_user(
+            email="jake@example.com", password="jakes_passwd"
+        )
+        self.assertEqual(jake, user_manager.get(email=jake.email))
+        self.assertTrue(jake.is_active)
+        self.assertFalse(jake.is_staff)
+        self.assertFalse(jake.is_superuser)
+        self.assertEqual(str(jake), jake.email)
+        self.assertEqual(jake.get_full_name(), jake.email)
+        self.assertEqual(jake.get_short_name(), jake.email)
+
+        staff = user_manager.create_user(
+            email="staff@example.com", is_staff=True, password="staffs_passwd"
+        )
+        self.assertEqual(staff, user_manager.get(email=staff.email))
+        self.assertTrue(staff.is_active)
+        self.assertTrue(staff.is_staff)
+        self.assertFalse(staff.is_superuser)
+
+        superuser = user_manager.create_superuser(
+            email="super@example.com", password="supers_passwd"
+        )
+        self.assertEqual(superuser, user_manager.get(email=superuser.email))
+        self.assertTrue(superuser.is_active)
+        self.assertTrue(superuser.is_staff)
+        self.assertTrue(superuser.is_superuser)
+
+        with self.assertRaises(ValueError):
+            user_manager.create_user(email=None)
+
+        with self.assertRaises(ValueError):
+            user_manager.create_superuser(
+                email="super1@example.com", is_staff=False, password="supers_passwd"
+            )
+
+        with self.assertRaises(ValueError):
+            user_manager.create_superuser(
+                email="super2@example.com", is_superuser=False, password="supers_passwd"
+            )

@@ -16,7 +16,6 @@ class UserCreationForm(forms.ModelForm):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            msg = "Passwords don't match"
             raise forms.ValidationError("Password mismatch")
         return password2
 
@@ -28,8 +27,5 @@ class UserCreationForm(forms.ModelForm):
         return user
 
     def send_email(self):
-        # send email using the self.cleaned_data dictionary
-        print("Email sending has not been implemented")
+        """Send email to the newly created user"""
         pass
-
-

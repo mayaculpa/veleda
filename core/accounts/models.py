@@ -71,15 +71,15 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def get_full_name(self):
-        if self.profile.full_name:
+        try:
             return self.profile.full_name
-        else:
+        except Profile.DoesNotExist:
             return self.email
 
     def get_short_name(self):
-        if self.profile.short_name:
+        try:
             return self.profile.short_name
-        else:
+        except Profile.DoesNotExist:
             return self.email
 
 
