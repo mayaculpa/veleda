@@ -26,6 +26,7 @@ urlpatterns = [
     path("", root_views.index, name="index"),
     path("admin/", admin.site.urls, name="admin"),
     path("accounts/", include("accounts.urls", namespace="accounts")),
+    path("accounts/", include("django_registration.backends.activation.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     # OAuth2 Endpoints
     path(

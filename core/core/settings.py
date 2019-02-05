@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_registration",
     "oauth2_provider",
     "rest_framework",
     "semanticuiforms",
@@ -127,6 +128,8 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
 )
 
+ACCOUNT_ACTIVATION_DAYS = 7
+
 # Authentication related settings
 OAUTH2_PROVIDER = {
     # this is the list of available scopes
@@ -141,3 +144,13 @@ OAUTH2_PROVIDER = {
 # }
 
 LOGIN_REDIRECT_URL = "/"
+
+# Email
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST_USER = "youremail@gmail.com"
+EMAIL_HOST_PASSWORD = "yourpassword"
+EMAIL_PORT = 587
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

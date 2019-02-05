@@ -3,7 +3,11 @@ from django.dispatch import receiver
 
 from .models import User, Profile
 
+
 @receiver(post_save, sender=User)
-def ensure_profile_exists(sender, instance, created, **kwargs):
-    if not created:
-        Profile.objects.get_or_create(user=instance)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    """Save a user's profile when the respective user object is saved"""
+    if created:
+        Profile.objects.create(user=instance)
+    else:
+        instance.profile.save()

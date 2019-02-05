@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<main class="ui main text container">
+  <h1>Activation Complete</h1>
+  <p>{% trans "Your account has been activated." %} <a href="{% url 'login' %}">Click here to login</a></p>
+</main>
+{% endblock %}

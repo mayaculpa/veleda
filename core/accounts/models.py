@@ -1,9 +1,18 @@
+"""
+User related models.
+
+Users are split into the User and the Profile model. The User model focuses on the authentication
+aspects while the Profile model contains all additional information. The Profile model uses a
+one-to-one reference to the User model.
+"""
+
 from django.db import models
 from django.contrib.auth.models import (
     BaseUserManager,
     AbstractBaseUser,
     PermissionsMixin,
 )
+from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -33,6 +42,7 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
+        """Create a superuser with thegiven email and password."""
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
@@ -68,25 +78,38 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        return self.get_full_name()
 
     def get_full_name(self):
+        """Returns a user's full name if set, else their email."""
         try:
-            return self.profile.full_name
+            if self.profile.full_name == "":
+                return self.email
+            else:
+                return self.profile.full_name
         except Profile.DoesNotExist:
             return self.email
 
     def get_short_name(self):
+        """Returns a user's short name if set, else their email."""
         try:
-            return self.profile.short_name
+            if self.profile.short_name == "":
+                return self.email
+            else:
+                return self.profile.short_name
         except Profile.DoesNotExist:
             return self.email
+
+    def email_user(self, subject, message, from_email=None, **kwargs):
+        """Send an email to this user."""
+        send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
 class Profile(models.Model):
     """Additional user information."""
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+
     short_name = models.CharField(
         _("short name"),
         max_length=30,

@@ -23,14 +23,13 @@ class LoginTests(TestCase):
             "password2": "jakes_passwd",
         }
         reponse = self.client.post(reverse("accounts:signup"), data=user_data)
-        self.assertRedirects(reponse, reverse("login"))
+        self.assertRedirects(reponse, reverse("django_registration_complete"))
 
         jake = get_user_model().objects.get(email=user_data["email"])
         self.assertEqual(jake.email, user_data["email"])
 
     def test_integration_create_user_errors(self):
         """Test data verification when creating a new user"""
-        # import ipdb
 
         a_user = get_user_model().objects.create_user(
             email="jake.john@example.com", password="jakes_passwd"
@@ -44,7 +43,6 @@ class LoginTests(TestCase):
         reponse = self.client.post(reverse("accounts:signup"), data=user_data)
         self.assertIn("email", reponse.context_data["form"].errors)
 
-        # ipdb.set_trace()
         user_data = {
             "email": "not_jake@example.com",
             "password1": "jakes_passwd",
@@ -100,3 +98,24 @@ class LoginTests(TestCase):
             user_manager.create_superuser(
                 email="super2@example.com", is_superuser=False, password="supers_passwd"
             )
+
+    def test_modify_profile(self):
+        user_manager = get_user_model().objects
+        jake = user_manager.create_user(
+            email="jake@example.com", password="jakes_passwd"
+        )
+        self.assertEqual(jake.get_short_name(), jake.email)
+        jake.profile.short_name = "Jake"
+        jake.profile.full_name = "Sir Jake Richard III"
+        jake.save()
+
+        new_jake = user_manager.get(id=jake.id)
+        self.assertEqual(new_jake.profile.full_name, jake.profile.full_name)
+        self.assertEqual(new_jake.get_short_name(), jake.profile.short_name)
+        self.assertEqual(str(new_jake), jake.profile.full_name)
+        self.assertEqual(str(new_jake.profile), jake.profile.full_name)
+
+        kate = get_user_model()(email="kate@katey.com")
+        self.assertEqual(kate.get_short_name(), kate.email)
+        self.assertEqual(kate.get_full_name(), kate.email)
+

@@ -2,6 +2,7 @@ certifi==2018.11.29
 chardet==3.0.4
 Django==2.1.5
 django-oauth-toolkit==1.2.0
+django-registration==3.0
 django-semanticui-forms==1.6.5
 djangorestframework==3.9.1
 idna==2.8

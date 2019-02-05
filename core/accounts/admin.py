@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import gettext_lazy as _
 
 from .models import User, Profile
-from .forms import UserCreationForm
+from .forms import UserRegistrationForm
 
 
 class ProfileInline(admin.StackedInline):
@@ -19,7 +19,7 @@ class ProfileInline(admin.StackedInline):
 class UserAdmin(DjangoUserAdmin):
     """Define admin model for custom User model with no email field."""
 
-    add_form = UserCreationForm
+    add_form = UserRegistrationForm
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
