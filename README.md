@@ -38,7 +38,7 @@ List the individual services with `docker ps`. Key data to the individual servic
 | nginx-web         | Landing page             |      | N/A                         |
 | nginx-gen         | Dynamically update proxy |      | N/A                         |
 | nginx-letsencrypt | Manage SSL certificates  |      | N/A                         |
-| core              | User management          | 8000 | [readme](web/README.md)     |
+| core              | User management          | 8000 | [readme](core/README.md)    |
 | grafana           | Time series analysis     | 3000 | [readme](grafana/README.md) |
 | postgres          | User storage             | 5432 | N/A                         |
 | influxdb          | Time series storage      | 8086 | N/A                         |

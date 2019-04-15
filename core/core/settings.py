@@ -25,7 +25,7 @@ SECRET_KEY = "r8qg2gwniy(ay(#^v3^!+vda75us0)e4iac(9-01qjls3gv^!="
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["core.flowleaf.local"]
 
 
 # Application definition

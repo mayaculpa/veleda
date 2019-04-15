@@ -18,6 +18,7 @@ from django.views.generic.base import RedirectView
 
 from django.contrib import admin
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from . import views as root_views
 from . import oauth2_views
 
@@ -43,3 +44,5 @@ urlpatterns = [
         name="favicon",
     ),
 ]
+
+urlpatterns += staticfiles_urlpatterns()

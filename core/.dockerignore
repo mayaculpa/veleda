@@ -1,10 +1,8 @@
 secrets.core
 dns.core
+db.sqlite3
 
 venv
 **/*.pyc
-
-node_modules
-semantic
 
 .vscode

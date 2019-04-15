@@ -79,7 +79,10 @@ services:
   core:
     build: ./core
     container_name: core
-    restart: always
+    logging:
+      options:
+        max-size: '2m'
+        max-file: '10'
     ports:
       - '8000:8000'
     env_file:
@@ -91,7 +94,6 @@ services:
     networks:
       - backend
       - frontend
-    command: bash -c "./start.sh"
     depends_on:
       - influxdb
       - grafana
