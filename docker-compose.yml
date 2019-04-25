@@ -79,6 +79,7 @@ services:
   core:
     build: ./core
     container_name: core
+    restart: always
     logging:
       options:
         max-size: '2m'

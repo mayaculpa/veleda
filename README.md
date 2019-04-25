@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/FlowLeaf/flow-leaf-server.svg?branch=master)](https://travis-ci.org/FlowLeaf/flow-leaf-server)
+[![codecov](https://codecov.io/gh/FlowLeaf/flow-leaf-server/branch/master/graph/badge.svg)](https://codecov.io/gh/FlowLeaf/flow-leaf-server)
 
 # FlowLeaf Server
 
@@ -10,9 +11,9 @@ A data analytics platform for hydroponic setups. It visualizes and allows analys
 
 - **Docker:** available for [Ubuntu][2], [Mac][3], [Windows][4] and other [Linux flavors][5]. Note that currently only Ubuntu is supported.
 - **Docker Compose:** the official [installation guide][6]
-- **Python:** Version 3.5 and above (Django in core)
-- **NPM and NodeJS:** Used to build Django's css/js ([Semantic UI][8])
+- **Python:** Version 3.7 and above (Django in core)
 - **Secrets:** Secrets have to be provided for the grafana, influxdb, postgres and web services. Templates are provided and *should* be modified
+- **DNS:** DNS configuration to route the incoming requests to the appropriate services
 
 For detailed instructions see the [server setup guide][7].
 
