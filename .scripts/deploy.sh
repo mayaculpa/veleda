@@ -42,7 +42,7 @@ git remote add deploy "deploy@$REMOTE:/home/deploy/repo/"
 #  git checkout -b $TRAVIS_PULL_REQUEST_BRANCH
 #fi
 
-echo "Pushing branch to server"
+echo "Pushing $TARGET_BRANCH branch to server"
 git push -f deploy $TARGET_BRANCH
 
 # Unpack and update the Docker services

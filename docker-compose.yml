@@ -84,8 +84,6 @@ services:
       options:
         max-size: '2m'
         max-file: '10'
-    ports:
-      - '8000:8000'
     env_file:
       - 'core/dns.core'
       - 'core/secrets.core'
@@ -105,8 +103,6 @@ services:
     image: grafana/grafana:4.6.3
     container_name: grafana
     restart: always
-    ports:
-      - '3000:3000'
     env_file:
       - 'grafana/dns.grafana'
       - 'grafana/env.grafana'
@@ -124,8 +120,6 @@ services:
     build: ./postgres
     container_name: postgres
     restart: always
-    ports:
-      - "5432:5432"
     env_file:
       - 'postgres/secrets.postgres'
     networks:

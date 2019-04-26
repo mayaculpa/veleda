@@ -19,6 +19,8 @@ djangorestframework = "*"
 oauth2-provider = "*"
 gunicorn = "*"
 django-registration = "*"
+psycopg2 = "*"
+whitenoise = {extras = ["brotli"],version = "*"}
 
 [requires]
 python_version = "3.7"

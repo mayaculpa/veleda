@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Exit with nonzero exit code if anything fails
+set -e
+
 # Need the sleep to wait for postgres to start
 # Should use pg_isready https://stackoverflow.com/a/42225536/6783666
 echo "Waiting PostgreSQL to launch on 5432..."

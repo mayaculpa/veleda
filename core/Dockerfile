@@ -20,6 +20,7 @@ RUN pipenv install --system
 
 # Copy the source files
 COPY ./ ./
+RUN ./manage.py collectstatic
 
 # Server
 EXPOSE 8000
