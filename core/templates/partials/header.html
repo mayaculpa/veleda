@@ -13,9 +13,11 @@
     <div class="ui right floated simple dropdown item">
       Menu<i class="dropdown icon"></i>
       <div class="menu">
-        <a class="item" href="#">Link Item</a>
-        <a class="item" href="#">Link Item</a>
-        <div class="divider"></div>
+        {% if user.is_staff %}
+        <a class="item" href="{% url 'admin:index' %}">Admin Dashboard</a>
+        <a class="item" href="{% url 'oauth2_provider:list' %}">OAuth2 Dashboard</a>
+        {% endif %}
+        <!-- <div class="divider"></div>
         <div class="header">Header Item</div>
         <div class="item">
           <i class="dropdown icon"></i>
@@ -24,7 +26,7 @@
             <a class="item" href="#">Link Item</a>
             <a class="item" href="#">Link Item</a>
           </div>
-        </div>
+        </div> -->
         <a class="item" href="{% url 'logout' %}">Logout</a>
       </div>
     </div>
