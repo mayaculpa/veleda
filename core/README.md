@@ -32,9 +32,10 @@ The command to create an HTML report of the test coverage:
 
 ## Local Development
 
-Create a development database (SQLite) with:
+Create a development database (SQLite) and a superuser with:
 
     ./manage.py migrate
+    ./manage.py createsuperuser
 
 Then start the development server. Changes to the code are automatically reloaded
 
