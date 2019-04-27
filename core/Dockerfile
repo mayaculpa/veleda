@@ -1,27 +1,29 @@
-FROM python:3.6.6
+FROM python:3.7.3
 MAINTAINER Moritz Ulmer <moritz.ulmer@posteo.de>
 
-# Install packages
-RUN apt-get update && apt-get install -y \
-        netcat-openbsd
+# Install Python and Package Libraries
+RUN apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get autoclean
+RUN apt-get install -y \
+    netcat-openbsd \
+    vim
 
-# Create the group and user to be used in this container
-RUN groupadd flaskgroup && useradd -m -g flaskgroup -s /bin/bash flask
+# Project Files and Settings
+ARG PROJECT=core
+ARG PROJECT_DIR=/var/www/${PROJECT}
 
-# Create the working directory (and set it as the working directory)
-RUN mkdir -p /home/flask/app/web
-WORKDIR /home/flask/app/web
+# Install the dependencies
+RUN mkdir -p $PROJECT_DIR
+WORKDIR $PROJECT_DIR
+COPY Pipfile Pipfile.lock ./
+RUN pip install -U pipenv
+RUN pipenv install --system
 
-# Install the package dependencies (this step is separated
-# from copying all the source code to avoid having to
-# re-install all python packages defined in requirements.txt
-# whenever any source code change is made)
-COPY requirements.txt /home/flask/app/web
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the source files
+COPY ./ ./
+RUN ./manage.py collectstatic
 
-# Copy the source code into the container
-COPY . /home/flask/app/web
-
-RUN chown -R flask:flaskgroup /home/flask
-
-USER flask
+# Server
+EXPOSE 8000
+STOPSIGNAL SIGINT
+ENTRYPOINT ["bash"]
+CMD ["./start.sh"]

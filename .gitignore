@@ -1,3 +1,5 @@
+core_old
+
 # Secret environment variables
 secrets.*
 !secrets.*.example
@@ -8,20 +10,6 @@ dns.*
 
 # Jekyll
 jekyll/web
-
-# Python flask 
-venv
-instance/
-__pycache__/
-*.pyc
-data-test.sqlite
-.coverage
-htmlcov
-core/app/static/webassets-external
-core/app/static/scripts
-core/app/static/styles
-core/app/static/.webassets-cache
-data-dev.sqlite
 
 # Postgres
 postgres/web-init.sql

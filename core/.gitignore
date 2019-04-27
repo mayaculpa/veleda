@@ -1,0 +1,10 @@
+# Python cache
+venv
+__pycache__/
+*.pyc
+
+# Django temporary files
+db.sqlite3
+.coverage
+htmlcov/
+staticfiles

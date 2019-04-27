@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load semanticui %}
+
+{% block title %}FlowLeaf: Sign Up{% endblock %}
+
+{% block content %}
+<div class="ui main text container">
+  <h1 class="ui header">Signup</h2>
+    <form class="ui form" method="post">
+      {% csrf_token %}
+      {% render_form form %}
+      <button class="ui button" type="submit">Sign up</button>
+    </form>
+</div>
+{% endblock %}

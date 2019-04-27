@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/FlowLeaf/flow-leaf-server.svg?branch=master)](https://travis-ci.org/FlowLeaf/flow-leaf-server)
+[![codecov](https://codecov.io/gh/FlowLeaf/flow-leaf-server/branch/master/graph/badge.svg)](https://codecov.io/gh/FlowLeaf/flow-leaf-server)
 
 # FlowLeaf Server
 
@@ -10,7 +11,9 @@ A data analytics platform for hydroponic setups. It visualizes and allows analys
 
 - **Docker:** available for [Ubuntu][2], [Mac][3], [Windows][4] and other [Linux flavors][5]. Note that currently only Ubuntu is supported.
 - **Docker Compose:** the official [installation guide][6]
+- **Python:** Version 3.7 and above (Django in core)
 - **Secrets:** Secrets have to be provided for the grafana, influxdb, postgres and web services. Templates are provided and *should* be modified
+- **DNS:** DNS configuration to route the incoming requests to the appropriate services
 
 For detailed instructions see the [server setup guide][7].
 
@@ -36,7 +39,7 @@ List the individual services with `docker ps`. Key data to the individual servic
 | nginx-web         | Landing page             |      | N/A                         |
 | nginx-gen         | Dynamically update proxy |      | N/A                         |
 | nginx-letsencrypt | Manage SSL certificates  |      | N/A                         |
-| core              | User management          | 8000 | [readme](web/README.md)     |
+| core              | User management          | 8000 | [readme](core/README.md)    |
 | grafana           | Time series analysis     | 3000 | [readme](grafana/README.md) |
 | postgres          | User storage             | 5432 | N/A                         |
 | influxdb          | Time series storage      | 8086 | N/A                         |
@@ -51,3 +54,4 @@ The data is stored in volumes. List all active volumes with `docker volume ls`. 
 [5]: https://docs.docker.com/install/
 [6]: https://docs.docker.com/compose/install/#install-compose
 [7]: server_setup.md
+[8]: https://semantic-ui.com/introduction/getting-started.html#installing

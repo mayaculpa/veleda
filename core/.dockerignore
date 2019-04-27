@@ -1,6 +1,10 @@
 secrets.core
-venv
 dns.core
+db.sqlite3
+
+venv
 **/*.pyc
 
 .vscode
+
+staticfiles

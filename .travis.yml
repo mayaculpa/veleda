@@ -1,7 +1,7 @@
 language: python
-
-python:
-- '3.6'
+sudo: required
+dist: xenial
+python: "3.7"
 
 cache:
   pip: true
@@ -16,8 +16,7 @@ install:
 - bash .scripts/install.sh
 
 script:
-- export FLASK_CONFIG=testing
-- python -u core/manage.py test
+- bash .scripts/test.sh
 
 after_success:
 - bash .scripts/deploy.sh

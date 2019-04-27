@@ -1,0 +1,29 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+coverage = "*"
+black = "*"
+ipdb = "*"
+pylint = "*"
+pylint-django = "*"
+codecov = "*"
+
+[packages]
+django = "*"
+django-oauth-toolkit = "*"
+django-semanticui-forms = "*"
+djangorestframework = "*"
+oauth2-provider = "*"
+gunicorn = "*"
+django-registration = "*"
+psycopg2 = "*"
+whitenoise = {extras = ["brotli"],version = "*"}
+
+[requires]
+python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true

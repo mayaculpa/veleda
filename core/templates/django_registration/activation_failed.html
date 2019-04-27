@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="ui main text container">
+  <h1>Activation Failed</h1>
+  <div class="ui negative message">
+    <i class="close icon"></i>
+    <div class="header">
+      Error
+    </div>
+    <p>{{ activation_error.message }}</p>
+  </div>
+  <p><a href="#">Click to send a new activation email</a></p>
+</main>
+
+<script>
+  $('.message .close').on('click', function () {
+    $(this).closest('.message').fadeOut();
+  });
+</script>
+{% endblock %}

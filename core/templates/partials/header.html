@@ -1,0 +1,35 @@
+<div class="ui fixed inverted menu">
+  <div class="ui container">
+    <a href="{% url 'index' %}" class="header item">
+      <img class="logo" src="/static/img/logo.png">
+      FlowLeaf
+    </a>
+    <a href="https://flowleaf.co" class="ui item">Home</a>
+    <a href="https://data.flowleaf.co" class="ui item">Data</a>
+    {% if not user.is_authenticated %}
+    <a href="{% url 'login' %}" class="ui right floated item">Login</a>
+    <a href="{% url 'django_registration_register' %}" class="ui item">Signup</a>
+    {% else %}
+    <div class="ui right floated simple dropdown item">
+      Menu<i class="dropdown icon"></i>
+      <div class="menu">
+        {% if user.is_staff %}
+        <a class="item" href="{% url 'admin:index' %}">Admin Dashboard</a>
+        <a class="item" href="{% url 'oauth2_provider:list' %}">OAuth2 Dashboard</a>
+        {% endif %}
+        <!-- <div class="divider"></div>
+        <div class="header">Header Item</div>
+        <div class="item">
+          <i class="dropdown icon"></i>
+          Sub Menu
+          <div class="menu">
+            <a class="item" href="#">Link Item</a>
+            <a class="item" href="#">Link Item</a>
+          </div>
+        </div> -->
+        <a class="item" href="{% url 'logout' %}">Logout</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
