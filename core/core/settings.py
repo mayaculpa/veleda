@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 
+# Workaround to enable logging errors via gunicorn in docker
+import logging
+logging.basicConfig(
+    level = logging.INFO,
+    format = " %(levelname)s %(name)s: %(message)s",
+)
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -27,9 +34,12 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
+#In docker use VIRTUAL_HOST environment variable, else use local address
 ALLOWED_HOSTS = os.environ.get(
     "VIRTUAL_HOST", "core.flowleaf.local,localhost,127.0.0.1"
 ).split(",")
+# Allow internal communication between docker services
+ALLOWED_HOSTS.append('core')
 
 # Application definition
 
