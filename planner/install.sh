@@ -3,5 +3,6 @@
 # exit with nonzero exit code if anything fails
 set -e
 
-# Run tests and coverage of each component
-core/test.sh
+# Install NPM dependencies
+cd "$(dirname "$0")"
+npm ci
