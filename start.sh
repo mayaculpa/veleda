@@ -1,3 +1,8 @@
+#!/bin/bash
+
+# exit with nonzero exit code if anything fails
+set -e
+
 bold=$(tput bold)
 normal=$(tput sgr0)
 

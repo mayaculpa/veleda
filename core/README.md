@@ -76,3 +76,21 @@ Then create a `dns.core` file with the entry
 Subsequently, from the repository root directory start all Docker containers with
 
     docker-compose build && docker-compose up -d
+
+To create a super-user in the core docker container run
+
+    docker exec -it core bash
+    ./manage.py createsuperuser
+
+To register a new OAuth2 application (such as Grafana)
+1. Go to the OAuth2 Dashboard (https://core.flowleaf.co/o/applications/)
+2. Click the link to register a new application
+3. Type in an application name
+4. Copy the client ID and secret into the `grafana/secrets.grafana` file
+5. Set the client type and authorization grant type (usually *Confidential* and *Authorization Code*)
+6. Add the redirect URI from the `grafana/secrets.grafana` file
+7. Save the new OAuth2 application
+8. Go to the Admin Dashboard (https://core.flowleaf.co/admin/)
+9. Go to the new application (Oauth2_Provider --> Applications --> *Application Name*)
+10. Enable *Skip authorization* at the bottom of the page
+11. Save the changes

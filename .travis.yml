@@ -1,22 +1,37 @@
-language: python
-sudo: required
-dist: xenial
-python: "3.7"
-
-cache:
-  pip: true
-  directories:
-    - core/app/static/.webassets-cache
-
 before_install:
 - openssl aes-256-cbc -K $encrypted_22a80512e0f7_key -iv $encrypted_22a80512e0f7_iv
   -in flowleaf-deploy-key.enc -out flowleaf-deploy-key -d
 
-install:
-- bash .scripts/install.sh
+matrix:
+  include:
+    - name: "Core"
+      language: python
+      sudo: required
+      dist: xenial
+      python: "3.7"
+      cache:
+        pip: true
+        directories:
+          - core/app/static/.webassets-cache
+      install:
+      - bash core/install.sh
+      script:
+      - bash core/test.sh
+    - name: "Planner"
+      language: node_js
+      dist: xenial
+      node_js: "10"
+      addons:
+        chrome: stable
+      cache: npm
+      install:
+      - bash planner/install.sh
+      script:
+      - bash planner/test.sh
 
-script:
-- bash .scripts/test.sh
-
-after_success:
-- bash .scripts/deploy.sh
+deploy:
+  provider: script
+  script: .scripts/deploy.sh
+  on:
+    all_branches: true
+    condition: $TRAVIS_BRANCH =~ ^master|production$

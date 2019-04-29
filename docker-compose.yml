@@ -86,6 +86,7 @@ services:
         max-file: '10'
     env_file:
       - 'core/dns.core'
+      - 'core/env.core'
       - 'core/secrets.core'
       - 'grafana/env.grafana'
       - 'grafana/secrets.grafana'
@@ -97,7 +98,6 @@ services:
       - influxdb
       - grafana
       - postgres
-      - redis
 
   grafana:
     image: grafana/grafana:4.6.3
@@ -115,6 +115,21 @@ services:
     depends_on:
       - influxdb
 
+  planner:
+    build: ./planner
+    container_name: planner
+    restart: always
+    logging:
+      options:
+        max-size: '2m'
+        max-file: '10'
+    env_file:
+      - 'planner/dns.core'
+    networks:
+      - frontend
+    depends_on:
+      - core
+
 ## Veleda Backend
   postgres:
     build: ./postgres
@@ -126,13 +141,6 @@ services:
       - backend
     volumes:
       - postgres-data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:3.2
-    container_name: redis
-    restart: always
-    networks:
-      - backend
 
   influxdb:
     image: influxdb:1.5

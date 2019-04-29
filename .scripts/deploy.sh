@@ -31,9 +31,11 @@ else
     echo "Pushing to production: Merge of $TRAVIS_PULL_REQUEST_BRANCH into $TRAVIS_BRANCH"
     export REMOTE="$BASE_URL"
     export TARGET_BRANCH="$TRAVIS_BRANCH"
+    git checkout "$TRAVIS_BRANCH"
 fi
 
 # Push to the remote server
+git show
 git remote add deploy "deploy@$REMOTE:/home/deploy/repo/"
 
 # Required when deploying a feature branch
@@ -43,7 +45,7 @@ git remote add deploy "deploy@$REMOTE:/home/deploy/repo/"
 #fi
 
 echo "Pushing $TARGET_BRANCH branch to server"
-git push -f deploy $TARGET_BRANCH
+git push -f deploy "$TARGET_BRANCH"
 
 # Unpack and update the Docker services
 ssh -t deploy@"$REMOTE" "\
