@@ -29,5 +29,9 @@ matrix:
       script:
       - bash planner/test.sh
 
-after_success:
-- bash .scripts/deploy.sh
+deploy:
+  provider: script
+  script: .scripts/deploy.sh
+  on:
+    all_branches: true
+    condition: $TRAVIS_BRANCH =~ ^master|production$

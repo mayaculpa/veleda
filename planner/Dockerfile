@@ -4,16 +4,17 @@
 # We label our stage as ‘builder’
 FROM node:10-alpine as builder
 
-WORKDIR /planner
 
 ## Storing node modules on a separate layer will prevent unnecessary npm installs at each build
-COPY package.json package-lock.json ./
-
-RUN npm ci --verbose
-
-COPY . .
+WORKDIR /tmp
+COPY package.json package-lock.json /tmp/
+# Slow npm install to avoid network congestion in Gründervilla, BS, DE
+RUN npm set maxsockets 1 && npm install
+RUN mkdir -p /planner && mv /tmp/node_modules /planner/node_modules
 
 ## Build the angular app in production mode and store the artifacts in dist folder
+WORKDIR /planner
+COPY . .
 RUN npm run ng build -- --prod --output-path=dist
 
 
