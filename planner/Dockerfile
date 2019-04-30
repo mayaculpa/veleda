@@ -4,7 +4,6 @@
 # We label our stage as ‘builder’
 FROM node:10-alpine as builder
 
-
 ## Storing node modules on a separate layer will prevent unnecessary npm installs at each build
 WORKDIR /tmp
 COPY package.json package-lock.json /tmp/
@@ -21,6 +20,7 @@ RUN npm run ng build -- --prod --output-path=dist
 # ### STAGE 2: Setup ###
 
 FROM nginx:1.14.1-alpine
+LABEL maintainer="moritz.ulmer@posteo.de"
 
 ## Copy our default nginx config
 COPY nginx/default.conf /etc/nginx/conf.d/
@@ -30,6 +30,4 @@ RUN rm -rf /usr/share/nginx/html/*
 
 ## From ‘builder’ stage copy over the artifacts in dist folder to default nginx public folder
 COPY --from=builder /planner/dist /usr/share/nginx/html
-
-CMD ["nginx", "-g", "daemon off;"]
 

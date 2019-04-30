@@ -1,5 +1,5 @@
 FROM python:3.7.3
-MAINTAINER Moritz Ulmer <moritz.ulmer@posteo.de>
+LABEL maintainer="moritz.ulmer@posteo.de"
 
 # Install Python and Package Libraries
 RUN apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get autoclean
