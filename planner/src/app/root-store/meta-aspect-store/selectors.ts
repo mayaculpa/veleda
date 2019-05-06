@@ -13,7 +13,7 @@ export const selectAllMetaAspectItems: (
 
 export const selectMetaAspectById = (id: string) =>
   createSelector(
-    this.selectAllMetaAspectItems,
+    selectAllMetaAspectItems,
     (allMetaAspects: MetaAspect[]) => {
       if (allMetaAspects) {
         return allMetaAspects.find(p => p.id === id);

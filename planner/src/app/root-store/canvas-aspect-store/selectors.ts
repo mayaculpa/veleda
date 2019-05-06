@@ -13,7 +13,7 @@ export const selectAllCanvasAspectItems: (
 
 export const selectCanvasAspectById = (id: string) =>
   createSelector(
-    this.selectAllCanvasAspectItems,
+    selectAllCanvasAspectItems,
     (allCanvasAspects: CanvasAspect[]) => {
       if (allCanvasAspects) {
         return allCanvasAspects.find(p => p.id === id);
