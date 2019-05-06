@@ -1,0 +1,33 @@
+.navbar-container {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.navbar-header {
+  position: fixed;
+  z-index: 2;
+  min-height:64px;
+  max-height:64px;
+}
+
+.navbar-header-spacer {
+  flex: 1 1 auto;
+}
+
+.sidenav-container {
+  flex: 1;
+  margin-top: 64px;
+}
+
+.sidenav {
+  width: 200px;
+}
+
+.sidenav-content {
+  padding-left: 15px;
+}

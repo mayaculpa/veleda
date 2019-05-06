@@ -1,0 +1,33 @@
+<div class="navbar-container" [class.example-is-mobile]="(isHandset$ | async)">
+  <mat-toolbar class="navbar-header" color="primary">
+    <button
+      type="button"
+      aria-label="Toggle sidenav"
+      mat-icon-button
+      (click)="drawer.toggle()"
+      *ngIf="isHandset$ | async">
+      <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+    </button>
+    <span>FlowLeaf</span>
+    <span class="navbar-header-spacer"></span>
+    <button mat-icon-button>
+      <mat-icon aria-label="">face</mat-icon>
+    </button>
+  </mat-toolbar>
+
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav #drawer class="sidenav" 
+        [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+        [mode]="(isHandset$ | async) ? 'over' : 'side'"
+        [opened]="!(isHandset$ | async)">
+      <mat-toolbar>Planner</mat-toolbar>
+      <mat-nav-list>
+        <a mat-list-item routerLink="/floor-planner">Build</a>
+        <a mat-list-item href="#">About</a>
+      </mat-nav-list>
+    </mat-sidenav>
+    <mat-sidenav-content class="sidenav-content">
+      <router-outlet></router-outlet>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
