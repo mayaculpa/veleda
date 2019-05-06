@@ -1,6 +1,9 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Store, StoreModule } from '@ngrx/store';
 
 import { CanvasAspectsComponent } from './canvas-aspects.component';
+import { featureReducer } from '../../root-store/canvas-aspect-store/reducer';
 
 describe('CanvasAspectsComponent', () => {
   let component: CanvasAspectsComponent;
@@ -8,9 +11,10 @@ describe('CanvasAspectsComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ CanvasAspectsComponent ]
-    })
-    .compileComponents();
+      imports: [StoreModule.forRoot({}), StoreModule.forFeature('canvasAspect', featureReducer)],
+      declarations: [CanvasAspectsComponent],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

@@ -1,7 +1,7 @@
 import { Actions, ActionTypes } from './actions';
 import { featureAdapter, initialState, State } from './state';
 
-export function feautureReducer(state = initialState, action: Actions): State {
+export function featureReducer(state = initialState, action: Actions): State {
   switch (action.type) {
     case ActionTypes.ADD: {
       return featureAdapter.addMany(action.payload.items, state);
