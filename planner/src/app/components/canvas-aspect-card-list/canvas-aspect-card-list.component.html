@@ -1,0 +1,11 @@
+<h1>Welcome</h1>
+
+<div class="add-button">
+  <button mat-fab (click)="this.add.emit()">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>
+<app-canvas-aspect-card-item
+  *ngFor="let canvasAspect of canvasAspects"
+  [canvasAspect]="canvasAspect"
+></app-canvas-aspect-card-item>
