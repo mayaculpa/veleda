@@ -6,12 +6,6 @@ BASE_URL=flowleaf.co
 # exit with nonzero exit code if anything fails
 set -e
 
-# Only deploy merge request builds
-if [[ $TRAVIS_PULL_REQUEST == "false" ]]; then
-  echo "Aborting deploy as not a pull request"
-  exit 0;
-fi
-
 # Add the SSH login key
 chmod 600 flowleaf-deploy-key
 mv flowleaf-deploy-key ~/.ssh/id_rsa

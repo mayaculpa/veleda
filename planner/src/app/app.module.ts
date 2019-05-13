@@ -12,6 +12,8 @@ import { CanvasAspectCardItemComponent } from './components/canvas-aspect-card-i
 import { CanvasAspectsComponent } from './containers/canvas-aspects/canvas-aspects.component';
 import { routes } from './app.routes';
 import { NavbarComponent } from './components/navbar/navbar.component';
+import { FloorPlannerComponent } from './containers/floor-planner/floor-planner.component';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 @NgModule({
   declarations: [
@@ -19,7 +21,8 @@ import { NavbarComponent } from './components/navbar/navbar.component';
     CanvasAspectCardListComponent,
     CanvasAspectCardItemComponent,
     CanvasAspectsComponent,
-    NavbarComponent
+    NavbarComponent,
+    FloorPlannerComponent
   ],
   imports: [
     BrowserModule,
@@ -32,7 +35,10 @@ import { NavbarComponent } from './components/navbar/navbar.component';
     MatSidenavModule,
     MatToolbarModule,
     RootStoreModule,
-    RouterModule.forRoot(routes)
+    RouterModule.forRoot(routes),
+    StoreDevtoolsModule.instrument({
+      maxAge: 20
+    })
   ],
   providers: [],
   bootstrap: [AppComponent]

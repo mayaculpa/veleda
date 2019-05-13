@@ -20,10 +20,14 @@
         [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
         [mode]="(isHandset$ | async) ? 'over' : 'side'"
         [opened]="!(isHandset$ | async)">
-      <mat-toolbar>Planner</mat-toolbar>
+      <mat-toolbar>Planning</mat-toolbar>
       <mat-nav-list>
-        <a mat-list-item routerLink="/floor-planner">Build</a>
-        <a mat-list-item href="#">About</a>
+        <a mat-list-item routerLink="/floor-planner">Floor Planner</a>
+        <a mat-list-item routerLink="/canvas-aspects">Canvas Aspects</a> 
+      </mat-nav-list>
+      <mat-toolbar>About</mat-toolbar>
+      <mat-nav-list>
+        <a mat-list-item routerLink="/">Team</a>
       </mat-nav-list>
     </mat-sidenav>
     <mat-sidenav-content class="sidenav-content">
