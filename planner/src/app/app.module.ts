@@ -14,6 +14,7 @@ import { routes } from './app.routes';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FloorPlannerComponent } from './containers/floor-planner/floor-planner.component';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { FabricCanvasComponent } from './components/fabric-canvas/fabric-canvas.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
     CanvasAspectCardItemComponent,
     CanvasAspectsComponent,
     NavbarComponent,
-    FloorPlannerComponent
+    FloorPlannerComponent,
+    FabricCanvasComponent
   ],
   imports: [
     BrowserModule,
