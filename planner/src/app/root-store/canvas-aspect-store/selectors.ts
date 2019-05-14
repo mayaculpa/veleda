@@ -22,3 +22,8 @@ export const selectCanvasAspectById = (id: string) =>
       }
     }
   );
+
+export const selectAddedCanvasAspects = createSelector(
+  selectCanvasAspectState,
+  state => state.addedIds.map(id => state.entities[id])
+);
