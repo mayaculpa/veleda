@@ -52,11 +52,16 @@ export class FabricCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
-    // Sets the canvas dimensions during the initial render
-    this.canvas.setDimensions({
-      width: this.canvasContainer.nativeElement.offsetWidth,
-      height: this.canvasContainer.nativeElement.offsetHeight
-    });
+    // Sets the canvas dimensions during the initial render. Not using the
+    // timeout will result in the wrong width being set (scrollbar width)
+    setTimeout(
+      () =>
+        this.canvas.setDimensions({
+          width: this.canvasContainer.nativeElement.offsetWidth,
+          height: this.canvasContainer.nativeElement.offsetHeight
+        }),
+      50
+    );
   }
 
   ngOnDestroy() {
