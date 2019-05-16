@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { Store, StoreModule } from '@ngrx/store';
+import { StoreModule } from '@ngrx/store';
 
 import { CanvasAspectsComponent } from './canvas-aspects.component';
 import { featureReducer } from '../../root-store/canvas-aspect-store/reducer';

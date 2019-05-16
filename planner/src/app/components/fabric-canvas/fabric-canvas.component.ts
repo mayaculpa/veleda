@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } fr
 import { fabric } from 'fabric';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
-import { FabricCanvasAspectService } from '../../services/fabric-canvas-aspect.service';
+import { FabricService } from '../../services/fabric.service';
 
 @Component({
   selector: 'app-fabric-canvas',
@@ -19,7 +19,7 @@ export class FabricCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   // Used to unsubscribe all subscriptions in the pipe operator
   private ngUnsubscribe$ = new Subject<void>();
 
-  constructor(private fabricCanvasAspectService: FabricCanvasAspectService) {}
+  constructor(private fabricService: FabricService) {}
 
   ngOnInit() {
     this.canvas = new fabric.Canvas('canvas');
@@ -39,14 +39,16 @@ export class FabricCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       });
 
-    // Add all existing fabric objects
-    this.fabricCanvasAspectService.getAllFabricObjects().forEach(object => this.canvas.add(object));
+    // Initially get existing fabric objects, later use observables
+    Object.values(this.fabricService.objects).forEach(object =>
+      this.canvas.add(object)
+    );
 
     // When Fabric objects are added / removed, update the canvas
-    this.fabricCanvasAspectService.addedFabricObjects$
+    this.fabricService.addedFabricObjects$
       .pipe(takeUntil(this.ngUnsubscribe$))
       .subscribe(objects => objects.map(object => this.canvas.add(object)));
-    // this.fabricCanvasAspectService.removedFabricObjects$
+    // this.fabricService.removedFabricObjects$
     //   .pipe(takeUntil(this.ngUnsubscribe$))
     //   .subscribe(objects => objects.map(object => this.canvas.remove(object)));
   }

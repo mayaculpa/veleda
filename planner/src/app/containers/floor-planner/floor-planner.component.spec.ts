@@ -1,4 +1,5 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 import { FloorPlannerComponent } from './floor-planner.component';
 
@@ -8,9 +9,9 @@ describe('FloorPlannerComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ FloorPlannerComponent ]
-    })
-    .compileComponents();
+      declarations: [FloorPlannerComponent],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

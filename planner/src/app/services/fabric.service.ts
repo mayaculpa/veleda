@@ -6,7 +6,7 @@ import { fabric } from 'fabric';
 import { RootStoreState, CanvasAspectStoreSelectors } from '../root-store';
 import { CanvasAspect } from '../models';
 
-function toFabricObject(canvasAspect: CanvasAspect): fabric.Object {
+export function toFabricObject(canvasAspect: CanvasAspect): fabric.Object {
   return new fabric.Rect({ name: canvasAspect.id,
     top: 50,
     left: 50,
@@ -19,7 +19,7 @@ function toFabricObject(canvasAspect: CanvasAspect): fabric.Object {
 @Injectable({
   providedIn: 'root'
 })
-export class FabricCanvasAspectService {
+export class FabricService {
   constructor(private store$: Store<RootStoreState.State>) {
     // Handle adding canvas aspects
     store$.select(CanvasAspectStoreSelectors.selectAddedCanvasAspects).subscribe(canvasAspects => {
@@ -39,9 +39,5 @@ export class FabricCanvasAspectService {
   removedFabricObjects$ = new Subject<fabric.Object[]>();
 
   // To be able to reference fabric objects by their ID, they are stored here
-  private objects: { [id: string]: fabric.Object } = {};
-
-  getAllFabricObjects(): fabric.Object[] {
-    return Object.values(this.objects);
-  }
+  objects: { [id: string]: fabric.Object } = {};
 }

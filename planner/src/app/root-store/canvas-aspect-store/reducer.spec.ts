@@ -1,16 +1,9 @@
-import * as uuid from 'uuid';
-
 import * as Actions from './actions';
 import { initialState } from './state';
 import { featureReducer } from './reducer';
-import { CanvasAspect } from '../../models';
+import { createMockCanvasAspects } from '../../models';
 
 describe('Canvas aspect reducer', () => {
-  const createCanvasAspects = (): CanvasAspect[] => [
-    { id: uuid.v4(), type: 'Box' },
-    { id: uuid.v4(), type: 'Circle' }
-  ];
-
   it('should return init state', () => {
     const action = { type: 'NOOP' } as any;
     const result = featureReducer(undefined, action);
@@ -19,7 +12,7 @@ describe('Canvas aspect reducer', () => {
   });
 
   it('should add items', () => {
-    const aspects = createCanvasAspects();
+    const aspects = createMockCanvasAspects();
     const action = new Actions.AddAction({ items: aspects });
     const result = featureReducer(undefined, action);
 
@@ -29,13 +22,14 @@ describe('Canvas aspect reducer', () => {
         [aspects[0].id]: aspects[0],
         [aspects[1].id]: aspects[1]
       },
-      ids: aspects.map(aspect => aspect.id)
+      ids: aspects.map(aspect => aspect.id),
+      addedIds: aspects.map(aspect => aspect.id)
     });
   });
 
   it('should add to existing items', () => {
-    const firstSet = createCanvasAspects();
-    const secondSet = createCanvasAspects();
+    const firstSet = createMockCanvasAspects();
+    const secondSet = createMockCanvasAspects();
 
     const firstAction = new Actions.AddAction({ items: firstSet });
     const firstResult = featureReducer(undefined, firstAction);
@@ -52,12 +46,13 @@ describe('Canvas aspect reducer', () => {
       },
       ids: firstSet
         .map(metaAspect => metaAspect.id)
-        .concat(secondSet.map(metaAspect => metaAspect.id))
+        .concat(secondSet.map(metaAspect => metaAspect.id)),
+      addedIds: secondSet.map(aspect => aspect.id)
     });
   });
 
   it('should remove an item', () => {
-    const aspects = createCanvasAspects();
+    const aspects = createMockCanvasAspects();
     const idToRemove = aspects[0].id;
 
     const addAction = new Actions.AddAction({ items: aspects });
@@ -70,7 +65,8 @@ describe('Canvas aspect reducer', () => {
       entities: {
         [aspects[1].id]: aspects[1]
       },
-      ids: aspects.map(aspect => aspect.id).filter(id => id !== idToRemove)
+      ids: aspects.map(aspect => aspect.id).filter(id => id !== idToRemove),
+      removedIds: [idToRemove]
     });
   });
 });
