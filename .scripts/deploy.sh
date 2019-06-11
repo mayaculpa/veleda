@@ -1,7 +1,7 @@
 #!/bin/bash
 
 REPO_NAME=flow-leaf-server
-BASE_URL=flowleaf.co
+BASE_URL=sdg.protohaus.org
 
 # exit with nonzero exit code if anything fails
 set -e
