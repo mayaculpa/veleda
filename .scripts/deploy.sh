@@ -7,10 +7,10 @@ BASE_URL=openfarming.ai
 set -e
 
 # Only deploy merge request builds
-if [[ $TRAVIS_PULL_REQUEST == "false" ]]; then
-  echo "Aborting deploy as not a pull request"
-  exit 0;
-fi
+# if [[ $TRAVIS_PULL_REQUEST == "false" ]]; then
+#   echo "Aborting deploy as not a pull request"
+#   exit 0;
+# fi
 
 # Add the SSH login key
 chmod 600 ~/.ssh/sdg-deploy-key

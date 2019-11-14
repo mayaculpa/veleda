@@ -16,3 +16,4 @@ postgres/web-init.sql
 
 # VS Code project files
 .vscode
+planner/coverage
