@@ -1,6 +1,6 @@
 before_install:
 - openssl aes-256-cbc -K $encrypted_22a80512e0f7_key -iv $encrypted_22a80512e0f7_iv
-  -in sdg-staging-deploy-key.enc -out ~\/.ssh/sdg-staging-deploy-key -d
+  -in sdg-staging-deploy-key.enc -out ~/.ssh/sdg-staging-deploy-key -d
 
 matrix:
   include:
