@@ -36,10 +36,39 @@
     - `core/dns.core`
     - `grafana/dns.grafana`
     - `nginx/dns.nginx`
+    - `planner/dns.planner`
   - Set the OAuth URLs in `grafana/secrets.grafana`
     - Replace *localhost:3000* with the grafana domain name (data.example.com)
     - Replace *localhost:8000* with the core domain name (core.example.com)
 - Optional: Update the *nginx-gen* template
+
+## Local Setup
+
+To enable browsing of the services on a local machine, add the following entries to your `/etc/hosts` file and configure the `dns.*` files in their respective folders accordingly.
+
+```
+# /etc/hosts 
+# Used for development of the SDG Server
+127.0.0.1       data.sdg.local
+127.0.0.1       core.sdg.local
+127.0.0.1       sdg.local
+127.0.0.1       www.sdg.local
+127.0.0.1       planner.sdg.local
+```
+
+```
+# grafana/dns.grafana
+VIRTUAL_HOST=data.sdg.local
+
+# core/dns.core
+VIRTUAL_HOST=core.sdg.local
+
+# nginx/dns.nginx
+VIRTUAL_HOST=sdg.local,www.sdg.local
+
+# planner/dns.planner
+VIRTUAL_HOST=planner.flowleaf.local
+```
 
 ## Optional:
 

@@ -1,9 +1,9 @@
 [![Build Status](https://travis-ci.org/FlowLeaf/flow-leaf-server.svg?branch=master)](https://travis-ci.org/FlowLeaf/flow-leaf-server)
 [![codecov](https://codecov.io/gh/FlowLeaf/flow-leaf-server/branch/master/graph/badge.svg)](https://codecov.io/gh/FlowLeaf/flow-leaf-server)
 
-# FlowLeaf Server
+# SmartDigitalGarden Server
 
-A data analytics platform for hydroponic setups. It visualizes and allows analysis of data covering the growth aspects of hydroponics. In combination with the [HAPI project][1], it creates a system that covers the data collection and automation to data storage and analysis.
+A data analytics platform for hydroponic setups. It visualizes and allows analysis of data covering the growth aspects of hydroponics. It creates a system that covers the data collection and automation to data storage and analysis.
 
 ## Requirements
 
@@ -47,7 +47,6 @@ List the individual services with `docker ps`. Key data to the individual servic
 
 The data is stored in volumes. List all active volumes with `docker volume ls`. To access Grafana, visit [localhost:3000](localhost:3000) after starting the services. The admin login credentials are defined in `web/secrets.flask`.
 
-[1]: https://github.com/mayaculpa/hapi
 [2]: https://docs.docker.com/install/linux/docker-ce/ubuntu/
 [3]: https://docs.docker.com/docker-for-mac/install/
 [4]: https://docs.docker.com/docker-for-windows/install/
