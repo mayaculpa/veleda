@@ -36,7 +36,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
 #In docker use VIRTUAL_HOST environment variable, else use local address
 ALLOWED_HOSTS = os.environ.get(
-    "VIRTUAL_HOST", "core.flowleaf.local,localhost,127.0.0.1"
+    "VIRTUAL_HOST", "core.sdg.local,localhost,127.0.0.1"
 ).split(",")
 # Allow internal communication between docker services
 ALLOWED_HOSTS.append('core')
@@ -54,7 +54,10 @@ INSTALLED_APPS = [
     "oauth2_provider",
     "rest_framework",
     "semanticuiforms",
+    "address",
+    "macaddress",
     "accounts.apps.AccountsConfig",
+    "farms.apps.FarmsConfig",
 ]
 
 MIDDLEWARE = [
@@ -90,6 +93,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyD--your-google-maps-key-SjQBE")
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases

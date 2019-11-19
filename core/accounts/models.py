@@ -5,7 +5,7 @@ Users are split into the User and the Profile model. The User model focuses on t
 aspects while the Profile model contains all additional information. The Profile model uses a
 one-to-one reference to the User model.
 """
-
+import uuid
 from django.db import models
 from django.contrib.auth.models import (
     BaseUserManager,
@@ -58,6 +58,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     """User model."""
 
     username = None
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="The UUID to identify a user.",
+    )
     email = models.EmailField(_("email address"), unique=True, null=True)
     is_staff = models.BooleanField(
         _("staff status"),
@@ -108,7 +114,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Profile(models.Model):
     """Additional user information."""
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True,)
 
     short_name = models.CharField(
         _("short name"),
