@@ -23,6 +23,7 @@ psycopg2 = "*"
 whitenoise = {extras = ["brotli"],version = "*"}
 celery = "~=4.3"
 django-address = "~=0.2"
+django-macaddress = "~=1.6"
 
 [requires]
 python_version = "3.7"

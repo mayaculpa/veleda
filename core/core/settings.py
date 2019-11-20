@@ -14,9 +14,9 @@ import os
 
 # Workaround to enable logging errors via gunicorn in docker
 import logging
+
 logging.basicConfig(
-    level = logging.INFO,
-    format = " %(levelname)s %(name)s: %(message)s",
+    level=logging.INFO, format=" %(levelname)s %(name)s: %(message)s",
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -34,12 +34,12 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
-#In docker use VIRTUAL_HOST environment variable, else use local address
+# In docker use VIRTUAL_HOST environment variable, else use local address
 ALLOWED_HOSTS = os.environ.get(
     "VIRTUAL_HOST", "core.sdg.local,localhost,127.0.0.1"
 ).split(",")
 # Allow internal communication between docker services
-ALLOWED_HOSTS.append('core')
+ALLOWED_HOSTS.append("core")
 
 # Application definition
 
@@ -116,6 +116,20 @@ else:
             "PORT": os.environ.get("DATABASE_PORT"),
         }
     }
+
+# Celery and RabbitMQ
+
+if DEBUG:
+    CELERY_BROKER_URL = "amqp://localhost"
+else:
+    CELERY_BROKER_URL = (
+        "amqp://"
+        + os.environ.get("RABBITMQ_DEFAULT_USER")
+        + ":"
+        + os.environ.get("RABBITMQ_DEFAULT_PASS")
+        + "@"
+        + os.environ.get("RABBITMQ_HOSTNAME")
+    )
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators

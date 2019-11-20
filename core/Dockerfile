@@ -1,4 +1,4 @@
-FROM python:3.7.3
+FROM python:3.7.5
 LABEL maintainer="moritz.ulmer@posteo.de"
 
 # Install Python and Package Libraries
@@ -8,19 +8,23 @@ RUN apt-get install -y \
     vim
 
 # Project Files and Settings
-ARG PROJECT=core
-ARG PROJECT_DIR=/var/www/${PROJECT}
+ARG USERNAME=core
+ARG PROJECT_DIR=/home/$USERNAME/
+RUN groupadd -r $USERNAME && useradd --no-log-init -r -g $USERNAME $USERNAME
+RUN mkdir -p $PROJECT_DIR && chown $USERNAME:$USERNAME $PROJECT_DIR
+WORKDIR $PROJECT_DIR
+ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
+
+# Drop user privileges
+USER $USERNAME
 
 # Install the dependencies
-RUN mkdir -p $PROJECT_DIR
-WORKDIR $PROJECT_DIR
 COPY Pipfile Pipfile.lock ./
-RUN pip install -U pipenv
-RUN pipenv install --system
+RUN pip install --user pipenv && pipenv install
 
 # Copy the source files
 COPY ./ ./
-RUN ./manage.py collectstatic
+RUN pipenv run ./manage.py collectstatic
 
 # Server
 EXPOSE 8000

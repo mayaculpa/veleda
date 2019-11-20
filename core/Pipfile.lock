@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d2ade49cce66881518494ec3977a2865f15b9526e060e8e317432787d0b0793b"
+            "sha256": "b8f4f6c45e2fae910fb204f454f4d58b42c3856a4dd4d303d8283c5e0d01c453"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -107,6 +107,14 @@
             "index": "pypi",
             "version": "==0.2.1"
         },
+        "django-macaddress": {
+            "hashes": [
+                "sha256:078bc7c9c04c35411378e86422a387d9fa6e728311e65bfd372aab3c4879ce3a",
+                "sha256:0ca677ff8df7011bfa6534b2bb779097865a68db699d70125f3336639fbfecd6"
+            ],
+            "index": "pypi",
+            "version": "==1.6.0"
+        },
         "django-oauth-toolkit": {
             "hashes": [
                 "sha256:ad1b76275950ebbff708222cec57bbdb879f89bac7df6b9dee0f4b9db485c264"
@@ -172,6 +180,13 @@
                 "sha256:92b8c4b06dac4f0611c0729b2f2ede52b2e1bac1ab48f089c7ddc12e26bb60c4"
             ],
             "version": "==7.2.0"
+        },
+        "netaddr": {
+            "hashes": [
+                "sha256:38aeec7cdd035081d3a4c306394b19d677623bf76fa0913f6695127c7753aefd",
+                "sha256:56b3558bd71f3f6999e4c52e349f38660e54a7a8a9943335f73dfc96883e08ca"
+            ],
+            "version": "==0.7.19"
         },
         "oauth2-provider": {
             "hashes": [
