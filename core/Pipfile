@@ -24,6 +24,7 @@ whitenoise = {extras = ["brotli"],version = "*"}
 celery = "~=4.3"
 django-address = "~=0.2"
 django-macaddress = "~=1.6"
+django-ipware = "~=2.1"
 
 [requires]
 python_version = "3.7"

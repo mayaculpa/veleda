@@ -1,3 +1,4 @@
+import uuid
 from rest_framework import serializers
 from address.models import Address
 
@@ -34,7 +35,35 @@ class AddressSerializer(serializers.HyperlinkedModelSerializer):
 class CoordinatorSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Coordinator
-        fields = ["url", "farm", "local_ip", "dns_address"]
+        fields = [
+            "url",
+            "farm",
+            "local_ip_address",
+            "external_ip_address",
+            "dns_address",
+        ]
+
+
+class CoordinatorPingSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(format='hex', default=uuid.uuid4)
+    
+    class Meta:
+        model = Coordinator
+        fields = [
+            "id",
+            "local_ip_address",
+            "external_ip_address",
+        ]
+
+    def create(self, validated_data):
+        coordinator, created = Coordinator.objects.update_or_create(
+            id=validated_data.get("id", None),
+            defaults={
+                "local_ip_address": validated_data["local_ip_address"],
+                "external_ip_address": validated_data["external_ip_address"],
+            },
+        )
+        return coordinator
 
 
 class HydroponicSystemSerializer(serializers.HyperlinkedModelSerializer):

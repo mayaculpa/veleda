@@ -55,13 +55,15 @@ class Coordinator(models.Model):
     farm = models.OneToOneField(
         Farm,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         help_text="The farm to which the coordinator belongs.",
     )
     local_ip_address = models.GenericIPAddressField(
-        null=True, blank=True, help_text="The coordinator's local IP address."
+        help_text="The coordinator's local IP address."
     )
     external_ip_address = models.GenericIPAddressField(
-        null=True, blank=True, help_text="The coordinator's external IP address."
+        help_text="The coordinator's external IP address."
     )
     dns_address = models.URLField(
         null=True,
@@ -78,7 +80,10 @@ class Coordinator(models.Model):
     )
 
     def __str__(self):
-        return self.farm.name + " Coordirnator"
+        if self.farm:
+            return self.farm.name + " Coordirnator"
+        else:
+            return self.id.hex
 
 
 class HydroponicSystem(models.Model):

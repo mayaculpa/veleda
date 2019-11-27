@@ -1,22 +1,21 @@
-import pytz
-import uuid
 from datetime import datetime, timedelta
+import json
+import logging
+import pytz
 from unittest import mock
+import uuid
 
-from django.test import Client, TestCase
-from django.contrib.auth import get_user_model
 from address.models import Address
+from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
 
 from .models import Farm, Coordinator, HydroponicSystem, Controller
 from accounts.models import Profile
+# from core.celery import debug_task
 
 
-# Create your tests here.
 class FarmTests(TestCase):
-    def setUp(self):
-        pass
-        # self.client = Client()
-
     def test_farm_components(self):
         """Test creating a farm and its components."""
 
@@ -38,7 +37,9 @@ class FarmTests(TestCase):
         )
         self.assertEqual(farm.address.raw, proto_farm_address.raw)
 
-        coordinator = Coordinator.objects.create(farm=farm)
+        coordinator = Coordinator.objects.create(
+            farm=farm, local_ip_address="192.168.0.2", external_ip_address="1.1.1.1"
+        )
         hydroponic_system_a = HydroponicSystem.objects.create(farm=farm,)
         hydroponic_system_b = HydroponicSystem.objects.create(farm=farm,)
         controller_a = Controller.objects.create(
@@ -63,7 +64,9 @@ class FarmTests(TestCase):
         mocked_now = datetime.now(pytz.utc)
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
             farm = Farm.objects.create(name="ProtoFarm")
-            coordinator = Coordinator.objects.create(farm=farm)
+            coordinator = Coordinator.objects.create(
+                farm=farm, local_ip_address="192.168.0.2", external_ip_address="1.1.1.1"
+            )
             hydroponic_system = HydroponicSystem.objects.create(
                 farm=farm, system_type=HydroponicSystem.FLOOD_AND_DRAIN
             )
@@ -129,3 +132,96 @@ class FarmTests(TestCase):
         )
         self.assertNotIn(controller_a, updated_unregistered_controllers)
 
+
+class APITests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # Disable HTTP request warnings
+        logging.disable()
+
+    def tearDown(self):
+        # Reenable HTTP request warnings
+        logging.disable(logging.NOTSET)
+
+    def test_controller_ping(self):
+        """Test unregistered coordinators pinging the server"""
+
+        # Test passing an empty POST request
+        data = {}
+        response = self.client.post(
+            reverse("coordiantor_ping_view"), data=data, REMOTE_ADDR="1.1.1.1"
+        )
+        self.assertContains(response, "This field is required", status_code=400)
+
+        # Test passing invalid JSON
+        data = "{hello there}"
+        response = self.client.post(
+            reverse("coordiantor_ping_view"),
+            data=data,
+            content_type="application/json",
+            REMOTE_ADDR="1.1.1.1",
+        )
+        self.assertContains(response, "JSON parse error", status_code=400)
+
+        # Test passing 127.0.0.1 as the remote IP address. Should fail as not routable
+        data = {"local_ip_address": "192.168.0.2"}
+        response = self.client.post(reverse("coordiantor_ping_view"), data=data)
+        self.assertContains(response, "IP address is not routable", status_code=400)
+
+        # Test a valid ping
+        data = {"local_ip_address": "192.168.0.2"}
+        response = self.client.post(
+            reverse("coordiantor_ping_view"), data=data, REMOTE_ADDR="1.1.1.1"
+        )
+        self.assertContains(response, "local_ip_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Test another anonymous valid ping
+        data = {"local_ip_address": "192.168.0.2"}
+        response = self.client.post(
+            reverse("coordiantor_ping_view"), data=data, REMOTE_ADDR="1.1.1.2"
+        )
+        self.assertContains(response, "local_ip_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Test a valid ping from a known coordinator
+        data = {
+            "local_ip_address": "192.168.0.2",
+            id: json.loads(response.content)["id"],
+        }
+        response = self.client.post(
+            reverse("coordiantor_ping_view"), data=data, REMOTE_ADDR="1.1.1.2"
+        )
+        self.assertContains(response, "local_ip_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Register the coordinator and send an invalid ping. Expect the response to
+        # contain the correct URL (consists of the coordinator-detail view + id)
+        farm = Farm.objects.create(name="TestFarm")
+        coordinator = Coordinator.objects.create(
+            farm=farm, local_ip_address="192.168.0.1", external_ip_address="1.1.1.3"
+        )
+        data = {"local_ip_address": "192.168.0.2", "id": coordinator.id}
+        response = self.client.post(
+            reverse("coordiantor_ping_view"), data=data, REMOTE_ADDR="1.1.1.2"
+        )
+        self.assertContains(response, "has been registered", status_code=403)
+        self.assertContains(response, coordinator.id, status_code=403)
+
+
+# class FlowTests(TestCase):
+#     def setUp(self):
+#         self.client = Client()
+
+#     def test_coordinator_registration_flow(self):
+#         """
+#         Test a coordinator pinging the server, being added by a user, updating the dns
+#         records and requesting new TLS certificates.
+#         """
+
+
+#     def test_celery(self):
+#         debug_task.delay()

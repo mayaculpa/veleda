@@ -44,6 +44,9 @@ ALLOWED_HOSTS.append("core")
 # Application definition
 
 INSTALLED_APPS = [
+    #
+    # Django Apps
+    #
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -51,11 +54,18 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_registration",
+    #
+    # Third-Party Apps
+    #
     "oauth2_provider",
     "rest_framework",
+    "rest_framework.authtoken",
     "semanticuiforms",
     "address",
     "macaddress",
+    #
+    # Local Apps
+    #
     "accounts.apps.AccountsConfig",
     "farms.apps.FarmsConfig",
 ]
@@ -182,12 +192,13 @@ OAUTH2_PROVIDER = {
     "SCOPES": {"userinfo-v1": "Userinfo API v1"}
 }
 
-# REST_FRAMEWORK = {
-#     "DEFAULT_AUTHENTICATION_CLASSES": (
-#         "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
-#     ),
-#     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-# }
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        'rest_framework.authentication.TokenAuthentication',
+        # "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+    ),
+    # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+}
 
 LOGIN_REDIRECT_URL = "/"
 
