@@ -12,6 +12,7 @@ from django.urls import reverse
 
 from .models import Farm, Coordinator, HydroponicSystem, Controller
 from accounts.models import Profile
+
 # from core.celery import debug_task
 
 
@@ -133,7 +134,50 @@ class FarmTests(TestCase):
         self.assertNotIn(controller_a, updated_unregistered_controllers)
 
 
-class APITests(TestCase):
+class CoordinatorSetupTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def test_coordinator_setup(self):
+        """Test that pinging coordinators can be found"""
+
+        # Test internal IP address
+        response = self.client.get(reverse("coordinator_setup"), REMOTE_ADDR="127.0.0.1")
+        self.assertContains(response, "external IP address can not be used for a lookup")
+        self.assertContains(response, "127.0.0.1")
+
+        # Test empty setup page
+        response = self.client.get(reverse("coordinator_setup"), REMOTE_ADDR="1.1.1.1")
+        self.assertContains(response, "no coordinators were found")
+
+        # Test only registered coordinators
+        farm_a_1 = Farm.objects.create(name="TestFarm_A_1")
+        farm_a_2 = Farm.objects.create(name="TestFarm_A_2")
+        coordinator_a_1 = Coordinator.objects.create(
+            local_ip_address="192.168.0.1", external_ip_address="1.1.1.1", farm=farm_a_1
+        )
+        coordinator_a_2 = Coordinator.objects.create(
+            local_ip_address="192.168.0.1", external_ip_address="1.1.1.1", farm=farm_a_2
+        )
+        response = self.client.get(reverse("coordinator_setup"), REMOTE_ADDR="1.1.1.1")
+        self.assertContains(response, coordinator_a_1.farm.name)
+        self.assertContains(response, coordinator_a_2.farm.name)
+        self.assertContains(response, "None found")
+
+        coordinator_b_1 = Coordinator.objects.create(
+            local_ip_address="192.168.0.1", external_ip_address="1.1.1.1"
+        )
+        coordinator_b_2 = Coordinator.objects.create(
+            local_ip_address="192.168.0.1", external_ip_address="1.1.1.1"
+        )
+        response = self.client.get(reverse("coordinator_setup"), REMOTE_ADDR="1.1.1.1")
+        self.assertContains(response, coordinator_b_1.id.hex[:7])
+        self.assertContains(response, coordinator_b_2.id.hex[:7])
+
+        response = self.client.get(reverse("coordinator_setup"), REMOTE_ADDR="1.1.1.2")
+        self.assertContains(response, "no coordinators were found")
+
+class CoordinatorAPITests(TestCase):
     def setUp(self):
         self.client = Client()
         # Disable HTTP request warnings
@@ -149,14 +193,14 @@ class APITests(TestCase):
         # Test passing an empty POST request
         data = {}
         response = self.client.post(
-            reverse("coordiantor_ping_view"), data=data, REMOTE_ADDR="1.1.1.1"
+            reverse("coordiantor_ping"), data=data, REMOTE_ADDR="1.1.1.1"
         )
         self.assertContains(response, "This field is required", status_code=400)
 
         # Test passing invalid JSON
         data = "{hello there}"
         response = self.client.post(
-            reverse("coordiantor_ping_view"),
+            reverse("coordiantor_ping"),
             data=data,
             content_type="application/json",
             REMOTE_ADDR="1.1.1.1",
@@ -165,13 +209,13 @@ class APITests(TestCase):
 
         # Test passing 127.0.0.1 as the remote IP address. Should fail as not routable
         data = {"local_ip_address": "192.168.0.2"}
-        response = self.client.post(reverse("coordiantor_ping_view"), data=data)
+        response = self.client.post(reverse("coordiantor_ping"), data=data)
         self.assertContains(response, "IP address is not routable", status_code=400)
 
         # Test a valid ping
         data = {"local_ip_address": "192.168.0.2"}
         response = self.client.post(
-            reverse("coordiantor_ping_view"), data=data, REMOTE_ADDR="1.1.1.1"
+            reverse("coordiantor_ping"), data=data, REMOTE_ADDR="1.1.1.1"
         )
         self.assertContains(response, "local_ip_address", status_code=201)
         self.assertContains(response, "external_ip_address", status_code=201)
@@ -180,7 +224,7 @@ class APITests(TestCase):
         # Test another anonymous valid ping
         data = {"local_ip_address": "192.168.0.2"}
         response = self.client.post(
-            reverse("coordiantor_ping_view"), data=data, REMOTE_ADDR="1.1.1.2"
+            reverse("coordiantor_ping"), data=data, REMOTE_ADDR="1.1.1.2"
         )
         self.assertContains(response, "local_ip_address", status_code=201)
         self.assertContains(response, "external_ip_address", status_code=201)
@@ -192,7 +236,7 @@ class APITests(TestCase):
             id: json.loads(response.content)["id"],
         }
         response = self.client.post(
-            reverse("coordiantor_ping_view"), data=data, REMOTE_ADDR="1.1.1.2"
+            reverse("coordiantor_ping"), data=data, REMOTE_ADDR="1.1.1.2"
         )
         self.assertContains(response, "local_ip_address", status_code=201)
         self.assertContains(response, "external_ip_address", status_code=201)
@@ -206,7 +250,7 @@ class APITests(TestCase):
         )
         data = {"local_ip_address": "192.168.0.2", "id": coordinator.id}
         response = self.client.post(
-            reverse("coordiantor_ping_view"), data=data, REMOTE_ADDR="1.1.1.2"
+            reverse("coordiantor_ping"), data=data, REMOTE_ADDR="1.1.1.2"
         )
         self.assertContains(response, "has been registered", status_code=403)
         self.assertContains(response, coordinator.id, status_code=403)

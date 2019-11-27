@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load semanticui %}
+
+{% block content %}
+
+<div class="ui main text container">
+  <h1 class="ui header">Setup</h1>
+  
+  {% if error %}
+  <p>{{ error }}</p>
+  {% endif %}
+
+  {% if unregistered_coordinators or registered_coordinators %}
+  <h2>Registered Coordinators</h2>
+  {% if registered_coordinators %}
+  <table style="width:100%">
+    <tr>
+      <th>Name</th>
+      <th>External IP Address</th>
+      <th>DNS Address</th>
+      <th>Last Modified</th>
+      <th>Date Created</th>
+    </tr>
+    {% for coordinator in registered_coordinators %}
+    <tr>
+      <td>
+      {% if coordinator.dns_address %}
+        <a href="http://{{ coordinator.dns_address }}">{{ coordinator.farm.name }}</a>
+      {% else %}
+        <a href="http://{{ coordinator.local_ip_address }}">{{ coordinator.farm.name }}</a>
+      {% endif %}
+      </td>
+      <td>{{ coordinator.external_ip_address }}</td>
+      <td>{{ coordinator.dns_address }}</a></td>
+      <td>{{ coordinator.modified_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+      <td>{{ coordinator.created_at|date:"SHORT_DATE_FORMAT" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>None found</p>
+  {% endif %}
+    
+  <h2>Unregistered Coordinators</h2>
+  {% if unregistered_coordinators %}
+  <table style="width:100%">
+    <tr>
+      <th>Name</th>
+      <th>External IP Address</th>
+      <th>Last Modified</th>
+      <th>Date Created</th>
+    </tr>
+    {% for coordinator in unregistered_coordinators %}
+    <tr>
+      <td>
+        <a href="http://{{ coordinator.local_ip_address }}">{{ coordinator.id|truncatechars:"8" }}</a>
+      </td>
+      <td>{{ coordinator.external_ip_address }}</td>
+      <td>{{ coordinator.modified_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+      <td>{{ coordinator.created_at|date:"SHORT_DATE_FORMAT" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>None found</p>
+  {% endif %}
+  {% else %}
+    <h2>Sorry, no coordinators were found</h2>
+    <p>Please ensure that you are in the same network (WiFi or LAN) as the coordinator.</p>
+  {% endif %}
+</div>
+{% endblock %}

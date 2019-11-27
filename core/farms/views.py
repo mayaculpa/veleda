@@ -6,6 +6,8 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.shortcuts import render
+from django.views.generic.base import View
 
 from .models import Farm, Coordinator, HydroponicSystem, Controller
 from .serializers import (
@@ -17,7 +19,6 @@ from .serializers import (
     ControllerSerializer,
 )
 
-# Create your views here.
 
 class FarmDetailView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -26,11 +27,36 @@ class FarmDetailView(APIView):
         pass
 
 
+class CoordinatorSetupView(View):
+    def get(self, request, *args, **kwargs):
+        context = {}
+
+        client_ip, is_routable = get_client_ip(request)
+        if not is_routable and not settings.DEBUG:
+            context["error"] = (
+                "Sorry, your external IP address can not be used for a lookup: %s"
+                % client_ip
+            )
+            return render(request, "farms/setup.html", context=context)
+
+        coordinators = Coordinator.objects.filter(external_ip_address=client_ip)
+        context["unregistered_coordinators"] = sorted(
+            filter(lambda coordinator: not coordinator.farm, coordinators),
+            key=lambda coordinator: coordinator.modified_at,
+        )
+        context["registered_coordinators"] = sorted(
+            filter(lambda coordinator: coordinator.farm, coordinators),
+            key=lambda coordinator: coordinator.modified_at,
+        )
+        return render(request, "farms/setup.html", context=context)
+
+
 class CoordinatorPingView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
         # Find the external IP address from the request
+        # TODO: Handle IPv6 properly: http://www.steves-internet-guide.com/ipv6-guide/
         client_ip, is_routable = get_client_ip(request)
         if not is_routable and not settings.DEBUG:
             error_msg = "External IP address is not routable: %s" % client_ip
