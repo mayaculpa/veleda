@@ -10,8 +10,8 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from .models import Farm, Coordinator, HydroponicSystem, Controller
 from accounts.models import Profile
+from .models import Farm, Coordinator, HydroponicSystem, Controller
 
 # from core.celery import debug_task
 
@@ -142,8 +142,12 @@ class CoordinatorSetupTests(TestCase):
         """Test that pinging coordinators can be found"""
 
         # Test internal IP address
-        response = self.client.get(reverse("coordinator_setup"), REMOTE_ADDR="127.0.0.1")
-        self.assertContains(response, "external IP address can not be used for a lookup")
+        response = self.client.get(
+            reverse("coordinator_setup"), REMOTE_ADDR="127.0.0.1"
+        )
+        self.assertContains(
+            response, "external IP address can not be used for a lookup"
+        )
         self.assertContains(response, "127.0.0.1")
 
         # Test empty setup page
@@ -176,6 +180,106 @@ class CoordinatorSetupTests(TestCase):
 
         response = self.client.get(reverse("coordinator_setup"), REMOTE_ADDR="1.1.1.2")
         self.assertContains(response, "no coordinators were found")
+
+
+class FarmTemplateTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user_a = get_user_model().objects.create_user(
+            email="user_a@example.com", password="user_a",
+        )
+        self.user_b = get_user_model().objects.create_user(
+            email="user_b@example.com", password="user_b",
+        )
+        # Disable HTTP request warnings
+        logging.disable()
+
+    def tearDown(self):
+        # Reenable HTTP request warnings
+        logging.disable(logging.NOTSET)
+
+    def test_create_farm(self):
+        """Test creating a farm"""
+
+        # Check required authentication
+        response = self.client.get(reverse("farm-setup"))
+        self.assertRedirects(
+            response, reverse("login") + "?next=" + reverse("farm-setup")
+        )
+        response = self.client.post(reverse("farm-setup"))
+        self.assertRedirects(
+            response, reverse("login") + "?next=" + reverse("farm-setup")
+        )
+
+        with self.settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage"
+        ):
+            self.client.login(username=self.user_a.email, password="user_a")
+            response = self.client.get(reverse("farm-setup"))
+            self.assertContains(response, "Name")
+            self.assertContains(response, "Address")
+
+            # Check poorly formatted requests
+            data = {}
+            response = self.client.post(reverse("farm-setup"), data)
+            self.assertContains(response, "Farm Setup", status_code=400)
+
+            data = {"name": "test farm"}
+            response = self.client.post(reverse("farm-setup"), data)
+            self.assertContains(response, "Farm Setup", status_code=400)
+
+            data = {"address": "some place"}
+            response = self.client.post(reverse("farm-setup"), data)
+            self.assertContains(response, "Farm Setup", status_code=400)
+            self.assertFalse(Farm.objects.all())
+
+            # Check valid requests
+            data = {"name": "good farm", "address": "some place"}
+            response = self.client.post(reverse("farm-setup"), data)
+            self.assertRedirects(response, reverse("farm-list"))
+            self.assertTrue(Farm.objects.all())
+
+            farm = Farm.objects.get(name=data["name"])
+            self.assertEqual(farm.name, data["name"])
+            self.assertEqual(farm.owner, self.user_a)
+
+    def test_farm_list(self):
+        """Test showing all farms registered to a user"""
+        farm_address_a = Address.objects.create(
+            raw="Some Street 42, Any Town, Major City, New Country",
+        )
+        farm_coordinator_a = Coordinator.objects.create(
+            local_ip_address="192.168.0.1", external_ip_address="1.1.1.1"
+        )
+        farm_a = Farm.objects.create(
+            name="Farm A", address=farm_address_a, coordinator=farm_coordinator_a
+        )
+        farm_b = Farm.objects.create(
+            name="Farm B"
+        )
+
+        # Test required authentication
+        response = self.client.get(reverse("farm-list"))
+        self.assertRedirects(
+            response, reverse("login") + "?next=" + reverse("farm-list")
+        )
+
+        # Test no owned farms
+        self.client.login(username=self.user_a.email, password="user_a")
+        response = self.client.get(reverse("farm-list"))
+        self.assertContains(response, "Farms")
+        self.assertContains(response, "No farms found")
+
+        # Test one ownder farm
+        farm_a.owner = self.user_a
+        farm_a.save()
+        farm_b.owner = self.user_b
+        farm_b.save()
+        response = self.client.get(reverse("farm-list"))
+        self.assertContains(response, farm_a.name)
+        self.assertNotContains(response, farm_b.name)
+        self.assertContains(response, farm_address_a.raw)
+
 
 class CoordinatorAPITests(TestCase):
     def setUp(self):

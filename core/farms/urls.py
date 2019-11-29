@@ -1,8 +1,18 @@
 from django.urls import path
 
-from .views import CoordinatorSetupView, CoordinatorPingView, CoordinatorDetailView, FarmDetailView
+from .views import CoordinatorSetupView, CoordinatorPingView, CoordinatorDetailView, FarmDetailView, FarmSetupView, FarmListView
 
 urlpatterns = [
+    path(
+        "farms/",
+        FarmListView.as_view(),
+        name="farm-list"
+    ),
+    path(
+        "farm-setup/",
+        FarmSetupView.as_view(),
+        name="farm-setup",
+    ),
     path(
         "setup/",
         CoordinatorSetupView.as_view(),

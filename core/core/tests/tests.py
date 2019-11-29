@@ -10,4 +10,4 @@ class MainTest(TestCase):
 
     def test_homepage(self):
         response = self.client.get("")
-        self.assertContains(response, "FlowLeaf", status_code=200)
+        self.assertContains(response, "SmartDigitalGarden", status_code=200)

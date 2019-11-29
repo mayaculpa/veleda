@@ -1,14 +1,16 @@
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.mixins import LoginRequiredMixin
 from ipware import get_client_ip
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.shortcuts import render
+from django.shortcuts import render, reverse
 from django.views.generic.base import View
 
+from .forms import CreateFarmForm
 from .models import Farm, Coordinator, HydroponicSystem, Controller
 from .serializers import (
     FarmSerializer,
@@ -25,6 +27,30 @@ class FarmDetailView(APIView):
 
     def get(self, request):
         pass
+
+
+class FarmListView(LoginRequiredMixin, View):
+    """List of a user's farm"""
+
+    def get(self, request, *args, **kwargs):
+        context = {"farms": Farm.objects.filter(owner=request.user)}
+        return render(request, "farms/farm_list.html", context=context)
+
+
+class FarmSetupView(LoginRequiredMixin, View):
+    """Allows a user to create a farm"""
+
+    def get(self, request, *args, **kwargs):
+        return render(request, "farms/farm_setup.html", {"form": CreateFarmForm()})
+
+    def post(self, request, *args, **kwargs):
+        form = CreateFarmForm(request.POST)
+
+        if form.is_valid():
+            Farm.objects.create(**form.cleaned_data, owner=request.user)
+            return HttpResponseRedirect(reverse('farm-list'))
+        else:
+            return render(request, "farms/farm_setup.html", {'form': form}, status=400)
 
 
 class CoordinatorSetupView(View):
