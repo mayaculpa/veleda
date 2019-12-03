@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import CoordinatorSetupView, CoordinatorPingView, CoordinatorDetailView, FarmDetailView, FarmSetupView, FarmListView
+from .views import CoordinatorSetupSelectView, CoordinatorSetupRegisterView, CoordinatorPingView, CoordinatorDetailView, FarmDetailView, FarmSetupView, FarmListView
 
 urlpatterns = [
     path(
@@ -14,14 +14,19 @@ urlpatterns = [
         name="farm-setup",
     ),
     path(
-        "setup/",
-        CoordinatorSetupView.as_view(),
-        name="coordinator_setup"
+        "coordinator-setup/",
+        CoordinatorSetupSelectView.as_view(),
+        name="coordinator-setup-select"
+    ),
+    path(
+        "coordinator-setup/<uuid:pk>/",
+        CoordinatorSetupRegisterView.as_view(),
+        name="coordinator-setup-register"
     ),
     path(
         "api/v1/farms/coordinators/ping/",
         CoordinatorPingView.as_view(),
-        name="coordiantor_ping",
+        name="coordiantor-ping",
     ),
     path(
         "api/v1/farms/coordinators/<uuid:pk>/",

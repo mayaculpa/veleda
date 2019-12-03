@@ -2,37 +2,34 @@
 {% load semanticui %}
 
 {% block content %}
+<h1 class="ui header">Log in</h1>
 
-<div class="ui main text container">
-  <h1 class="ui header">Log in</h1>
+{% if form.errors %}
+<p>Your email and password didn't match. Please try again.</p>
+{% endif %}
 
-  {% if form.errors %}
-  <p>Your email and password didn't match. Please try again.</p>
-  {% endif %}
+{% if next %}
+{% if user.is_authenticated %}
+<p>Your account doesn't hace access to this page. To proceed
+  please login with an account that has access.</p>
+{% else %}
+<p>Please login to see this page.</p>
+{% endif %}
+{% endif %}
 
-  {% if next %}
-  {% if user.is_authenticated %}
-  <p>Your account doesn't hace access to this page. To proceed
-    please login with an account that has access.</p>
-  {% else %}
-  <p>Please login to see this page.</p>
-  {% endif %}
-  {% endif %}
-
-  <form class="ui form" method="post" action="{% url 'login' %}">
-    {% csrf_token %}
-    {% render_form form %}
-    <input type="hidden" name="next" value="{{ next }}" />
-    <div class="ui items">
-      <div class="item">
-        <div class="content">
-          <button class="ui button" type="submit">Log in</button>
-        </div>
-        <div class="ui right floated basic button">
-          <a href="{% url 'password_reset' %}">Lost password?</a>
-        </div>
+<form class="ui form" method="post" action="{% url 'login' %}">
+  {% csrf_token %}
+  {% render_form form %}
+  <input type="hidden" name="next" value="{{ next }}" />
+  <div class="ui items">
+    <div class="item">
+      <div class="content">
+        <button class="ui button" type="submit">Log in</button>
+      </div>
+      <div class="ui right floated basic button">
+        <a href="{% url 'password_reset' %}">Lost password?</a>
       </div>
     </div>
-  </form>
-</div>
+  </div>
+</form>
 {% endblock %}

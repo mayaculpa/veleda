@@ -1,4 +1,4 @@
-# Core FlowLeaf Server
+# Core Service
 
 ## Installation
 
@@ -18,6 +18,10 @@ Or
 
     ./manage.py migrate
     ./manage.py runserver
+
+### Server Domain
+
+In order to create the farm subdomains, the server domain and the subdomain namespace have to be known (e.g., *example.com* and *farms*). The namespace will be slugified (i.e., only alphanumerics, underscores and hyphens). Set both variables in the `dns.core` file.
 
 ## Tests
 

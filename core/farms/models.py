@@ -18,6 +18,12 @@ class Farm(models.Model):
         help_text="The UUID to identify the hydroponic system.",
     )
     name = models.CharField(max_length=30, help_text="The name of the farm.")
+    subdomain = models.URLField(
+        max_length=60,
+        unique=True,
+        null=True,
+        help_text="The subdomain used to connect to the coordiantor",
+    )
     owner = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -36,7 +42,7 @@ class Farm(models.Model):
     modified_at = models.DateTimeField(
         auto_now=True, help_text="The date and time when the farm was last updated."
     )
-
+    
     def __str__(self):
         return self.name
 

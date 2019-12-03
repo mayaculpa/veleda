@@ -1,17 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-<main class="ui main text container">
-  <h1>Activation Failed</h1>
-  <div class="ui negative message">
-    <i class="close icon"></i>
-    <div class="header">
-      Error
-    </div>
-    <p>{{ activation_error.message }}</p>
+<h1>Activation Failed</h1>
+<div class="ui negative message">
+  <i class="close icon"></i>
+  <div class="header">
+    Error
   </div>
-  <p><a href="#">Click to send a new activation email</a></p>
-</main>
+  <p>{{ activation_error.message }}</p>
+</div>
+<p><a href="#">Click to send a new activation email</a></p>
 
 <script>
   $('.message .close').on('click', function () {
