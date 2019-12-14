@@ -40,7 +40,6 @@ class CoordinatorSerializer(serializers.HyperlinkedModelSerializer):
             "farm",
             "local_ip_address",
             "external_ip_address",
-            "dns_address",
         ]
 
 

@@ -18,12 +18,6 @@ class Farm(models.Model):
         help_text="The UUID to identify the hydroponic system.",
     )
     name = models.CharField(max_length=30, help_text="The name of the farm.")
-    subdomain = models.URLField(
-        max_length=60,
-        unique=True,
-        null=True,
-        help_text="The subdomain used to connect to the coordiantor",
-    )
     owner = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -42,7 +36,7 @@ class Farm(models.Model):
     modified_at = models.DateTimeField(
         auto_now=True, help_text="The date and time when the farm was last updated."
     )
-    
+
     def __str__(self):
         return self.name
 
@@ -58,7 +52,7 @@ class Coordinator(models.Model):
         editable=False,
         help_text="The UUID to identify the hydroponic system.",
     )
-    farm = models.OneToOneField(
+    farm = models.ForeignKey(
         Farm,
         on_delete=models.CASCADE,
         null=True,
@@ -70,11 +64,6 @@ class Coordinator(models.Model):
     )
     external_ip_address = models.GenericIPAddressField(
         help_text="The coordinator's external IP address."
-    )
-    dns_address = models.URLField(
-        null=True,
-        blank=True,
-        help_text="The URL which can be used to find the local IP address.",
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -146,19 +135,22 @@ class HydroponicSystem(models.Model):
             return self.get_system_type_display() + " (" + self.id.hex + ")"
 
 
-class ControllerQuerySet(QuerySet):
-    def get_local_unregistered_controllers(self, external_ip_address):
+class ControllerManager(models.Manager):
+    def get_local_unregistered(self, external_ip_address):
         """Finds all unregistered controllers in the same local network (sharing an
            external IP address)"""
 
-        return self.filter(external_ip_address=external_ip_address).filter(
-            farm__isnull=True
+        queryset = self.get_queryset()
+        return queryset.filter(external_ip_address=external_ip_address).filter(
+            coordinator__isnull=True
         )
 
 
 class Controller(models.Model):
     """A component of the hydroponic system that can be commanded (e.g., pump, dosage, camera or
     sensor controller)"""
+
+    objects = ControllerManager()
 
     id = models.UUIDField(
         primary_key=True,
@@ -169,18 +161,17 @@ class Controller(models.Model):
     name = models.CharField(
         max_length=30, null=True, blank=True, help_text="The name of the controller",
     )
-    farm = models.ForeignKey(
-        Farm,
+    coordinator = models.ForeignKey(
+        Coordinator,
         on_delete=models.CASCADE,
         null=True,
-        blank=True,
-        help_text="The farm to which the controller belongs to, and thus the coordinator.",
+        help_text="The coordinator with which the controller is connected to.",
     )
     wifi_mac_address = MACAddressField(
         help_text="The Wifi MAC address of the controller."
     )
     external_ip_address = models.GenericIPAddressField(
-        null=True, blank=True, help_text="The external IP address of the controller."
+        help_text="The external IP address of the controller."
     )
 
     PUMP_CONTROLLER = "PC"
@@ -210,7 +201,6 @@ class Controller(models.Model):
         help_text="The date and time when the controller was last updated.",
     )
 
-    objects = ControllerQuerySet.as_manager()
 
     def __str__(self):
         if self.name:

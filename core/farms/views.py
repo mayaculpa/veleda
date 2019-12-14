@@ -18,7 +18,6 @@ from .forms import (
     CoordinatorSetupRegistrationForm,
 )
 from .models import Farm, Coordinator, HydroponicSystem, Controller
-from .tasks import setup_subdomain_task
 from .serializers import (
     AddressSerializer,
     CoordinatorPingSerializer,

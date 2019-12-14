@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 import sys
-from django.utils.text import slugify
 
 TESTING = sys.argv[1:2] == ['test']
 
@@ -221,9 +220,3 @@ if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-
-# Exteranl APIs
-
-CLOUDFLARE_API_KEY = os.environ.get("CLOUDFLARE_API_KEY")
-SERVER_DOMAIN = os.environ.get("SERVER_DOMAIN")
-FARMS_SUBDOMAIN_NAMESPACE = slugify("FARMS_SUBDOMAIN_NAMESPACE")

@@ -14,8 +14,8 @@ from django.test import Client, TestCase, tag
 from django.urls import reverse
 
 from accounts.models import Profile
+from .forms import CoordinatorSetupRegistrationForm
 from .models import Farm, Coordinator, HydroponicSystem, Controller
-from .tasks import setup_subdomain_task
 
 
 class FarmTests(TestCase):
@@ -46,18 +46,18 @@ class FarmTests(TestCase):
         hydroponic_system_a = HydroponicSystem.objects.create(farm=farm,)
         hydroponic_system_b = HydroponicSystem.objects.create(farm=farm,)
         controller_a = Controller.objects.create(
-            farm=farm,
+            coordinator=coordinator,
             controller_type=Controller.SENSOR_CONTROLLER,
             wifi_mac_address="00:11:22:33:44:55",
         )
         controller_b = Controller.objects.create(
-            farm=farm,
+            coordinator=coordinator,
             controller_type=Controller.PUMP_CONTROLLER,
             wifi_mac_address="00:11:22:33:44:56",
         )
-        self.assertEqual(farm.coordinator.id, coordinator.id)
-        self.assertEqual(controller_a.farm.id, farm.id)
-        self.assertEqual(controller_b.farm.id, farm.id)
+        self.assertEqual(Coordinator.objects.filter(farm=farm.id)[0].id, coordinator.id)
+        self.assertEqual(controller_a.coordinator.id, coordinator.id)
+        self.assertEqual(controller_b.coordinator.id, coordinator.id)
         self.assertEqual(hydroponic_system_a.farm.id, farm.id)
         self.assertEqual(hydroponic_system_b.farm.id, farm.id)
 
@@ -74,7 +74,7 @@ class FarmTests(TestCase):
                 farm=farm, system_type=HydroponicSystem.FLOOD_AND_DRAIN
             )
             controller = Controller.objects.create(
-                farm=farm,
+                coordinator=coordinator,
                 controller_type=Controller.SENSOR_CONTROLLER,
                 wifi_mac_address="00:11:22:33:44:55",
             )
@@ -111,9 +111,8 @@ class FarmTests(TestCase):
     def test_controller_registration_flow(self):
         """Test a new controller automatically registering itself and being assigned to a farm."""
 
-        farm = Farm.objects.create(name="ProtoFarm")
         coordinator = Coordinator.objects.create(
-            farm=farm, local_ip_address="192.168.0.2", external_ip_address="3.3.3.3"
+            local_ip_address="192.168.0.2", external_ip_address="3.3.3.3"
         )
         controller_a = Controller.objects.create(
             wifi_mac_address="00:11:22:33:44:55", external_ip_address="3.3.3.3"
@@ -121,19 +120,25 @@ class FarmTests(TestCase):
         controller_b = Controller.objects.create(
             wifi_mac_address="00:11:22:33:44:56", external_ip_address="3.3.3.3"
         )
-
-        unregistered_controllers = Controller.objects.get_local_unregistered_controllers(
+        controller_c = Controller.objects.create(
+            wifi_mac_address="00:11:22:33:44:57", external_ip_address="4.4.4.4"
+        )
+        # Expect both to be unregistered
+        unregistered_controllers = Controller.objects.get_local_unregistered(
             coordinator.external_ip_address
         )
         self.assertIn(controller_a, unregistered_controllers)
         self.assertIn(controller_b, unregistered_controllers)
+        self.assertNotIn(controller_c, unregistered_controllers)
 
-        controller_a.farm = farm
+        controller_a.coordinator = coordinator
         controller_a.save()
-        updated_unregistered_controllers = Controller.objects.get_local_unregistered_controllers(
+        unregistered_controllers = Controller.objects.get_local_unregistered(
             coordinator.external_ip_address
         )
-        self.assertNotIn(controller_a, updated_unregistered_controllers)
+        self.assertNotIn(controller_a, unregistered_controllers)
+        self.assertIn(controller_b, unregistered_controllers)
+        self.assertNotIn(controller_c, unregistered_controllers)
 
 
 class CoordinatorSetupTests(TestCase):
@@ -273,6 +278,43 @@ class CoordinatorSetupTests(TestCase):
             REMOTE_ADDR="127.0.0.1",
         )
 
+    def test_coordinator_form(self):
+        farm = Farm.objects.create(name="TestFarm")
+        farms = Farm.objects.all()
+
+        # Test a valid form
+        data = {"subdomain_prefix": "valid-name", "farm": farm.id}
+        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        self.assertTrue(form.is_valid())
+
+        # Test lowercasing
+        data = {"subdomain_prefix": "Val1D-Name", "farm": farm.id}
+        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        self.assertTrue(form.is_valid())
+        self.assertEqual(
+            form.cleaned_data["subdomain_prefix"], data["subdomain_prefix"].lower()
+        )
+
+        # Test underscores
+        data = {"subdomain_prefix": "inVal1D_Name", "farm": farm.id}
+        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        self.assertFalse(form.is_valid())
+
+        # Test dots
+        data = {"subdomain_prefix": "inVal1D.Name", "farm": farm.id}
+        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        self.assertFalse(form.is_valid())
+
+        # Test leading hyphen
+        data = {"subdomain_prefix": "-inVal1DName", "farm": farm.id}
+        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        self.assertFalse(form.is_valid())
+
+        # Test other characters
+        data = {"subdomain_prefix": "a*ä", "farm": farm.id}
+        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        self.assertFalse(form.is_valid())
+
 
 class FarmTemplateTests(TestCase):
     def setUp(self):
@@ -369,89 +411,6 @@ class FarmTemplateTests(TestCase):
         self.assertContains(response, farm_a.name)
         self.assertNotContains(response, farm_b.name)
         self.assertContains(response, farm_address_a.raw)
-
-
-@tag("external-api")
-@skipIf(
-    not settings.CLOUDFLARE_API_KEY
-    or not settings.FARMS_SUBDOMAIN_NAMESPACE
-    or not settings.SERVER_DOMAIN,
-    "Missing settings (API key or dns config)",
-)
-class FarmTaskTests(TestCase):
-    def setUp(self):
-        self.cf = CloudFlare.CloudFlare(token=settings.CLOUDFLARE_API_KEY)
-        self.subdomain = (
-            "test_a."
-            + settings.FARMS_SUBDOMAIN_NAMESPACE
-            + "."
-            + settings.SERVER_DOMAIN
-        )
-        self.zone = self.cf.zones.get(params={"name": settings.SERVER_DOMAIN})[0]
-
-        # Disable HTTP request warnings
-        logging.disable()
-
-    def tearDown(self):
-        try:
-            dns_records = self.cf.zones.dns_records.get(
-                self.zone["id"], params={"name": self.subdomain}
-            )
-            if dns_records:
-                self.cf.zones.dns_records.delete(self.zone["id"], dns_records[0]["id"])
-        except CloudFlareError as err:
-            logger.warn(
-                "Calling Cloudflare API failed: {} {}".format(int(err), str(err))
-            )
-
-        # Reenable HTTP request warnings
-        logging.disable(logging.NOTSET)
-
-    def test_setup_subdomain(self):
-        """
-        Expect the setup_subdomain task to create the subdomain, the OAuth2 credentials
-        and start the Let's Encrypt certification process.
-        """
-        # As the test calls external APIs, ensure settings are set to testing values
-        self.assertTrue(settings.TESTING)
-        self.assertTrue(self.zone["id"])
-
-        # Tests the validation checks needed to create a subdomain and certs
-        farm = Farm.objects.create(name="Test Farm A")
-        task = setup_subdomain_task.s(farm.id).apply()
-        self.assertTrue(task.failed())
-        self.assertIsInstance(task.result, ValidationError)
-
-        farm.subdomain = self.subdomain
-        farm.save()
-        task = setup_subdomain_task.s(farm.id).apply()
-        self.assertTrue(task.failed())
-        self.assertIsInstance(task.result, ObjectDoesNotExist)
-
-        coordinator = Coordinator.objects.create(
-            local_ip_address="127.0.0.1", external_ip_address="1.1.1.1", farm=farm
-        )
-        task = setup_subdomain_task.s(farm.id).apply()
-        self.assertEqual(task.status, "SUCCESS")
-
-        # Verification
-        # Check that the farm subdomain has been created. Tear down will delete it
-        # import ipdb; ipdb.set_trace()
-        dns_records = self.cf.zones.dns_records.get(
-            self.zone["id"], params={"name": self.subdomain}
-        )
-        self.assertTrue(dns_records)
-        # cf.zones.dns_records.delete(subdomain_record.id)
-
-        # Check that Sewer has requested and created a staging Let's Encrypt certificate
-        # Use a time-out
-        # Delete DNS records created for verification
-
-        # Login is checked in test_oauth2.py
-        # Only test that the OAuth2 application is correctly created
-
-        # get domain list and expect created subdomain to be there
-        # delete subdomain
 
 
 class CoordinatorAPITests(TestCase):

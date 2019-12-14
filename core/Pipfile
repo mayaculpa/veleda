@@ -18,9 +18,9 @@ django-semanticui-forms = "*"
 djangorestframework = "*"
 oauth2-provider = "*"
 gunicorn = "~=20.0"
-django-registration = "*"
-psycopg2 = "*"
-whitenoise = {extras = ["brotli"],version = "*"}
+django-registration = "~=3.0"
+psycopg2 = "~=2.8"
+whitenoise = {extras = ["brotli"],version = "~=4.1"}
 celery = "~=4.3"
 django-address = "~=0.2"
 django-macaddress = "~=1.6"
