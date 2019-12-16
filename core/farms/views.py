@@ -7,6 +7,8 @@ from django.shortcuts import render, reverse
 from django.views.generic.base import View
 from django_celery_results.models import TaskResult
 from ipware import get_client_ip
+from ipware.utils import is_valid_ipv6
+from rest_framework.exceptions import APIException
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -23,9 +25,40 @@ from .serializers import (
     CoordinatorPingSerializer,
     CoordinatorSerializer,
     ControllerSerializer,
+    ControllerPingGetSerializer,
+    ControllerPingPostSerializer,
     FarmSerializer,
     HydroponicSystemSerializer,
 )
+
+
+class ExternalIPAddressNotRoutable(APIException):
+    status_code = 400
+    default_detail = "Invalid external IP address."
+    default_code = "external_ip_address_not_routable"
+
+    def __init__(ip_address):
+        self.detail = "External IP address ({}) is not routable".format(ip_address)
+
+
+class ExternalIPAddressV6(APIException):
+    status_code = 400
+    default_detail = "Invalid external IP address."
+    default_code = "external_ip_address_v6"
+
+    def __init__(ip_address, is_ipv6=False):
+        self.detail = "External IPv6 address ({}) is not supported".format(ip_address)
+
+
+def get_external_ip_address(request):
+    """Find the external IP address from the request"""
+    # TODO: Handle IPv6 properly: http://www.steves-internet-guide.com/ipv6-guide/
+    client_ip, is_routable = get_client_ip(request)
+    if not is_routable and not settings.DEBUG:
+        raise ExternalIPAddressNotRoutable(client_ip)
+    if is_valid_ipv6(client_ip):
+        raise ExternalIPAddressV6(client_ip)
+    return client_ip
 
 
 class FarmDetailView(APIView):
@@ -156,13 +189,22 @@ class CoordinatorSetupRegisterView(LoginRequiredMixin, View):
             )
 
         # Set the farm and subdomain
-        form.cleaned_data["farm"].subdomain = form.cleaned_data["subdomain_prefix"] + "." + settings.FARMS_SUBDOMAIN_NAMESPACE + "." + settings.SERVER_DOMAIN
+        form.cleaned_data["farm"].subdomain = (
+            form.cleaned_data["subdomain_prefix"]
+            + "."
+            + settings.FARMS_SUBDOMAIN_NAMESPACE
+            + "."
+            + settings.SERVER_DOMAIN
+        )
         form.cleaned_data["farm"].save()
         coordinator.farm = form.cleaned_data["farm"]
         coordinator.save()
         # setup_subdomain_task.delay(coordinator.farm.id)
-        setup_subdomain_task.s(coordinator.farm.id).apply()
-        messages.success(request, 'Registration successful. Creating subdomain and credentials.')        
+        # TODO: Setup after registration
+        # setup_subdomain_task.s(coordinator.farm.id).apply()
+        # messages.success(
+        #     request, "Registration successful. Creating subdomain and credentials."
+        # )
         return HttpResponseRedirect(reverse("farm-list"))
 
 
@@ -207,6 +249,59 @@ class CoordinatorPingView(APIView):
 class CoordinatorDetailView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    def get(self, pk):
+        return JsonResponse(CoordinatorSerializer(Coordinator.objects.get(pk=pk)))
+
+
+class ControllerPingView(APIView):
+    permission_classes = (AllowAny,)
+
     def get(self, request):
-        pass
+        # Extract the IP address and get the first matching coordinator
+        external_ip_address = get_external_ip_address(request)
+        coordinator = Coordinator.objects.filter(
+            external_ip_address=external_ip_address
+        ).first()
+
+        # Return the local IP address of the coordinator
+        return JsonResponse(
+            ControllerPingGetSerializer(
+                controller_local_ip_address=coordinator.local_ip_address
+            )
+        )
+
+    def post(self, request):
+        request.data["external_ip_address"] = get_external_ip_address(request)
+
+        # Serialize the request
+        serializer = ControllerPingSerializer(data=request.data)
+        if not serializer.is_valid():
+            return JsonResponse(serializer.errors, status=400)
+
+        # If the controller has been registered, only allow authenticated view
+        try:
+            controller = Controller.objects.get(pk=serializer.validated_data["id"])
+            if controller.coordinator:
+                controller_url = ControllerSerializer(
+                    controller, context={"request": request}
+                ).data["url"]
+                error_msg = (
+                    "Controller has been registered. Use the detail URL: %s"
+                    % controller_url
+                )
+                return JsonResponse(data={"error": error_msg}, status=403)
+        except ObjectDoesNotExist:
+            pass
+
+        serializer.save()
+        return JsonResponse(serializer.data, status=201)
+
+
+class ControllerDetailView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return JsonResponse(
+            ControllerSerializer(Controller.objects.get(pk=request.user))
+        )
 

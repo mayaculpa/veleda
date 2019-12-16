@@ -47,12 +47,12 @@ class FarmTests(TestCase):
         hydroponic_system_b = HydroponicSystem.objects.create(farm=farm,)
         controller_a = Controller.objects.create(
             coordinator=coordinator,
-            controller_type=Controller.SENSOR_CONTROLLER,
+            controller_type=Controller.SENSOR_TYPE,
             wifi_mac_address="00:11:22:33:44:55",
         )
         controller_b = Controller.objects.create(
             coordinator=coordinator,
-            controller_type=Controller.PUMP_CONTROLLER,
+            controller_type=Controller.PUMP_TYPE,
             wifi_mac_address="00:11:22:33:44:56",
         )
         self.assertEqual(Coordinator.objects.filter(farm=farm.id)[0].id, coordinator.id)
@@ -75,7 +75,7 @@ class FarmTests(TestCase):
             )
             controller = Controller.objects.create(
                 coordinator=coordinator,
-                controller_type=Controller.SENSOR_CONTROLLER,
+                controller_type=Controller.SENSOR_TYPE,
                 wifi_mac_address="00:11:22:33:44:55",
             )
 

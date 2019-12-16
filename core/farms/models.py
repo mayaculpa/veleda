@@ -152,6 +152,20 @@ class Controller(models.Model):
 
     objects = ControllerManager()
 
+    PUMP_TYPE = "PUM"
+    DOSAGE_TYPE = "DOS"
+    CAMERA_TYPE = "CAM"
+    SENSOR_TYPE = "SEN"
+    UNKNOWN_TYPE = "UNK"
+
+    CONTROLLER_TYPE_CHOICES = [
+        (PUMP_TYPE, "Pump controller"),
+        (DOSAGE_TYPE, "Dosage controller"),
+        (CAMERA_TYPE, "Camera controller"),
+        (SENSOR_TYPE, "Sensor controller"),
+        (UNKNOWN_TYPE, "Unknown controller")
+    ]
+    
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -173,23 +187,10 @@ class Controller(models.Model):
     external_ip_address = models.GenericIPAddressField(
         help_text="The external IP address of the controller."
     )
-
-    PUMP_CONTROLLER = "PC"
-    DOSAGE_CONTROLLER = "DC"
-    CAMERA_CONTROLLER = "CC"
-    SENSOR_CONTROLLER = "SC"
-
-    CONTROLLER_TYPE_CHOICES = [
-        (PUMP_CONTROLLER, "Pump controller"),
-        (DOSAGE_CONTROLLER, "Dosage controller"),
-        (CAMERA_CONTROLLER, "Camera controller"),
-        (SENSOR_CONTROLLER, "Sensor controller"),
-    ]
-
     controller_type = models.CharField(
         max_length=3,
         choices=CONTROLLER_TYPE_CHOICES,
-        default=PUMP_CONTROLLER,
+        default=UNKNOWN_TYPE,
         help_text="The main function of the controller (e.g., pump or sensor controller).",
     )
     created_at = models.DateTimeField(

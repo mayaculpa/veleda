@@ -74,4 +74,24 @@ class HydroponicSystemSerializer(serializers.HyperlinkedModelSerializer):
 class ControllerSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Controller
-        fields = ["url", "name", "wifi_mac", "controller_type"]
+        fields = ["__all__"]
+
+
+class ControllerPingGetSerializer(serializers.Serializer):
+    controller_local_ip_address = serializers.IPAddressField()
+
+
+class ControllerPingPostSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(format='hex', default=uuid.uuid4)
+    
+    class Meta:
+        model = Controller
+        fields = ["__all__"]
+
+    def create(self, validated_data):
+        controller, created = Controller.objects.update_or_create(
+            id=validated_data.get("id", None),
+            defaults=validated_data
+        )
+        return controller
+
