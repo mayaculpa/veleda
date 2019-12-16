@@ -44,8 +44,8 @@ class CoordinatorSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class CoordinatorPingSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(format='hex', default=uuid.uuid4)
-    
+    id = serializers.UUIDField(default=uuid.uuid4)
+
     class Meta:
         model = Coordinator
         fields = [
@@ -56,11 +56,7 @@ class CoordinatorPingSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         coordinator, created = Coordinator.objects.update_or_create(
-            id=validated_data.get("id", None),
-            defaults={
-                "local_ip_address": validated_data["local_ip_address"],
-                "external_ip_address": validated_data["external_ip_address"],
-            },
+            id=validated_data.get("id", None), defaults=validated_data
         )
         return coordinator
 
@@ -74,24 +70,29 @@ class HydroponicSystemSerializer(serializers.HyperlinkedModelSerializer):
 class ControllerSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Controller
-        fields = ["__all__"]
+        fields = "__all__"
 
 
 class ControllerPingGetSerializer(serializers.Serializer):
-    controller_local_ip_address = serializers.IPAddressField()
+    coordinator_local_ip_address = serializers.IPAddressField(allow_blank=True)
 
 
 class ControllerPingPostSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(format='hex', default=uuid.uuid4)
-    
+    id = serializers.UUIDField(default=uuid.uuid4)
+
     class Meta:
         model = Controller
-        fields = ["__all__"]
+        fields = [
+            "id",
+            "name",
+            "wifi_mac_address",
+            "external_ip_address",
+            "controller_type",
+        ]
 
     def create(self, validated_data):
         controller, created = Controller.objects.update_or_create(
-            id=validated_data.get("id", None),
-            defaults=validated_data
+            id=validated_data.get("id", None), defaults=validated_data
         )
         return controller
 

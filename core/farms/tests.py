@@ -488,5 +488,130 @@ class CoordinatorAPITests(TestCase):
         response = self.client.post(
             reverse("coordiantor-ping"), data=data, REMOTE_ADDR="1.1.1.2"
         )
-        self.assertContains(response, "has been registered", status_code=403)
+        self.assertContains(response, "Unauthenticated ping", status_code=403)
         self.assertContains(response, coordinator.id, status_code=403)
+
+
+class ControllerAPITests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # Disable HTTP request warnings
+        logging.disable()
+
+    def tearDown(self):
+        # Reenable HTTP request warnings
+        logging.disable(logging.NOTSET)
+
+    def test_controller_ping_post(self):
+        """Test unregistered controllers pinging the server"""
+
+        # Test passing an empty POST request
+        data = {}
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR="1.1.1.1"
+        )
+        self.assertContains(response, "This field is required", status_code=400)
+
+        # Test passing 127.0.0.1 as the remote IP address. Should fail as not routable
+        data = {"wifi_mac_address": "AA:BB:CC:DD:EE:FF"}
+        ip_address = "127.0.0.1"
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR=ip_address
+        )
+        self.assertContains(response, "is not routable", status_code=400)
+        self.assertContains(response, ip_address, status_code=400)
+
+        # Test passing an IPv6 remote IP address. Should fail as not currently supported
+        data = {"wifi_mac_address": "AA:BB:CC:DD:EE:FF"}
+        ip_address = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR=ip_address,
+        )
+        self.assertContains(response, "IPv6 address", status_code=400)
+        self.assertContains(response, ip_address, status_code=400)
+
+        # Test a valid ping
+        data = {"wifi_mac_address": "AA:BB:CC:DD:EE:FF"}
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR="1.1.1.1"
+        )
+        self.assertContains(response, "wifi_mac_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Test another anonymous valid ping
+        data = {"wifi_mac_address": "AA:BB:CC:DD:EE:FF"}
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR="1.1.1.1"
+        )
+        self.assertContains(response, "wifi_mac_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Test a valid ping from a known coordinator
+        data = {
+            "wifi_mac_address": "AA:BB:CC:DD:EE:FF",
+            id: json.loads(response.content)["id"],
+        }
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR="1.1.1.2"
+        )
+        self.assertContains(response, "wifi_mac_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Register the coordinator and send an invalid ping. Expect the response to
+        # contain the correct URL (consists of the coordinator-detail view + id)
+        coordinator = Coordinator.objects.create(
+            local_ip_address="127.0.0.1", external_ip_address="1.1.1.1"
+        )
+        controller = Controller.objects.create(
+            coordinator=coordinator,
+            wifi_mac_address="AA:BB:CC:DD:EE:FF",
+            external_ip_address="1.1.1.1",
+        )
+        data = {"wifi_mac_address": "AA:BB:CC:DD:EE:FF", "id": controller.id}
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR="1.1.1.2"
+        )
+        self.assertContains(response, "Unauthenticated ping", status_code=403)
+        self.assertContains(response, controller.id, status_code=403)
+
+    def test_controller_ping_get(self):
+        """Test unregistered controllers requesting local coordinators"""
+
+        # Test passing 127.0.0.1 as the remote IP address. Should fail as not routable
+        ip_address = "127.0.0.1"
+        response = self.client.get(reverse("controller-ping"), REMOTE_ADDR=ip_address)
+        self.assertContains(response, "is not routable", status_code=400)
+        self.assertContains(response, ip_address, status_code=400)
+
+        # Test passing an IPv6 remote IP address. Should fail as not currently supported
+        ip_address = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+        response = self.client.get(reverse("controller-ping"), REMOTE_ADDR=ip_address,)
+        self.assertContains(response, "IPv6 address", status_code=400)
+        self.assertContains(response, ip_address, status_code=400)
+
+        # Test a valid ping. Result should be empty
+        response = self.client.get(reverse("controller-ping"), REMOTE_ADDR="1.1.1.1")
+        self.assertFalse(json.loads(response.content)["coordinator_local_ip_address"])
+        self.assertEqual(response.status_code, 200)
+
+        # Test a valid ping. Should not return coordinator from different subnet
+        coordinator = Coordinator.objects.create(
+            local_ip_address="192.168.0.1", external_ip_address="1.1.1.2"
+        )
+        ip_address = "1.1.1.1"
+        self.assertNotEqual(coordinator.external_ip_address, ip_address)
+        response = self.client.get(reverse("controller-ping"), REMOTE_ADDR=ip_address)
+        self.assertFalse(json.loads(response.content)["coordinator_local_ip_address"])
+        self.assertEqual(response.status_code, 200)
+
+        # Test a valid ping. Should return coordinator from the same subnet
+        ip_address = coordinator.external_ip_address
+        response = self.client.get(reverse("controller-ping"), REMOTE_ADDR=ip_address)
+        self.assertEqual(
+            json.loads(response.content)["coordinator_local_ip_address"],
+            coordinator.local_ip_address,
+        )
+        self.assertEqual(response.status_code, 200)

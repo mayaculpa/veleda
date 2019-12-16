@@ -34,20 +34,29 @@ from .serializers import (
 
 class ExternalIPAddressNotRoutable(APIException):
     status_code = 400
-    default_detail = "Invalid external IP address."
     default_code = "external_ip_address_not_routable"
 
-    def __init__(ip_address):
-        self.detail = "External IP address ({}) is not routable".format(ip_address)
+    def __init__(self, ip_address):
+        detail = "External IP address is not routable: {}".format(ip_address)
+        super().__init__(detail=detail)
 
 
 class ExternalIPAddressV6(APIException):
     status_code = 400
-    default_detail = "Invalid external IP address."
     default_code = "external_ip_address_v6"
 
-    def __init__(ip_address, is_ipv6=False):
-        self.detail = "External IPv6 address ({}) is not supported".format(ip_address)
+    def __init__(self, ip_address):
+        detail = "External IPv6 address is not supported: {}".format(ip_address)
+        super().__init__(detail=detail)
+
+
+class UnauthenticatedPing(APIException):
+    status_code = 403
+    default_code = "unauthenticated_ping"
+
+    def __init__(self, url):
+        detail = "Unauthenticated ping of registered device. Use {}".format(url)
+        super().__init__(detail=detail)
 
 
 def get_external_ip_address(request):
@@ -231,14 +240,10 @@ class CoordinatorPingView(APIView):
         try:
             coordinator = Coordinator.objects.get(pk=serializer.validated_data["id"])
             if coordinator.farm:
-                coordinator_url = CoordinatorSerializer(
+                url = CoordinatorSerializer(
                     coordinator, context={"request": request}
                 ).data["url"]
-                error_msg = (
-                    "Coordinator has been registered. Use the detail URL: %s"
-                    % coordinator_url
-                )
-                return JsonResponse(data={"error": error_msg}, status=403)
+                raise UnauthenticatedPing(url)
         except ObjectDoesNotExist:
             pass
 
@@ -259,22 +264,26 @@ class ControllerPingView(APIView):
     def get(self, request):
         # Extract the IP address and get the first matching coordinator
         external_ip_address = get_external_ip_address(request)
+
+        # Return the local IP address of the coordinator or
         coordinator = Coordinator.objects.filter(
             external_ip_address=external_ip_address
         ).first()
-
-        # Return the local IP address of the coordinator
-        return JsonResponse(
-            ControllerPingGetSerializer(
-                controller_local_ip_address=coordinator.local_ip_address
+        if coordinator:
+            response = ControllerPingGetSerializer(
+                {"coordinator_local_ip_address": coordinator.local_ip_address}
             )
-        )
+        else:
+            response = ControllerPingGetSerializer()
+
+        return JsonResponse(response.data)
 
     def post(self, request):
-        request.data["external_ip_address"] = get_external_ip_address(request)
+        request_data = request.data.copy()
+        request_data["external_ip_address"] = get_external_ip_address(request)
 
         # Serialize the request
-        serializer = ControllerPingSerializer(data=request.data)
+        serializer = ControllerPingPostSerializer(data=request_data)
         if not serializer.is_valid():
             return JsonResponse(serializer.errors, status=400)
 
@@ -282,14 +291,10 @@ class ControllerPingView(APIView):
         try:
             controller = Controller.objects.get(pk=serializer.validated_data["id"])
             if controller.coordinator:
-                controller_url = ControllerSerializer(
+                url = ControllerSerializer(
                     controller, context={"request": request}
                 ).data["url"]
-                error_msg = (
-                    "Controller has been registered. Use the detail URL: %s"
-                    % controller_url
-                )
-                return JsonResponse(data={"error": error_msg}, status=403)
+                raise UnauthenticatedPing(url)
         except ObjectDoesNotExist:
             pass
 
