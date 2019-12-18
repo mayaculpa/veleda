@@ -22,7 +22,7 @@ services:
       - frontend
 
   nginx-gen:
-    image: jwilder/docker-gen
+    image: jwilder/docker-gen:0.7.0
     command: -notify-sighup nginx-proxy -watch -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
     container_name: nginx-gen
     restart: always

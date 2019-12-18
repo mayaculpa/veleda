@@ -36,12 +36,12 @@ urlpatterns = [
         name="coordinator-detail",
     ),
     path(
-        "api/v1/farms/controller/ping/",
+        "api/v1/farms/controllers/ping/",
         ControllerPingView.as_view(),
         name="controller-ping",
     ),
     path(
-        "api/v1/farms/controller/<uuid:pk>/",
+        "api/v1/farms/controllers/<uuid:pk>/",
         ControllerDetailView.as_view(),
         name="controller-detail",
     ),
