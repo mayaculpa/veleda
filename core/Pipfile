@@ -12,7 +12,7 @@ pylint-django = "*"
 codecov = "*"
 
 [packages]
-django = "~=2.2.9"
+django = "~=3.0.1"
 django-oauth-toolkit = "*"
 django-semanticui-forms = "*"
 djangorestframework = "*"
