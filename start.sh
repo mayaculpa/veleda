@@ -6,12 +6,9 @@ set -e
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-# Prefix 'sdgserver' has to match the parent deploy folder on the server. Hyphens are removed from filenames
+# Prefix 'sdg-server' has to match the parent deploy folder on the server.
 echo "${bold}sdg-server: Creating data volumes${normal}"
-docker volume create sdgserver_influxdb-data
-docker volume create sdgserver_grafana-data
-docker volume create sdgserver_postgres-data
-docker volume create sdgserver_jekyll-data
+docker volume create sdg-server_jekyll-data
 
 echo "${bold}sdg-server: Building Jekyll site${normal}"
 docker run --rm \

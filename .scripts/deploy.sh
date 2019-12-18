@@ -1,7 +1,8 @@
 #!/bin/bash
 
-REPO_NAME=sdg-server
-BASE_URL=openfarming.ai
+REPO_NAME="sdg-server"
+BASE_URL="openfarming.ai"
+GIT_REMOTE="staging"
 
 # exit with nonzero exit code if anything fails
 set -e
@@ -10,6 +11,9 @@ echo '$TRAVIS_BRANCH' = "$TRAVIS_BRANCH"
 echo '$TRAVIS_PULL_REQUEST_BRANCH' = "$TRAVIS_PULL_REQUEST_BRANCH"
 echo '> git branch'
 git branch
+echo ''
+echo '> git diff master --stat'
+git diff master --stat
 echo ''
 
 # Add the SSH login key
@@ -21,11 +25,11 @@ echo '|1|iu4b5h1OW+OpP8M796mUJFoVEhI=|fwUJjq4g4CBx3zqjf6k0sprcTKI= ssh-rsa AAAAB
 
 # Push only if the master is the target branch
 if [ $TRAVIS_BRANCH == 'master' ] ; then
-    echo "Pushing to staging: Merge of $TRAVIS_PULL_REQUEST_BRANCH into $TRAVIS_BRANCH"
+    echo "Pushing "$TRAVIS_BRANCH" to staging"
     export REMOTE="staging.$BASE_URL"
-    export TARGET_BRANCH="$TRAVIS_PULL_REQUEST_BRANCH"
+    export TARGET_BRANCH="deploy-branch"
     # Recreate the feature branch as Travis is on HEAD
-    git checkout -b $TARGET_BRANCH
+    git checkout -b "$TARGET_BRANCH"
 else
     echo "Not deploying the $TRAVIS_BRANCH to staging. Has to be the master branch. Exiting."
     exit 1
@@ -33,7 +37,7 @@ fi
 
 # Push to the remote server
 git show
-git remote add deploy "deploy@$REMOTE:/home/deploy/repo/"
+git remote add "$GIT_REMOTE" "deploy@$REMOTE:/home/deploy/repo/"
 
 # Required when deploying a feature branch
 #if ! $(git show-ref -q --heads $TRAVIS_PULL_REQUEST_BRANCH); then
@@ -42,7 +46,7 @@ git remote add deploy "deploy@$REMOTE:/home/deploy/repo/"
 #fi
 
 echo "Pushing $TARGET_BRANCH branch to server"
-git push -f deploy "$TARGET_BRANCH"
+git push -f "$GIT_REMOTE" "$TARGET_BRANCH"
 
 # Unpack and update the Docker services
 ssh -t deploy@"$REMOTE" "\

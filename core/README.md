@@ -1,4 +1,4 @@
-# Core FlowLeaf Server
+# Core Service
 
 ## Installation
 
@@ -18,6 +18,10 @@ Or
 
     ./manage.py migrate
     ./manage.py runserver
+
+### Server Domain
+
+In order to create the farm subdomains, the server domain and the subdomain namespace have to be known (e.g., *example.com* and *farms*). The namespace will be slugified (i.e., only alphanumerics, underscores and hyphens). Set both variables in the `dns.core` file.
 
 ## Tests
 
@@ -41,6 +45,13 @@ Then start the development server. Changes to the code are automatically reloade
 
     ./manage.py runserver
 
+### Running Celery Tasks
+
+This requires RabbitMQ and Celery to be started before the `./manage.py runserver` command is run.
+
+    docker run -d --hostname my-rabbit -p 127.0.0.1:5672:5672 --name some-rabbit rabbitmq:3
+    celery -A core worker -l info
+
 ## Database Migrations
 
 For a database migration, the web app has to be started outside Docker (the database may run in Docker). First make sure the database is up-to-date:
@@ -63,15 +74,15 @@ To start the web server with a custom port and host binding:
 
 To enable DNS and subdomains add the following entries to your `/etc/hosts` file
 
-    # Used for development of FlowLeaf
-    127.0.0.1       data.flowleaf.local
-    127.0.0.1       core.flowleaf.local
-    127.0.0.1       flowleaf.local
-    127.0.0.1       www.flowleaf.local
+    # Used for development of the SDG server
+    127.0.0.1       data.sdg.local
+    127.0.0.1       core.sdg.local
+    127.0.0.1       sdg.local
+    127.0.0.1       www.sdg.local
 
 Then create a `dns.core` file with the entry
 
-    VIRTUAL_HOST=core.flowleaf.local
+    VIRTUAL_HOST=core.sdg.local
 
 Subsequently, from the repository root directory start all Docker containers with
 
@@ -83,14 +94,14 @@ To create a super-user in the core docker container run
     ./manage.py createsuperuser
 
 To register a new OAuth2 application (such as Grafana)
-1. Go to the OAuth2 Dashboard (https://core.flowleaf.co/o/applications/)
+1. Go to the OAuth2 Dashboard (https://core.openfarming.ai/o/applications/)
 2. Click the link to register a new application
 3. Type in an application name
 4. Copy the client ID and secret into the `grafana/secrets.grafana` file
 5. Set the client type and authorization grant type (usually *Confidential* and *Authorization Code*)
 6. Add the redirect URI from the `grafana/secrets.grafana` file
 7. Save the new OAuth2 application
-8. Go to the Admin Dashboard (https://core.flowleaf.co/admin/)
+8. Go to the Admin Dashboard (https://core.openfarming.ai/admin/)
 9. Go to the new application (Oauth2_Provider --> Applications --> *Application Name*)
 10. Enable *Skip authorization* at the bottom of the page
 11. Save the changes

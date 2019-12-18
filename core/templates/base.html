@@ -4,10 +4,14 @@
   <head>
     {% block title %}{% endblock %}
     {% include 'partials/head.html' %}
+    {% block head_includes %}{% endblock %}
   </head>
   <body>
     {% include 'partials/header.html' %}
+    <div class="ui main text container">
+    {% include 'partials/messages.html' %}
     {% block content %}{% endblock%}
+    </div>
     {% include 'partials/footer.html' %}
   </body>
 </html>

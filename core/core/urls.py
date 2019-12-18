@@ -19,9 +19,9 @@ from django.views.generic.base import RedirectView
 from django.contrib import admin
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from rest_framework.authtoken.views import obtain_auth_token
 from . import views as root_views
 from . import oauth2_views
-
 
 urlpatterns = [
     path("", root_views.index, name="index"),
@@ -29,6 +29,10 @@ urlpatterns = [
     path("accounts/", include("accounts.urls", namespace="accounts")),
     path("accounts/", include("django_registration.backends.activation.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
+    # Farm URLs
+    path("", include("farms.urls")),
+    # API Endpoints
+    path("api-token-auth/", obtain_auth_token, name="api_token_auth"),
     # OAuth2 Endpoints
     path(
         "o/",

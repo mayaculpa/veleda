@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load semanticui %}
+
+{% block title %}<title>SDG: Farms</title>{% endblock %}
+
+{% block content %}
+<h1 class="ui header">Farms</h1>
+{% if farms %}
+<table style="width:100%">
+  <tr>
+    <th>Name</th>
+    <th>Coordinator</th>
+    <th>Address</th>
+  </tr>
+  {% for farm in farms %}
+  <tr>
+    <td>{{ farm.name }}</td>
+    <td>
+    {% if farm.coordinator and farm.subdomain %}
+      <a href="http://{{ farm.subdomain }}">Coordinator</a>
+    {% else %}
+      -
+    {% endif %}
+    </td>
+    <td>{{ farm.address }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No farms found.</p>
+{% endif %}
+{% endblock %}

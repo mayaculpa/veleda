@@ -1,6 +1,7 @@
 import base64
 import urllib
 import json
+import logging
 from uuid import uuid4
 
 from django.test import TestCase, Client
@@ -46,9 +47,12 @@ class Oauth2ApplicationTests(TestCase):
             authorization_grant_type="authorization-code",
             name="test_client",
         )
+        # Disable HTTP request warnings
+        logging.disable()
 
     def tearDown(self):
-        pass
+        # Reenable HTTP request warnings
+        logging.disable(logging.NOTSET)
 
     def test_application_with_anonymous_user(self):
         """

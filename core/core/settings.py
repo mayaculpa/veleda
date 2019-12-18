@@ -11,12 +11,15 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import sys
+
+TESTING = sys.argv[1:2] == ['test']
 
 # Workaround to enable logging errors via gunicorn in docker
 import logging
+
 logging.basicConfig(
-    level = logging.INFO,
-    format = " %(levelname)s %(name)s: %(message)s",
+    level=logging.INFO, format=" %(levelname)s %(name)s: %(message)s",
 )
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -34,16 +37,19 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
-#In docker use VIRTUAL_HOST environment variable, else use local address
+# In docker use VIRTUAL_HOST environment variable, else use local address
 ALLOWED_HOSTS = os.environ.get(
-    "VIRTUAL_HOST", "core.flowleaf.local,localhost,127.0.0.1"
+    "VIRTUAL_HOST", "core.sdg.local,localhost,127.0.0.1"
 ).split(",")
 # Allow internal communication between docker services
-ALLOWED_HOSTS.append('core')
+ALLOWED_HOSTS.append("core")
 
 # Application definition
 
 INSTALLED_APPS = [
+    #
+    # Django Apps
+    #
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -51,10 +57,21 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_registration",
+    #
+    # Third-Party Apps
+    #
     "oauth2_provider",
     "rest_framework",
+    "rest_framework.authtoken",
     "semanticuiforms",
+    "address",
+    "macaddress",
+    "django_celery_results",
+    #
+    # Local Apps
+    #
     "accounts.apps.AccountsConfig",
+    "farms.apps.FarmsConfig",
 ]
 
 MIDDLEWARE = [
@@ -90,6 +107,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyD--your-google-maps-key-SjQBE")
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -112,6 +130,20 @@ else:
             "PORT": os.environ.get("DATABASE_PORT"),
         }
     }
+
+# Celery and RabbitMQ
+
+if DEBUG:
+    CELERY_BROKER_URL = "amqp://localhost"
+else:
+    CELERY_BROKER_URL = (
+        "amqp://"
+        + os.environ.get("RABBITMQ_DEFAULT_USER")
+        + ":"
+        + os.environ.get("RABBITMQ_DEFAULT_PASS")
+        + "@"
+        + os.environ.get("RABBITMQ_HOSTNAME")
+    )
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -164,12 +196,13 @@ OAUTH2_PROVIDER = {
     "SCOPES": {"userinfo-v1": "Userinfo API v1"}
 }
 
-# REST_FRAMEWORK = {
-#     "DEFAULT_AUTHENTICATION_CLASSES": (
-#         "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
-#     ),
-#     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-# }
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        'rest_framework.authentication.TokenAuthentication',
+        # "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+    ),
+    # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+}
 
 LOGIN_REDIRECT_URL = "/"
 

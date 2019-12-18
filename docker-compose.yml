@@ -60,7 +60,7 @@ services:
     networks:
       - frontend
 
-## Veleda Frontend
+## App Frontend
   nginx-web:
     build: nginx
     container_name: nginx-web
@@ -88,6 +88,8 @@ services:
       - 'core/dns.core'
       - 'core/env.core'
       - 'core/secrets.core'
+      - 'core/env.rabbitmq'
+      - 'core/secrets.rabbitmq'
       - 'grafana/env.grafana'
       - 'grafana/secrets.grafana'
       - 'influxdb/secrets.influxdb'
@@ -130,7 +132,7 @@ services:
     depends_on:
       - core
 
-## Veleda Backend
+## App Backend
   postgres:
     build: ./postgres
     container_name: postgres
@@ -155,6 +157,20 @@ services:
       - backend
     volumes:
       - influxdb-data:/var/lib/influxdb
+    
+  rabbitmq:
+    image: rabbitmq:3
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+    env_file:
+      - 'core/env.rabbitmq'
+      - 'core/secrets.rabbitmq'
+    networks:
+      - backend
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
 
 networks:
   backend:
@@ -165,6 +181,7 @@ volumes:
   grafana-data:
   postgres-data:
   jekyll-data:
+  rabbitmq-data:
   
   nginx-conf.d:
   nginx-vhost.d:

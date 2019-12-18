@@ -17,10 +17,16 @@ django-oauth-toolkit = "*"
 django-semanticui-forms = "*"
 djangorestframework = "*"
 oauth2-provider = "*"
-gunicorn = "*"
-django-registration = "*"
-psycopg2 = "*"
-whitenoise = {extras = ["brotli"],version = "*"}
+gunicorn = "~=20.0"
+django-registration = "~=3.0"
+psycopg2 = "~=2.8"
+whitenoise = {extras = ["brotli"],version = "~=4.1"}
+celery = "~=4.3"
+django-address = "~=0.2"
+django-macaddress = "~=1.6"
+django-ipware = "~=2.1"
+django-celery-results = "~=1.1"
+cloudflare = "~=2.3"
 
 [requires]
 python_version = "3.7"

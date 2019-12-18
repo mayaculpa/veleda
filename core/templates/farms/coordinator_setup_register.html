@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load semanticui %}
+
+{% block title %}<title>SDG: Coordinator Setup</title>{% endblock %}
+
+
+{% block content %}
+<h1 class="ui header">Coordinator Setup: Registration</h1>
+
+{% if form.errors %}
+  {% for error in form.non_field_errors %}
+    <div class="alert alert-danger">
+      <strong>{{ error|escape }}</strong>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<form action="" method="post">
+  {% csrf_token %}
+  <table>
+  {{ form.as_table }}
+  </table>
+  <input type="submit" value="OK">
+</form>
+{% endblock %}
