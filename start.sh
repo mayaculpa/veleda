@@ -20,7 +20,7 @@ docker run --rm \
 echo "${bold}sdg-server: Copying site to jekyll-data volume${normal}"
 docker run \
   --name helper \
-  --volume="sdgserver_jekyll-data:/web" \
+  --volume="sdg-server_jekyll-data:/web" \
   -it busybox \
   true
 docker cp jekyll/web/. helper:/web
