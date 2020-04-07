@@ -27,10 +27,12 @@ urlpatterns = [
     path("", root_views.index, name="index"),
     path("admin/", admin.site.urls, name="admin"),
     path("accounts/", include("accounts.urls", namespace="accounts")),
+    path("api/", include("accounts.urls_api")),
     path("accounts/", include("django_registration.backends.activation.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     # Farm URLs
-    path("", include("farms.urls")),
+    path("farms/", include("farms.urls", namespace="farms")),
+    path("api/", include("farms.urls_api")),
     # API Endpoints
     path("api-token-auth/", obtain_auth_token, name="api_token_auth"),
     # OAuth2 Endpoints

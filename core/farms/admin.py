@@ -1,10 +1,10 @@
 from django.contrib import admin
 
-from .models import Farm, Coordinator, HydroponicSystem, Controller
+from .models import Site, Coordinator, HydroponicSystem, Controller
 # Register your models here.
 
-@admin.register(Farm)
-class FarmAdmin(admin.ModelAdmin):
+@admin.register(Site)
+class SiteAdmin(admin.ModelAdmin):
     pass
 
 @admin.register(Coordinator)

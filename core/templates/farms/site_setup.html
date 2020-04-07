@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load semanticui %}
 
-{% block title %}<title>SDG: Farm Setup</title>{% endblock %}
+{% block title %}<title>SDG: Site Setup</title>{% endblock %}
 
 {% block head_includes %}
 <!-- needed for JS/GoogleMaps lookup -->
@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="ui header">Farm Setup</h1>
+<h1 class="ui header">Site Setup</h1>
 
 {% if form.errors %}
   {% for error in form.non_field_errors %}

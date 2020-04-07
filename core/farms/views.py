@@ -8,6 +8,7 @@ from django.views.generic.base import View
 from django_celery_results.models import TaskResult
 from ipware import get_client_ip
 from ipware.utils import is_valid_ipv6
+from rest_framework import generics
 from rest_framework.exceptions import APIException
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -15,20 +16,19 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .forms import (
-    CreateFarmForm,
+    CreateSiteForm,
     CoordinatorSetupSelectForm,
     CoordinatorSetupRegistrationForm,
 )
-from .models import Farm, Coordinator, HydroponicSystem, Controller
+from .models import Site, Coordinator, Controller, MqttMessage
 from .serializers import (
-    AddressSerializer,
     CoordinatorPingSerializer,
     CoordinatorSerializer,
     ControllerSerializer,
     ControllerPingGetSerializer,
     ControllerPingPostSerializer,
-    FarmSerializer,
-    HydroponicSystemSerializer,
+    SiteSerializer,
+    MqttMessageSerializer,
 )
 
 
@@ -70,38 +70,48 @@ def get_external_ip_address(request):
     return client_ip
 
 
-class FarmDetailView(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request):
-        pass
-
-
-class FarmListView(LoginRequiredMixin, View):
-    """List of a user's farm"""
+class SiteListView(LoginRequiredMixin, View):
+    """List of a user's site"""
 
     def get(self, request, *args, **kwargs):
         context = {}
         if "message" in kwargs:
             context["message"] = kwargs["message"]
-        context["farms"] = Farm.objects.filter(owner=request.user)
-        return render(request, "farms/farm_list.html", context=context)
+        context["sites"] = Site.objects.filter(owner=request.user)
+        return render(request, "farms/site_list.html", context=context)
 
 
-class FarmSetupView(LoginRequiredMixin, View):
-    """Allows a user to create a farm"""
+class SiteSetupView(LoginRequiredMixin, View):
+    """Allows a user to create a site"""
 
     def get(self, request, *args, **kwargs):
-        return render(request, "farms/farm_setup.html", {"form": CreateFarmForm()})
+        return render(request, "farms/site_setup.html", {"form": CreateSiteForm()})
 
     def post(self, request, *args, **kwargs):
-        form = CreateFarmForm(request.POST)
+        form = CreateSiteForm(request.POST)
 
         if form.is_valid():
-            Farm.objects.create(**form.cleaned_data, owner=request.user)
-            return HttpResponseRedirect(reverse("farm-list"))
+            Site.objects.create(**form.cleaned_data, owner=request.user)
+            return HttpResponseRedirect(reverse("site-list"))
         else:
-            return render(request, "farms/farm_setup.html", {"form": form}, status=400)
+            return render(request, "farms/site_setup.html", {"form": form}, status=400)
+
+
+class APISiteDetailView(generics.RetrieveAPIView):
+    """Details of one site"""
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SiteSerializer
+    queryset = Site.objects.all()
+
+
+class APISiteListCreateView(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SiteSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Site.objects.filter(owner=user)
 
 
 class CoordinatorSetupSelectView(LoginRequiredMixin, View):
@@ -120,11 +130,11 @@ class CoordinatorSetupSelectView(LoginRequiredMixin, View):
 
         coordinators = Coordinator.objects.filter(external_ip_address=client_ip)
         context["unregistered_coordinators"] = sorted(
-            filter(lambda coordinator: not coordinator.farm, coordinators),
+            filter(lambda coordinator: not coordinator.site, coordinators),
             key=lambda coordinator: coordinator.modified_at,
         )
         context["registered_coordinators"] = sorted(
-            filter(lambda coordinator: coordinator.farm, coordinators),
+            filter(lambda coordinator: coordinator.site, coordinators),
             key=lambda coordinator: coordinator.modified_at,
         )
         return render(request, "farms/coordinator_setup_select.html", context=context)
@@ -148,7 +158,7 @@ class CoordinatorSetupSelectView(LoginRequiredMixin, View):
 
 
 class CoordinatorSetupRegisterView(LoginRequiredMixin, View):
-    """The view to assign a coordinator to a farm."""
+    """The view to assign a coordinator to a site."""
 
     def get(self, request, *args, **kwargs):
         context = {}
@@ -162,14 +172,14 @@ class CoordinatorSetupRegisterView(LoginRequiredMixin, View):
                 request, "farms/coordinator_setup_register.html", context=context
             )
 
-        # Get all farms that do not have a coordinator
-        farms = Farm.objects.filter(coordinator__isnull=True).filter(owner=request.user)
-        form = CoordinatorSetupRegistrationForm(farms=farms)
+        # Get all sites that do not have a coordinator
+        sites = Site.objects.filter(coordinator__isnull=True).filter(owner=request.user)
+        form = CoordinatorSetupRegistrationForm(sites=sites)
         return render(request, "farms/coordinator_setup_register.html", {"form": form},)
 
     def post(self, request, *args, **kwargs):
-        farms = Farm.objects.filter(coordinator__isnull=True).filter(owner=request.user)
-        form = CoordinatorSetupRegistrationForm(request.POST, farms=farms)
+        sites = Site.objects.filter(coordinator__isnull=True).filter(owner=request.user)
+        form = CoordinatorSetupRegistrationForm(request.POST, sites=sites)
 
         # Check if the request originates from a valid IP address
         client_ip, is_routable = get_client_ip(request)
@@ -197,27 +207,27 @@ class CoordinatorSetupRegisterView(LoginRequiredMixin, View):
                 request, "farms/coordinator_setup_register.html", {"form": form}
             )
 
-        # Set the farm and subdomain
-        form.cleaned_data["farm"].subdomain = (
+        # Set the site and subdomain
+        form.cleaned_data["site"].subdomain = (
             form.cleaned_data["subdomain_prefix"]
             + "."
             + settings.FARMS_SUBDOMAIN_NAMESPACE
             + "."
             + settings.SERVER_DOMAIN
         )
-        form.cleaned_data["farm"].save()
-        coordinator.farm = form.cleaned_data["farm"]
+        form.cleaned_data["site"].save()
+        coordinator.site = form.cleaned_data["site"]
         coordinator.save()
-        # setup_subdomain_task.delay(coordinator.farm.id)
+        # setup_subdomain_task.delay(coordinator.site.id)
         # TODO: Setup after registration
-        # setup_subdomain_task.s(coordinator.farm.id).apply()
+        # setup_subdomain_task.s(coordinator.site.id).apply()
         # messages.success(
         #     request, "Registration successful. Creating subdomain and credentials."
         # )
-        return HttpResponseRedirect(reverse("farm-list"))
+        return HttpResponseRedirect(reverse("site-list"))
 
 
-class CoordinatorPingView(APIView):
+class APICoordinatorPingView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -227,9 +237,9 @@ class CoordinatorPingView(APIView):
         if not is_routable and not settings.DEBUG:
             error_msg = "External IP address is not routable: %s" % client_ip
             return JsonResponse(data={"error": error_msg}, status=400)
-        else:
-            data = request.data.copy()
-            data["external_ip_address"] = client_ip
+
+        data = request.data.copy()
+        data["external_ip_address"] = client_ip
 
         # Serialize the request
         serializer = CoordinatorPingSerializer(data=data)
@@ -239,7 +249,7 @@ class CoordinatorPingView(APIView):
         # If the coordinator has been registered, only allow authenticated view
         try:
             coordinator = Coordinator.objects.get(pk=serializer.validated_data["id"])
-            if coordinator.farm:
+            if coordinator.site:
                 url = CoordinatorSerializer(
                     coordinator, context={"request": request}
                 ).data["url"]
@@ -251,14 +261,41 @@ class CoordinatorPingView(APIView):
         return JsonResponse(serializer.data, status=201)
 
 
-class CoordinatorDetailView(APIView):
+class APICoordinatorListCreateView(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    serializer_class = CoordinatorSerializer
+
+    def get_queryset(self):
+        return Coordinator.objects.filter(site__owner=self.request.user)
+
+
+class APICoordinatorDetailView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, pk):
         return JsonResponse(CoordinatorSerializer(Coordinator.objects.get(pk=pk)))
 
 
-class ControllerPingView(APIView):
+class APIMqttMessageListView(generics.ListAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    serializer_class = MqttMessageSerializer
+
+    def get_queryset(self):
+        coordinator = self.kwargs["coordinator"]
+        return MqttMessage.objects.filter(coordinator=coordinator)
+
+
+class APICoordinatorMqttView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+
+        return
+
+
+class APIControllerPingView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request):
@@ -302,11 +339,10 @@ class ControllerPingView(APIView):
         return JsonResponse(serializer.data, status=201)
 
 
-class ControllerDetailView(APIView):
+class APIControllerDetailView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         return JsonResponse(
             ControllerSerializer(Controller.objects.get(pk=request.user))
         )
-

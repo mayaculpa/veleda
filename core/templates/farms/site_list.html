@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load semanticui %}
+
+{% block title %}<title>SDG: Sites</title>{% endblock %}
+
+{% block content %}
+<h1 class="ui header">Sites</h1>
+{% if sites %}
+<table style="width:100%">
+  <tr>
+    <th>Name</th>
+    <th>Coordinator</th>
+    <th>Address</th>
+  </tr>
+  {% for site in sites %}
+  <tr>
+    <td>{{ site.name }}</td>
+    <td>
+    {% if site.coordinator and site.subdomain %}
+      <a href="http://{{ site.subdomain }}">Coordinator</a>
+    {% else %}
+      -
+    {% endif %}
+    </td>
+    <td>{{ site.address }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No sites found.</p>
+{% endif %}
+{% endblock %}

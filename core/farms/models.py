@@ -1,14 +1,15 @@
 import uuid
 from django.db import models
 from django.db.models.query import QuerySet
+from django.contrib.postgres.fields import JSONField
 from address.models import AddressField
 from macaddress.fields import MACAddressField
 
 from accounts.models import User
 
 # Create your models here.
-class Farm(models.Model):
-    """A farm where plants are grown hydroponically. Contains all hydroponic systems
+class Site(models.Model):
+    """A site where plants are grown hydroponically. Contains all hydroponic systems
        and plants that are controlled by an on-site coordinator"""
 
     id = models.UUIDField(
@@ -17,24 +18,24 @@ class Farm(models.Model):
         editable=False,
         help_text="The UUID to identify the hydroponic system.",
     )
-    name = models.CharField(max_length=30, help_text="The name of the farm.")
+    name = models.CharField(max_length=30, help_text="The name of the site.")
     owner = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
-        help_text="The user that owns the farm.",
+        help_text="The user that owns the site.",
     )
     address = AddressField(
         on_delete=models.SET_NULL,
         null=True,
-        help_text="The postal address and the coordinates of the farm",
+        help_text="The postal address and the coordinates of the site",
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
-        help_text="The date and time when the farm was first created.",
+        help_text="The date and time when the site was first created.",
     )
     modified_at = models.DateTimeField(
-        auto_now=True, help_text="The date and time when the farm was last updated."
+        auto_now=True, help_text="The date and time when the site was last updated."
     )
 
     def __str__(self):
@@ -52,12 +53,12 @@ class Coordinator(models.Model):
         editable=False,
         help_text="The UUID to identify the hydroponic system.",
     )
-    farm = models.ForeignKey(
-        Farm,
+    site = models.ForeignKey(
+        Site,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        help_text="The farm to which the coordinator belongs.",
+        help_text="The site to which the coordinator belongs.",
     )
     local_ip_address = models.GenericIPAddressField(
         help_text="The coordinator's local IP address."
@@ -75,10 +76,10 @@ class Coordinator(models.Model):
     )
 
     def __str__(self):
-        if self.farm:
-            return self.farm.name + " Coordirnator"
-        else:
-            return self.id.hex
+        if self.site:
+            return self.site.name + " Coordirnator"
+        
+        return self.id.hex
 
 
 class HydroponicSystem(models.Model):
@@ -92,7 +93,7 @@ class HydroponicSystem(models.Model):
         help_text="The UUID to identify the hydroponic system.",
     )
 
-    farm = models.ForeignKey(Farm, on_delete=models.CASCADE)
+    site = models.ForeignKey(Site, on_delete=models.CASCADE)
 
     name = models.CharField(
         max_length=30,
@@ -163,9 +164,9 @@ class Controller(models.Model):
         (DOSAGE_TYPE, "Dosage controller"),
         (CAMERA_TYPE, "Camera controller"),
         (SENSOR_TYPE, "Sensor controller"),
-        (UNKNOWN_TYPE, "Unknown controller")
+        (UNKNOWN_TYPE, "Unknown controller"),
     ]
-    
+
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -202,9 +203,49 @@ class Controller(models.Model):
         help_text="The date and time when the controller was last updated.",
     )
 
-
     def __str__(self):
         if self.name:
             return self.get_controller_type_display() + " (" + self.name + ")"
         else:
             return self.get_controller_type_display() + " (" + self.id.hex + ")"
+
+
+class MqttMessage(models.Model):
+    """An MQTT message from a coordinator's MQTT broker"""
+
+    COMMAND_PREFIX = "cmd"
+    TELEMETRY_PREFIX = "tel"
+    REGISTER_PREFIX = "reg"
+
+    TOPIC_PREFIX_CHOICES = [
+        (COMMAND_PREFIX, "Command topic"),
+        (TELEMETRY_PREFIX, "Telemetry topic"),
+        (REGISTER_PREFIX, "Register topic"),
+    ]
+
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        help_text="The datetime when the message was received",
+    )
+    coordinator = models.ForeignKey(
+        Coordinator,
+        on_delete=models.CASCADE,
+        help_text="The coordinator that relayed the message.",
+    )
+    message = JSONField()
+    controller = models.ForeignKey(
+        Controller,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="If not None, the sender of the message."
+    )
+    topic_prefix = models.CharField(
+        max_length=3,
+        choices=TOPIC_PREFIX_CHOICES,
+        help_text="The purpose of the message.",
+    )
+    topic_suffix = models.CharField(
+        max_length=30,
+        help_text="The context of the message."
+    )

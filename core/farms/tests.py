@@ -15,72 +15,75 @@ from django.urls import reverse
 
 from accounts.models import Profile
 from .forms import CoordinatorSetupRegistrationForm
-from .models import Farm, Coordinator, HydroponicSystem, Controller
+from .models import Site, Coordinator, HydroponicSystem, Controller
 
 
-class FarmTests(TestCase):
-    def test_farm_components(self):
-        """Test creating a farm and its components."""
+class SiteTests(TestCase):
+    def test_site_components(self):
+        """Test creating a site and its components."""
 
-        proto_farm_owner = get_user_model().objects.create_user(
+        proto_site_owner = get_user_model().objects.create_user(
             email="owner@example.com", password="owners_passwd",
         )
-        proto_farm_owner.profile.short_name = "Dude"
-        proto_farm_owner.profile.full_name = "Dr. Owner C. Dude"
-        proto_farm_owner.save()
+        proto_site_owner.profile.short_name = "Dude"
+        proto_site_owner.profile.full_name = "Dr. Owner C. Dude"
+        proto_site_owner.save()
 
-        proto_farm_address = Address.objects.create(
+        proto_site_address = Address.objects.create(
             raw="Some Street 42, Any Town, Major City, New Country",
         )
-        farm = Farm.objects.create(
-            name="ProtoFarm", owner=proto_farm_owner, address=proto_farm_address
+        site = Site.objects.create(
+            name="ProtoSite", owner=proto_site_owner, address=proto_site_address
         )
         self.assertEqual(
-            farm.owner.profile.short_name, proto_farm_owner.profile.short_name
+            site.owner.profile.short_name, proto_site_owner.profile.short_name
         )
-        self.assertEqual(farm.address.raw, proto_farm_address.raw)
+        self.assertEqual(site.address.raw, proto_site_address.raw)
 
         coordinator = Coordinator.objects.create(
-            farm=farm, local_ip_address="192.168.0.2", external_ip_address="1.1.1.1"
+            site=site, local_ip_address="192.168.0.2", external_ip_address="1.1.1.1"
         )
-        hydroponic_system_a = HydroponicSystem.objects.create(farm=farm,)
-        hydroponic_system_b = HydroponicSystem.objects.create(farm=farm,)
+        hydroponic_system_a = HydroponicSystem.objects.create(site=site,)
+        hydroponic_system_b = HydroponicSystem.objects.create(site=site,)
         controller_a = Controller.objects.create(
             coordinator=coordinator,
             controller_type=Controller.SENSOR_TYPE,
             wifi_mac_address="00:11:22:33:44:55",
+            external_ip_address="1.1.1.1",
         )
         controller_b = Controller.objects.create(
             coordinator=coordinator,
             controller_type=Controller.PUMP_TYPE,
             wifi_mac_address="00:11:22:33:44:56",
+            external_ip_address="1.1.1.1",
         )
-        self.assertEqual(Coordinator.objects.filter(farm=farm.id)[0].id, coordinator.id)
+        self.assertEqual(Coordinator.objects.filter(site=site.id)[0].id, coordinator.id)
         self.assertEqual(controller_a.coordinator.id, coordinator.id)
         self.assertEqual(controller_b.coordinator.id, coordinator.id)
-        self.assertEqual(hydroponic_system_a.farm.id, farm.id)
-        self.assertEqual(hydroponic_system_b.farm.id, farm.id)
+        self.assertEqual(hydroponic_system_a.site.id, site.id)
+        self.assertEqual(hydroponic_system_b.site.id, site.id)
 
-    def test_farm_timestamps(self):
-        """Test creating a farm and check that the timestamps update correctly"""
+    def test_site_timestamps(self):
+        """Test creating a site and check that the timestamps update correctly"""
 
         mocked_now = datetime.now(pytz.utc)
         with mock.patch("django.utils.timezone.now", return_value=mocked_now):
-            farm = Farm.objects.create(name="ProtoFarm")
+            site = Site.objects.create(name="ProtoSite")
             coordinator = Coordinator.objects.create(
-                farm=farm, local_ip_address="192.168.0.2", external_ip_address="1.1.1.1"
+                site=site, local_ip_address="192.168.0.2", external_ip_address="1.1.1.1"
             )
             hydroponic_system = HydroponicSystem.objects.create(
-                farm=farm, system_type=HydroponicSystem.FLOOD_AND_DRAIN
+                site=site, system_type=HydroponicSystem.FLOOD_AND_DRAIN
             )
             controller = Controller.objects.create(
                 coordinator=coordinator,
                 controller_type=Controller.SENSOR_TYPE,
                 wifi_mac_address="00:11:22:33:44:55",
+                external_ip_address="1.1.1.1",
             )
 
-        self.assertEqual(farm.created_at, mocked_now)
-        self.assertEqual(farm.modified_at, mocked_now)
+        self.assertEqual(site.created_at, mocked_now)
+        self.assertEqual(site.modified_at, mocked_now)
         self.assertEqual(coordinator.created_at, mocked_now)
         self.assertEqual(coordinator.modified_at, mocked_now)
         self.assertEqual(hydroponic_system.created_at, mocked_now)
@@ -90,8 +93,8 @@ class FarmTests(TestCase):
 
         mocked_later = mocked_now + timedelta(hours=1)
         with mock.patch("django.utils.timezone.now", return_value=mocked_later):
-            farm.name = "New name"
-            farm.save()
+            site.name = "New name"
+            site.save()
             coordinator.local_ip_address = "192.168.0.2"
             coordinator.save()
             hydroponic_system.name = "A Flood and drain system"
@@ -99,8 +102,8 @@ class FarmTests(TestCase):
             controller.wifi_mac_address = "11:22:33:44:55:66"
             controller.save()
 
-        self.assertEqual(farm.created_at, mocked_now)
-        self.assertEqual(farm.modified_at, mocked_later)
+        self.assertEqual(site.created_at, mocked_now)
+        self.assertEqual(site.modified_at, mocked_later)
         self.assertEqual(coordinator.created_at, mocked_now)
         self.assertEqual(coordinator.modified_at, mocked_later)
         self.assertEqual(hydroponic_system.created_at, mocked_now)
@@ -109,7 +112,7 @@ class FarmTests(TestCase):
         self.assertEqual(controller.modified_at, mocked_later)
 
     def test_controller_registration_flow(self):
-        """Test a new controller automatically registering itself and being assigned to a farm."""
+        """Test a new controller automatically registering itself and being assigned to a site."""
 
         coordinator = Coordinator.objects.create(
             local_ip_address="192.168.0.2", external_ip_address="3.3.3.3"
@@ -184,19 +187,19 @@ class CoordinatorSetupTests(TestCase):
         self.assertContains(response, "no coordinators were found")
 
         # Test only registered coordinators
-        farm_a_1 = Farm.objects.create(name="TestFarm_A_1")
-        farm_a_2 = Farm.objects.create(name="TestFarm_A_2")
+        site_a_1 = Site.objects.create(name="TestSite_A_1")
+        site_a_2 = Site.objects.create(name="TestSite_A_2")
         coordinator_a_1 = Coordinator.objects.create(
-            local_ip_address="192.168.0.1", external_ip_address="1.1.1.1", farm=farm_a_1
+            local_ip_address="192.168.0.1", external_ip_address="1.1.1.1", site=site_a_1
         )
         coordinator_a_2 = Coordinator.objects.create(
-            local_ip_address="192.168.0.1", external_ip_address="1.1.1.1", farm=farm_a_2
+            local_ip_address="192.168.0.1", external_ip_address="1.1.1.1", site=site_a_2
         )
         response = self.client.get(
             reverse("coordinator-setup-select"), REMOTE_ADDR="1.1.1.1"
         )
-        self.assertContains(response, coordinator_a_1.farm.name)
-        self.assertContains(response, coordinator_a_2.farm.name)
+        self.assertContains(response, coordinator_a_1.site.name)
+        self.assertContains(response, coordinator_a_2.site.name)
         self.assertContains(response, "None found")
 
         # Test listing unregistered coordinators
@@ -279,44 +282,44 @@ class CoordinatorSetupTests(TestCase):
         )
 
     def test_coordinator_form(self):
-        farm = Farm.objects.create(name="TestFarm")
-        farms = Farm.objects.all()
+        site = Site.objects.create(name="TestSite")
+        sites = Site.objects.all()
 
         # Test a valid form
-        data = {"subdomain_prefix": "valid-name", "farm": farm.id}
-        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        data = {"subdomain_prefix": "valid-name", "site": site.id}
+        form = CoordinatorSetupRegistrationForm(sites=sites, data=data)
         self.assertTrue(form.is_valid())
 
         # Test lowercasing
-        data = {"subdomain_prefix": "Val1D-Name", "farm": farm.id}
-        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        data = {"subdomain_prefix": "Val1D-Name", "site": site.id}
+        form = CoordinatorSetupRegistrationForm(sites=sites, data=data)
         self.assertTrue(form.is_valid())
         self.assertEqual(
             form.cleaned_data["subdomain_prefix"], data["subdomain_prefix"].lower()
         )
 
         # Test underscores
-        data = {"subdomain_prefix": "inVal1D_Name", "farm": farm.id}
-        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        data = {"subdomain_prefix": "inVal1D_Name", "site": site.id}
+        form = CoordinatorSetupRegistrationForm(sites=sites, data=data)
         self.assertFalse(form.is_valid())
 
         # Test dots
-        data = {"subdomain_prefix": "inVal1D.Name", "farm": farm.id}
-        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        data = {"subdomain_prefix": "inVal1D.Name", "site": site.id}
+        form = CoordinatorSetupRegistrationForm(sites=sites, data=data)
         self.assertFalse(form.is_valid())
 
         # Test leading hyphen
-        data = {"subdomain_prefix": "-inVal1DName", "farm": farm.id}
-        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        data = {"subdomain_prefix": "-inVal1DName", "site": site.id}
+        form = CoordinatorSetupRegistrationForm(sites=sites, data=data)
         self.assertFalse(form.is_valid())
 
         # Test other characters
-        data = {"subdomain_prefix": "a*ä", "farm": farm.id}
-        form = CoordinatorSetupRegistrationForm(farms=farms, data=data)
+        data = {"subdomain_prefix": "a*ä", "site": site.id}
+        form = CoordinatorSetupRegistrationForm(sites=sites, data=data)
         self.assertFalse(form.is_valid())
 
 
-class FarmTemplateTests(TestCase):
+class SiteTemplateTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.user_a = get_user_model().objects.create_user(
@@ -332,85 +335,85 @@ class FarmTemplateTests(TestCase):
         # Reenable HTTP request warnings
         logging.disable(logging.NOTSET)
 
-    def test_create_farm(self):
-        """Test creating a farm"""
+    def test_create_site(self):
+        """Test creating a site"""
 
         # Check required authentication
-        response = self.client.get(reverse("farm-setup"))
+        response = self.client.get(reverse("site-setup"))
         self.assertRedirects(
-            response, reverse("login") + "?next=" + reverse("farm-setup")
+            response, reverse("login") + "?next=" + reverse("site-setup")
         )
-        response = self.client.post(reverse("farm-setup"))
+        response = self.client.post(reverse("site-setup"))
         self.assertRedirects(
-            response, reverse("login") + "?next=" + reverse("farm-setup")
+            response, reverse("login") + "?next=" + reverse("site-setup")
         )
 
         with self.settings(
             STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage"
         ):
             self.client.login(username=self.user_a.email, password="user_a")
-            response = self.client.get(reverse("farm-setup"))
+            response = self.client.get(reverse("site-setup"))
             self.assertContains(response, "Name")
             self.assertContains(response, "Address")
 
             # Check poorly formatted requests
             data = {}
-            response = self.client.post(reverse("farm-setup"), data)
-            self.assertContains(response, "Farm Setup", status_code=400)
+            response = self.client.post(reverse("site-setup"), data)
+            self.assertContains(response, "Site Setup", status_code=400)
 
-            data = {"name": "test farm"}
-            response = self.client.post(reverse("farm-setup"), data)
-            self.assertContains(response, "Farm Setup", status_code=400)
+            data = {"name": "test site"}
+            response = self.client.post(reverse("site-setup"), data)
+            self.assertContains(response, "Site Setup", status_code=400)
 
             data = {"address": "some place"}
-            response = self.client.post(reverse("farm-setup"), data)
-            self.assertContains(response, "Farm Setup", status_code=400)
-            self.assertFalse(Farm.objects.all())
+            response = self.client.post(reverse("site-setup"), data)
+            self.assertContains(response, "Site Setup", status_code=400)
+            self.assertFalse(Site.objects.all())
 
             # Check valid requests
-            data = {"name": "good farm", "address": "some place"}
-            response = self.client.post(reverse("farm-setup"), data)
-            self.assertRedirects(response, reverse("farm-list"))
-            self.assertTrue(Farm.objects.all())
+            data = {"name": "good site", "address": "some place"}
+            response = self.client.post(reverse("site-setup"), data)
+            self.assertRedirects(response, reverse("site-list"))
+            self.assertTrue(Site.objects.all())
 
-            farm = Farm.objects.get(name=data["name"])
-            self.assertEqual(farm.name, data["name"])
-            self.assertEqual(farm.owner, self.user_a)
+            site = Site.objects.get(name=data["name"])
+            self.assertEqual(site.name, data["name"])
+            self.assertEqual(site.owner, self.user_a)
 
-    def test_farm_list(self):
-        """Test showing all farms registered to a user"""
-        farm_address_a = Address.objects.create(
+    def test_site_list(self):
+        """Test showing all sites registered to a user"""
+        site_address_a = Address.objects.create(
             raw="Some Street 42, Any Town, Major City, New Country",
         )
-        farm_coordinator_a = Coordinator.objects.create(
+        site_coordinator_a = Coordinator.objects.create(
             local_ip_address="192.168.0.1", external_ip_address="1.1.1.1"
         )
-        farm_a = Farm.objects.create(
-            name="Farm A", address=farm_address_a, coordinator=farm_coordinator_a
+        site_a = Site.objects.create(
+            name="Site A", address=site_address_a, coordinator=site_coordinator_a
         )
-        farm_b = Farm.objects.create(name="Farm B")
+        site_b = Site.objects.create(name="Site B")
 
         # Test required authentication
-        response = self.client.get(reverse("farm-list"))
+        response = self.client.get(reverse("site-list"))
         self.assertRedirects(
-            response, reverse("login") + "?next=" + reverse("farm-list")
+            response, reverse("login") + "?next=" + reverse("site-list")
         )
 
-        # Test no owned farms
+        # Test no owned sites
         self.client.login(username=self.user_a.email, password="user_a")
-        response = self.client.get(reverse("farm-list"))
-        self.assertContains(response, "Farms")
-        self.assertContains(response, "No farms found")
+        response = self.client.get(reverse("site-list"))
+        self.assertContains(response, "Sites")
+        self.assertContains(response, "No sites found")
 
-        # Test one ownder farm
-        farm_a.owner = self.user_a
-        farm_a.save()
-        farm_b.owner = self.user_b
-        farm_b.save()
-        response = self.client.get(reverse("farm-list"))
-        self.assertContains(response, farm_a.name)
-        self.assertNotContains(response, farm_b.name)
-        self.assertContains(response, farm_address_a.raw)
+        # Test one ownder site
+        site_a.owner = self.user_a
+        site_a.save()
+        site_b.owner = self.user_b
+        site_b.save()
+        response = self.client.get(reverse("site-list"))
+        self.assertContains(response, site_a.name)
+        self.assertNotContains(response, site_b.name)
+        self.assertContains(response, site_address_a.raw)
 
 
 class CoordinatorAPITests(TestCase):
@@ -480,9 +483,9 @@ class CoordinatorAPITests(TestCase):
 
         # Register the coordinator and send an invalid ping. Expect the response to
         # contain the correct URL (consists of the coordinator-detail view + id)
-        farm = Farm.objects.create(name="TestFarm")
+        site = Site.objects.create(name="TestSite")
         coordinator = Coordinator.objects.create(
-            farm=farm, local_ip_address="192.168.0.1", external_ip_address="1.1.1.3"
+            site=site, local_ip_address="192.168.0.1", external_ip_address="1.1.1.3"
         )
         data = {"local_ip_address": "192.168.0.2", "id": coordinator.id}
         response = self.client.post(

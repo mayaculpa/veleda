@@ -6,7 +6,8 @@ The Django application is responisble for the user authentication.
 
 Local install:
 
-    pip install --user pipenv
+    sudo apt install python3-pip libpq-dev
+    python3 -m pip install --user pipenv
     pipenv install
     pipenv shell
 

@@ -1,35 +1,37 @@
 import uuid
 from rest_framework import serializers
 from address.models import Address
+from accounts.models import User
 
-from .models import Farm, Coordinator, Controller, HydroponicSystem
-
-
-class FarmSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Farm
-        fields = ["url", "name", "owner", "address"]
+from .models import Site, Coordinator, Controller, HydroponicSystem, MqttMessage
 
 
-class AddressSerializer(serializers.HyperlinkedModelSerializer):
+class SiteAddressSerializer(serializers.ModelSerializer):
+    """Nested serializer for a site's address"""
     class Meta:
         model = Address
         fields = [
-            "url",
             "raw",
-            "country",
-            "country_code",
-            "state",
-            "state_code",
-            "locality",
-            "sublocality",
-            "postal_code",
-            "street_number",
-            "route",
-            "formatted",
-            "latitude",
-            "longitude",
         ]
+
+
+class SiteOwnerField(serializers.HyperlinkedRelatedField):
+    """Field to only list the logged in user. In future all group members?"""
+    # How to limit related members https://stackoverflow.com/a/57184103
+
+    def get_queryset(self):
+        user = self.context["request"].user
+        return User.objects.filter(pk=user.id)
+
+
+class SiteSerializer(serializers.HyperlinkedModelSerializer):
+    """Serialize a farm site and limit owner and address listings"""
+    address = SiteAddressSerializer()
+    owner = SiteOwnerField(view_name="user-detail")
+
+    class Meta:
+        model = Site
+        fields = ["url", "name", "owner", "address"]
 
 
 class CoordinatorSerializer(serializers.HyperlinkedModelSerializer):
@@ -37,11 +39,22 @@ class CoordinatorSerializer(serializers.HyperlinkedModelSerializer):
         model = Coordinator
         fields = [
             "url",
-            "farm",
+            "site",
             "local_ip_address",
             "external_ip_address",
         ]
 
+class MqttMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MqttMessage
+        fields = [
+            "timestamp",
+            "coordinator",
+            "message",
+            "controller",
+            "topic_prefix",
+            "topic_suffix",
+        ]
 
 class CoordinatorPingSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(default=uuid.uuid4)
@@ -64,7 +77,7 @@ class CoordinatorPingSerializer(serializers.ModelSerializer):
 class HydroponicSystemSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = HydroponicSystem
-        fields = ["url", "farm", "name", "system_type"]
+        fields = ["url", "site", "name", "system_type"]
 
 
 class ControllerSerializer(serializers.HyperlinkedModelSerializer):
@@ -95,4 +108,3 @@ class ControllerPingPostSerializer(serializers.ModelSerializer):
             id=validated_data.get("id", None), defaults=validated_data
         )
         return controller
-

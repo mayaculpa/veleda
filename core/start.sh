@@ -21,6 +21,12 @@ done
 # Migrate the database to the newest version
 pipenv run ./manage.py migrate
 
+if [[ $(./manage.py createsuperuser --no-input >/dev/null 2>&1) ]]; then
+  echo "Creating superuser $DJANGO_SUPERUSER_EMAIL"
+else
+  echo "Superuser $DJANGO_SUPERUSER_EMAIL already exists"
+fi
+
 # Start Celery worker processes
 echo "Starting Celery processes"
 pipenv run celery -A core worker -l info &

@@ -2,13 +2,13 @@ from django import forms
 from django.core.validators import RegexValidator
 from address.forms import AddressField
 
-from .models import Farm, Coordinator
+from .models import Site, Coordinator
 
 
-class CreateFarmForm(forms.Form):
-    name = Farm._meta.get_field("name").formfield()
+class CreateSiteForm(forms.Form):
+    name = Site._meta.get_field("name").formfield()
     name.help_text = ""
-    name.widget.attrs["placeholder"] = "Farm's name"
+    name.widget.attrs["placeholder"] = "Site's name"
     address = AddressField(initial={"formatted": ""})
 
 
@@ -19,12 +19,12 @@ class CoordinatorSetupSelectForm(forms.Form):
 
 
 class CoordinatorSetupRegistrationForm(forms.Form):
-    """Add the coordinator to the farm"""
+    """Add the coordinator to the site"""
 
-    farm = forms.ModelChoiceField(Farm.objects.none())
+    site = forms.ModelChoiceField(Site.objects.none())
     subdomain_prefix = forms.CharField(
         max_length=20,
-        widget=forms.TextInput(attrs={"placeholder": "farm-name"},),
+        widget=forms.TextInput(attrs={"placeholder": "site-name"},),
         validators=[
             RegexValidator(
                 regex="^[a-zA-Z0-9]+[a-zA-Z0-9\-]*$",
@@ -35,9 +35,9 @@ class CoordinatorSetupRegistrationForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        qs = kwargs.pop("farms")
+        qs = kwargs.pop("sites")
         super(CoordinatorSetupRegistrationForm, self).__init__(*args, **kwargs)
-        self.fields["farm"].queryset = qs
+        self.fields["site"].queryset = qs
 
     def clean_subdomain_prefix(self):
         """ensure that subdomain_prefix is always lower case."""

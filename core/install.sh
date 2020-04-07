@@ -4,7 +4,7 @@
 set -e
 
 # Install Pipenv
-pip install pipenv
+python3 -m pip install pipenv
 
 # Install Python dependencies
 cd "$(dirname "$0")"

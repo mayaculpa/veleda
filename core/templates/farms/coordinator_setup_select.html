@@ -40,9 +40,9 @@
   <tr>
     <td>
     {% if coordinator.dns_address %}
-      <a href="http://{{ coordinator.dns_address }}">{{ coordinator.farm.name }}</a>
+      <a href="http://{{ coordinator.dns_address }}">{{ coordinator.site.name }}</a>
     {% else %}
-      <a href="http://{{ coordinator.local_ip_address }}">{{ coordinator.farm.name }}</a>
+      <a href="http://{{ coordinator.local_ip_address }}">{{ coordinator.site.name }}</a>
     {% endif %}
     </td>
     <td>{{ coordinator.external_ip_address }}</td>

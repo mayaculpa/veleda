@@ -1,4 +1,4 @@
-FROM python:3.7.5
+FROM python:3.8
 LABEL maintainer="moritz.ulmer@posteo.de"
 
 # Install Python and Package Libraries
@@ -20,7 +20,7 @@ USER $USERNAME
 
 # Install the dependencies
 COPY Pipfile Pipfile.lock ./
-RUN pip install --user pipenv && pipenv install
+RUN python3 -m pip install --user pipenv && pipenv install
 
 # Copy the source files
 COPY ./ ./

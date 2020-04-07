@@ -18,5 +18,5 @@ urlpatterns = [
         "register/",
         RegistrationView.as_view(form_class=UserRegistrationForm),
         name="signup",
-    )
+    ),
 ]

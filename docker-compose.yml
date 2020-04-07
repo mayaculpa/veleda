@@ -102,7 +102,7 @@ services:
       - postgres
 
   grafana:
-    image: grafana/grafana:4.6.3
+    image: grafana/grafana:5.4.3
     container_name: grafana
     restart: always
     env_file:
@@ -114,6 +114,7 @@ services:
       - frontend
     volumes:
       - grafana-data:/var/lib/grafana
+      - grafana-config:/etc/grafana/
     depends_on:
       - influxdb
 
@@ -179,6 +180,7 @@ networks:
 volumes:
   influxdb-data:
   grafana-data:
+  grafana-config:
   postgres-data:
   jekyll-data:
   rabbitmq-data:

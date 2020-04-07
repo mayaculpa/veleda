@@ -12,7 +12,7 @@ pylint-django = "*"
 codecov = "*"
 
 [packages]
-django = "~=2.2.9"
+django = "~=3.0.0"
 django-oauth-toolkit = "*"
 django-semanticui-forms = "*"
 djangorestframework = "*"
@@ -29,7 +29,7 @@ django-celery-results = "~=1.1"
 cloudflare = "~=2.3"
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"
 
 [pipenv]
 allow_prereleases = true
