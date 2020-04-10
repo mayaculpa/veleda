@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 import sys
 
-TESTING = sys.argv[1:2] == ['test']
+TESTING = sys.argv[1:2] == ["test"]
 
 # Workaround to enable logging errors via gunicorn in docker
 import logging
@@ -123,8 +123,12 @@ DATABASES = {
     }
 }
 
-# Celery and RabbitMQ
+if TESTING:
+    # Override user and password
+    DATABASES["default"]["USER"] = "postgres"
+    DATABASES["default"]["PASSWORD"] = os.environ.get("POSTGRES_PASSWORD")
 
+# Celery and RabbitMQ
 if DEBUG:
     CELERY_BROKER_URL = "amqp://localhost"
 else:
@@ -190,8 +194,8 @@ OAUTH2_PROVIDER = {
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
         # "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
     ),
     # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),

@@ -162,10 +162,11 @@ class CoordinatorSetupTests(TestCase):
 
         # Test login required
         response = self.client.get(
-            reverse("coordinator-setup-select"), REMOTE_ADDR="127.0.0.1"
+            reverse("farms:coordinator-setup-select"), REMOTE_ADDR="127.0.0.1"
         )
         self.assertRedirects(
-            response, reverse("login") + "?next=" + reverse("coordinator-setup-select")
+            response,
+            reverse("login") + "?next=" + reverse("farms:coordinator-setup-select"),
         )
 
         # Test with authenticated user for remaining asserts
@@ -173,7 +174,7 @@ class CoordinatorSetupTests(TestCase):
 
         # Test internal IP address
         response = self.client.get(
-            reverse("coordinator-setup-select"), REMOTE_ADDR="127.0.0.1"
+            reverse("farms:coordinator-setup-select"), REMOTE_ADDR="127.0.0.1"
         )
         self.assertContains(
             response, "external IP address can not be used for a lookup"
@@ -182,7 +183,7 @@ class CoordinatorSetupTests(TestCase):
 
         # Test empty setup page
         response = self.client.get(
-            reverse("coordinator-setup-select"), REMOTE_ADDR="1.1.1.1"
+            reverse("farms:coordinator-setup-select"), REMOTE_ADDR="1.1.1.1"
         )
         self.assertContains(response, "no coordinators were found")
 
@@ -196,7 +197,7 @@ class CoordinatorSetupTests(TestCase):
             local_ip_address="192.168.0.1", external_ip_address="1.1.1.1", site=site_a_2
         )
         response = self.client.get(
-            reverse("coordinator-setup-select"), REMOTE_ADDR="1.1.1.1"
+            reverse("farms:coordinator-setup-select"), REMOTE_ADDR="1.1.1.1"
         )
         self.assertContains(response, coordinator_a_1.site.name)
         self.assertContains(response, coordinator_a_2.site.name)
@@ -210,14 +211,14 @@ class CoordinatorSetupTests(TestCase):
             local_ip_address="192.168.0.1", external_ip_address="1.1.1.1"
         )
         response = self.client.get(
-            reverse("coordinator-setup-select"), REMOTE_ADDR="1.1.1.1"
+            reverse("farms:coordinator-setup-select"), REMOTE_ADDR="1.1.1.1"
         )
         self.assertContains(response, coordinator_b_1.id.hex[:7])
         self.assertContains(response, coordinator_b_2.id.hex[:7])
 
         # Test not showing coordinators for a user from a different subnet
         response = self.client.get(
-            reverse("coordinator-setup-select"), REMOTE_ADDR="1.1.1.2"
+            reverse("farms:coordinator-setup-select"), REMOTE_ADDR="1.1.1.2"
         )
         self.assertContains(response, "no coordinators were found")
 
@@ -226,10 +227,11 @@ class CoordinatorSetupTests(TestCase):
 
         # Test login required
         response = self.client.post(
-            reverse("coordinator-setup-select"), REMOTE_ADDR="127.0.0.1"
+            reverse("farms:coordinator-setup-select"), REMOTE_ADDR="127.0.0.1"
         )
         self.assertRedirects(
-            response, reverse("login") + "?next=" + reverse("coordinator-setup-select")
+            response,
+            reverse("login") + "?next=" + reverse("farms:coordinator-setup-select"),
         )
 
         # Test with a logged in user and valid coordinator for the remaining asserts
@@ -240,21 +242,23 @@ class CoordinatorSetupTests(TestCase):
 
         # Test blank post request
         data = {}
-        response = self.client.post(reverse("coordinator-setup-select"), data)
+        response = self.client.post(reverse("farms:coordinator-setup-select"), data)
         self.assertContains(response, "This field is required", status_code=400)
 
         # Test invalid UUID
         data = {"coordinator_id": coordinator_a_1.id.hex[:-1]}
         # import ipdb; ipdb.set_trace()
-        response = self.client.post(reverse("coordinator-setup-select"), data)
+        response = self.client.post(reverse("farms:coordinator-setup-select"), data)
         self.assertContains(response, "Enter a valid UUID", status_code=400)
 
         # Test a valid request
         data = {"coordinator_id": coordinator_a_1.id}
-        response = self.client.post(reverse("coordinator-setup-select"), data)
+        response = self.client.post(reverse("farms:coordinator-setup-select"), data)
         self.assertRedirects(
             response,
-            reverse("coordinator-setup-register", kwargs={"pk": coordinator_a_1.id,}),
+            reverse(
+                "farms:coordinator-setup-register", kwargs={"pk": coordinator_a_1.id,}
+            ),
         )
 
     def test_register_coordinator(self):
@@ -265,19 +269,25 @@ class CoordinatorSetupTests(TestCase):
             local_ip_address="192.168.0.1", external_ip_address="1.1.1.1"
         )
         response = self.client.get(
-            reverse("coordinator-setup-register", kwargs={"pk": coordinator_a.id}),
+            reverse(
+                "farms:coordinator-setup-register", kwargs={"pk": coordinator_a.id}
+            ),
             REMOTE_ADDR="127.0.0.1",
         )
         self.assertRedirects(
             response,
             reverse("login")
             + "?next="
-            + reverse("coordinator-setup-register", kwargs={"pk": coordinator_a.id}),
+            + reverse(
+                "farms:coordinator-setup-register", kwargs={"pk": coordinator_a.id}
+            ),
         )
 
         # Test if the form fields were loaded
         response = self.client.get(
-            reverse("coordinator-setup-register", kwargs={"pk": coordinator_a.id}),
+            reverse(
+                "farms:coordinator-setup-register", kwargs={"pk": coordinator_a.id}
+            ),
             REMOTE_ADDR="127.0.0.1",
         )
 
@@ -339,41 +349,41 @@ class SiteTemplateTests(TestCase):
         """Test creating a site"""
 
         # Check required authentication
-        response = self.client.get(reverse("site-setup"))
+        response = self.client.get(reverse("farms:site-setup"))
         self.assertRedirects(
-            response, reverse("login") + "?next=" + reverse("site-setup")
+            response, reverse("login") + "?next=" + reverse("farms:site-setup")
         )
-        response = self.client.post(reverse("site-setup"))
+        response = self.client.post(reverse("farms:site-setup"))
         self.assertRedirects(
-            response, reverse("login") + "?next=" + reverse("site-setup")
+            response, reverse("login") + "?next=" + reverse("farms:site-setup")
         )
 
         with self.settings(
             STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage"
         ):
             self.client.login(username=self.user_a.email, password="user_a")
-            response = self.client.get(reverse("site-setup"))
+            response = self.client.get(reverse("farms:site-setup"))
             self.assertContains(response, "Name")
             self.assertContains(response, "Address")
 
             # Check poorly formatted requests
             data = {}
-            response = self.client.post(reverse("site-setup"), data)
+            response = self.client.post(reverse("farms:site-setup"), data)
             self.assertContains(response, "Site Setup", status_code=400)
 
             data = {"name": "test site"}
-            response = self.client.post(reverse("site-setup"), data)
+            response = self.client.post(reverse("farms:site-setup"), data)
             self.assertContains(response, "Site Setup", status_code=400)
 
             data = {"address": "some place"}
-            response = self.client.post(reverse("site-setup"), data)
+            response = self.client.post(reverse("farms:site-setup"), data)
             self.assertContains(response, "Site Setup", status_code=400)
             self.assertFalse(Site.objects.all())
 
             # Check valid requests
             data = {"name": "good site", "address": "some place"}
-            response = self.client.post(reverse("site-setup"), data)
-            self.assertRedirects(response, reverse("site-list"))
+            response = self.client.post(reverse("farms:site-setup"), data)
+            self.assertRedirects(response, reverse("farms:site-list"))
             self.assertTrue(Site.objects.all())
 
             site = Site.objects.get(name=data["name"])
@@ -394,14 +404,14 @@ class SiteTemplateTests(TestCase):
         site_b = Site.objects.create(name="Site B")
 
         # Test required authentication
-        response = self.client.get(reverse("site-list"))
+        response = self.client.get(reverse("farms:site-list"))
         self.assertRedirects(
-            response, reverse("login") + "?next=" + reverse("site-list")
+            response, reverse("login") + "?next=" + reverse("farms:site-list")
         )
 
         # Test no owned sites
         self.client.login(username=self.user_a.email, password="user_a")
-        response = self.client.get(reverse("site-list"))
+        response = self.client.get(reverse("farms:site-list"))
         self.assertContains(response, "Sites")
         self.assertContains(response, "No sites found")
 
@@ -410,7 +420,7 @@ class SiteTemplateTests(TestCase):
         site_a.save()
         site_b.owner = self.user_b
         site_b.save()
-        response = self.client.get(reverse("site-list"))
+        response = self.client.get(reverse("farms:site-list"))
         self.assertContains(response, site_a.name)
         self.assertNotContains(response, site_b.name)
         self.assertContains(response, site_address_a.raw)

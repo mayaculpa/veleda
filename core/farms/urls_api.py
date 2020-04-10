@@ -22,7 +22,7 @@ urlpatterns = [
     path(
         "v1/farms/coordinators/",
         views.APICoordinatorListCreateView.as_view(),
-        name="coordinators",
+        name="coordinator-list",
     ),
     path(
         "v1/farms/coordinators/<uuid:pk>/",

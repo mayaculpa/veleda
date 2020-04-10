@@ -79,11 +79,11 @@ class Oauth2ApplicationTests(TestCase):
             self.assertEqual(response.status_code, 200)
 
         response = self.http_client.get(
-            reverse("oauth2_provider:detail", kwargs={"pk": 1})
+            reverse("oauth2_provider:detail", kwargs={"pk": self.oauth2_client.pk})
         )
         self.assertEqual(response.status_code, 200)
         response = self.http_client.get(
-            reverse("oauth2_provider:detail", kwargs={"pk": 2})
+            reverse("oauth2_provider:detail", kwargs={"pk": self.oauth2_client.pk + 1})
         )
         self.assertEqual(response.status_code, 404)
 

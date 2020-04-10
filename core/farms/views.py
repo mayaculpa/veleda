@@ -92,9 +92,8 @@ class SiteSetupView(LoginRequiredMixin, View):
 
         if form.is_valid():
             Site.objects.create(**form.cleaned_data, owner=request.user)
-            return HttpResponseRedirect(reverse("site-list"))
-        else:
-            return render(request, "farms/site_setup.html", {"form": form}, status=400)
+            return HttpResponseRedirect(reverse("farms:site-list"))
+        return render(request, "farms/site_setup.html", {"form": form}, status=400)
 
 
 class CoordinatorSetupSelectView(LoginRequiredMixin, View):
@@ -127,17 +126,14 @@ class CoordinatorSetupSelectView(LoginRequiredMixin, View):
         if form.is_valid():
             return HttpResponseRedirect(
                 reverse(
-                    "coordinator-setup-register",
+                    "farms:coordinator-setup-register",
                     kwargs={"pk": form.cleaned_data["coordinator_id"]},
                 ),
             )
-        else:
-            return render(
-                request,
-                "farms/coordinator_setup_select.html",
-                {"form": form},
-                status=400,
-            )
+
+        return render(
+            request, "farms/coordinator_setup_select.html", {"form": form}, status=400,
+        )
 
 
 class CoordinatorSetupRegisterView(LoginRequiredMixin, View):
@@ -282,7 +278,7 @@ class APICoordinatorDetailView(generics.RetrieveUpdateAPIView):
         return Coordinator.objects.filter(site__owner=self.request.user)
 
 
-class APIMqttMessageListView(generics.ListAPIView):
+class APIMqttMessageListView(generics.ListCreateAPIView):
     """List of a coordinator's MQTT messages"""
 
     permission_classes = (IsAuthenticated,)
@@ -296,6 +292,8 @@ class APIMqttMessageListView(generics.ListAPIView):
 
 
 class APIMqttMessageDetailView(generics.RetrieveAPIView):
+    """Details of one MQTT message"""
+
     permission_classes = (IsAuthenticated,)
     serializer_class = MqttMessageSerializer
     queryset = MqttMessage.objects.all()
