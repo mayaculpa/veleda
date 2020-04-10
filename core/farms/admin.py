@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Site, Coordinator, HydroponicSystem, Controller
+from .models import Site, Coordinator, HydroponicSystem, Controller, MqttMessage
 # Register your models here.
 
 @admin.register(Site)
@@ -17,4 +17,8 @@ class HydroponicSystemAdmin(admin.ModelAdmin):
 
 @admin.register(Controller)
 class ControllerAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(MqttMessage)
+class MqttMessageAdmin(admin.ModelAdmin):
     pass

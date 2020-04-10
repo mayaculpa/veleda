@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponseBadRequest
-from django.shortcuts import render, reverse
+from django.shortcuts import render, reverse, get_object_or_404
 from django.views.generic.base import View
 from django_celery_results.models import TaskResult
 from ipware import get_client_ip
@@ -95,23 +95,6 @@ class SiteSetupView(LoginRequiredMixin, View):
             return HttpResponseRedirect(reverse("site-list"))
         else:
             return render(request, "farms/site_setup.html", {"form": form}, status=400)
-
-
-class APISiteDetailView(generics.RetrieveAPIView):
-    """Details of one site"""
-
-    permission_classes = (IsAuthenticated,)
-    serializer_class = SiteSerializer
-    queryset = Site.objects.all()
-
-
-class APISiteListCreateView(generics.ListCreateAPIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = SiteSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        return Site.objects.filter(owner=user)
 
 
 class CoordinatorSetupSelectView(LoginRequiredMixin, View):
@@ -261,38 +244,70 @@ class APICoordinatorPingView(APIView):
         return JsonResponse(serializer.data, status=201)
 
 
-class APICoordinatorListCreateView(generics.ListCreateAPIView):
-    permission_classes = (IsAuthenticated,)
+class APISiteListCreateView(generics.ListCreateAPIView):
+    """List of your sites"""
 
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SiteSerializer
+
+    def get_queryset(self):
+        return Site.objects.filter(owner=self.request.user)
+
+
+class APISiteDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Details of one site"""
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = SiteSerializer
+    queryset = Site.objects.all()
+
+
+class APICoordinatorListCreateView(generics.ListCreateAPIView):
+    """List of your coordinators"""
+
+    permission_classes = (IsAuthenticated,)
     serializer_class = CoordinatorSerializer
 
     def get_queryset(self):
         return Coordinator.objects.filter(site__owner=self.request.user)
 
 
-class APICoordinatorDetailView(APIView):
-    permission_classes = (IsAuthenticated,)
+class APICoordinatorDetailView(generics.RetrieveUpdateAPIView):
+    """Details of one coordinator"""
 
-    def get(self, pk):
-        return JsonResponse(CoordinatorSerializer(Coordinator.objects.get(pk=pk)))
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CoordinatorSerializer
+
+    def get_queryset(self):
+        return Coordinator.objects.filter(site__owner=self.request.user)
 
 
 class APIMqttMessageListView(generics.ListAPIView):
-    permission_classes = (IsAuthenticated,)
+    """List of a coordinator's MQTT messages"""
 
+    permission_classes = (IsAuthenticated,)
     serializer_class = MqttMessageSerializer
 
     def get_queryset(self):
-        coordinator = self.kwargs["coordinator"]
-        return MqttMessage.objects.filter(coordinator=coordinator)
+        coordinator = self.kwargs["pk"]
+        return MqttMessage.objects.filter(coordinator=coordinator).order_by(
+            "-created_at"
+        )
 
 
-class APICoordinatorMqttView(APIView):
+class APIMqttMessageDetailView(generics.RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
+    serializer_class = MqttMessageSerializer
+    queryset = MqttMessage.objects.all()
 
-    def post(self, request, *args, **kwargs):
-
-        return
+    def get_object(self):
+        queryset = self.get_queryset()
+        filters = {
+            "coordinator": self.kwargs["pk"],
+            "created_at": self.kwargs["created_at"],
+        }
+        obj = get_object_or_404(queryset, **filters)
+        return obj
 
 
 class APIControllerPingView(APIView):

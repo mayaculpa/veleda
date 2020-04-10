@@ -213,6 +213,9 @@ class Controller(models.Model):
 class MqttMessage(models.Model):
     """An MQTT message from a coordinator's MQTT broker"""
 
+    class Meta:
+        unique_together = ['created_at', 'coordinator']
+
     COMMAND_PREFIX = "cmd"
     TELEMETRY_PREFIX = "tel"
     REGISTER_PREFIX = "reg"
@@ -223,7 +226,7 @@ class MqttMessage(models.Model):
         (REGISTER_PREFIX, "Register topic"),
     ]
 
-    timestamp = models.DateTimeField(
+    created_at = models.DateTimeField(
         auto_now_add=True,
         help_text="The datetime when the message was received",
     )

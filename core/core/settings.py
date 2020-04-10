@@ -112,24 +112,16 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyD--your-google-maps-key
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-if DEBUG:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-        }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("DATABASE_NAME"),
+        "USER": os.environ.get("DATABASE_USER"),
+        "PASSWORD": os.environ.get("DATABASE_PASSWORD"),
+        "HOST": os.environ.get("DATABASE_HOST"),
+        "PORT": os.environ.get("DATABASE_PORT"),
     }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("DATABASE_NAME"),
-            "USER": os.environ.get("DATABASE_USER"),
-            "PASSWORD": os.environ.get("DATABASE_PASSWORD"),
-            "HOST": os.environ.get("DATABASE_HOST"),
-            "PORT": os.environ.get("DATABASE_PORT"),
-        }
-    }
+}
 
 # Celery and RabbitMQ
 

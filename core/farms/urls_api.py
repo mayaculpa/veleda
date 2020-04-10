@@ -1,43 +1,53 @@
-from django.urls import path
+from django.urls import path, register_converter
 
-from .views import (
-    APICoordinatorPingView,
-    APICoordinatorListCreateView,
-    APICoordinatorDetailView,
-    APIControllerPingView,
-    APIControllerDetailView,
-    APIMqttMessageListView,
-    APISiteDetailView,
-    APISiteListCreateView,
-)
+from . import views
 
+# fmt: off
 urlpatterns = [
-    path("v1/farms/sites/", APISiteListCreateView.as_view(), name="site-list",),
-    path("v1/farms/sites/<uuid:pk>/", APISiteDetailView.as_view(), name="site-detail",),
+    path(
+        "v1/farms/sites/",
+        views.APISiteListCreateView.as_view(),
+        name="site-list",
+    ),
+    path(
+        "v1/farms/sites/<uuid:pk>/",
+        views.APISiteDetailView.as_view(),
+        name="site-detail",
+    ),
     path(
         "v1/farms/coordinators/ping/",
-        APICoordinatorPingView.as_view(),
+        views.APICoordinatorPingView.as_view(),
         name="coordiantor-ping",
     ),
     path(
-        "v1/farms/coordinators/", APICoordinatorListCreateView.as_view(), name="coordinators",
+        "v1/farms/coordinators/",
+        views.APICoordinatorListCreateView.as_view(),
+        name="coordinators",
     ),
     path(
         "v1/farms/coordinators/<uuid:pk>/",
-        APICoordinatorDetailView.as_view(),
+        views.APICoordinatorDetailView.as_view(),
         name="coordinator-detail",
     ),
     path(
-        "v1/farms/controllers/ping/", APIControllerPingView.as_view(), name="controller-ping",
+        "v1/farms/controllers/ping/",
+        views.APIControllerPingView.as_view(),
+        name="controller-ping",
     ),
     path(
         "v1/farms/controllers/<uuid:pk>/",
-        APIControllerDetailView.as_view(),
+        views.APIControllerDetailView.as_view(),
         name="controller-detail",
     ),
     path(
         "v1/farms/coordinators/<uuid:pk>/mqtt/",
-        APIMqttMessageListView.as_view(),
-        name="coordinator-mqtt",
+        views.APIMqttMessageListView.as_view(),
+        name="mqttmessage-list",
+    ),
+    path(
+        "v1/farms/coordinators/<uuid:pk>/mqtt/<str:created_at>/",
+        views.APIMqttMessageDetailView.as_view(),
+        name="mqttmessage-detail",
     ),
 ]
+# fmt: on
