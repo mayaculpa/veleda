@@ -241,7 +241,7 @@ class APICoordinatorPingView(APIView):
 
 
 class APISiteListCreateView(generics.ListCreateAPIView):
-    """List of your sites"""
+    """List of your sites. Returns 404 on unauthorized access."""
 
     permission_classes = (IsAuthenticated,)
     serializer_class = SiteSerializer
@@ -255,7 +255,9 @@ class APISiteDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     permission_classes = (IsAuthenticated,)
     serializer_class = SiteSerializer
-    queryset = Site.objects.all()
+
+    def get_queryset(self):
+        return Site.objects.filter(owner=self.request.user)
 
 
 class APICoordinatorListCreateView(generics.ListCreateAPIView):

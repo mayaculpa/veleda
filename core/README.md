@@ -4,7 +4,7 @@
 
 The Django application is responisble for the user authentication.
 
-Local install:
+Local install requires *Docker* and the following commands:
 
     sudo apt install python3-pip libpq-dev
     python3 -m pip install --user pipenv
@@ -15,10 +15,7 @@ Start with:
 
     ./start.sh
 
-Or
-
-    ./manage.py migrate
-    ./manage.py runserver
+This starts a development environment by default. If `DJANGO_DEBUG=False` is set, the production environment will be loaded. This variable is loaded if started via the docker compose command.
 
 ### Server Domain
 
@@ -26,50 +23,31 @@ In order to create the farm subdomains, the server domain and the subdomain name
 
 ## Tests
 
-The command to run tests:
+The tests try to mirror the production environment throught the use of the respective Docker services. The command to run tests:
 
-    ./manage.py test
+    ./start.sh test
 
 The command to create an HTML report of the test coverage:
 
-    coverage run --source='.' manage.py test
-    coverage html
-
-## Local Development
-
-Create a development database (SQLite) and a superuser with:
-
-    ./manage.py migrate
-    ./manage.py createsuperuser
-
-Then start the development server. Changes to the code are automatically reloaded
-
-    ./manage.py runserver
+    ./start.sh coverage
 
 ### Running Celery Tasks
 
-This requires RabbitMQ and Celery to be started before the `./manage.py runserver` command is run.
-
-    docker run -d --hostname my-rabbit -p 127.0.0.1:5672:5672 --name some-rabbit rabbitmq:3
-    celery -A core worker -l info
+A Celery task runner and RabbitMQ Docker service are created by default when running `start.sh`.
 
 ## Database Migrations
 
 For a database migration, the web app has to be started outside Docker (the database may run in Docker). First make sure the database is up-to-date:
 
-    ./manage.py makemigrations
+    ./start.sh makemigrations
 
-Then, to create a new migration use:
-
-    ./manage.py migrate
-
-This will create a diff from the previous database in migrations/versions.
+The `migrate` command is called by default by the `start.sh` script
 
 ## Options
 
 To start the web server with a custom port and host binding:
 
-    ./manage.py runserver -p 8001 -h 0.0.0.0
+    ./start.sh runserver 0.0.0.0:8001
 
 ## Running a local Docker instance
 

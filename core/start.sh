@@ -106,16 +106,29 @@ fi
 echo "Starting Celery processes"
 pipenv run celery -A core worker -l info &
 
-# Start the app server, either for the dev or prod environment
-if [[ $DJANGO_DEBUG != "FALSE" ]]; then
-  echo "Starting Django dev server"
-  pipenv run ./manage.py runserver
+if [[ -z $1 ]]; then
+  # Start the app server, either for the dev or prod environment
+  if [[ $DJANGO_DEBUG != "FALSE" ]]; then
+    echo "Starting Django dev server"
+    pipenv run ./manage.py runserver
+  else
+    echo "Starting Gunicorn"
+    exec pipenv run gunicorn core.wsgi:application \
+        --bind "$GUNICORN_HOST:8000" \
+        --workers 3
+        --capture-output
+        --enable-stdio-inheritance
+  fi
+elif [[ $1 == "test" ]]; then
+  echo "Starting Django test runner"
+  pipenv run ./manage.py test $2
+elif [[ $1 == "coverage" ]]; then
+  echo "Starting test coverage analysis"
+  pipenv run coverage run --source='.' manage.py test
+  pipenv run coverage html
+  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+  echo "Coverage analysis created: file:$DIR/htmlcov/index.html"
 else
-  echo "Starting Gunicorn"
-  exec pipenv run gunicorn core.wsgi:application \
-      --bind "$GUNICORN_HOST:8000" \
-      --workers 3
-      --capture-output
-      --enable-stdio-inheritance
+  echo "$@"
+  pipenv run ./manage.py "$@"
 fi
-

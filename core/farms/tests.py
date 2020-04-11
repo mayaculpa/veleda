@@ -426,6 +426,94 @@ class SiteTemplateTests(TestCase):
         self.assertContains(response, site_address_a.raw)
 
 
+class SiteAPITests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # Disable HTTP request warnings
+        logging.disable()
+
+        # Create 3 users, with total 2, 1, and 0 sites respectively
+        self.user_a = get_user_model().objects.create_user(
+            email="user_a@example.com", password="user_a_passwd",
+        )
+        self.user_b = get_user_model().objects.create_user(
+            email="user_b@example.com", password="user_b_passwd",
+        )
+        self.user_c = get_user_model().objects.create_user(
+            email="user_c@example.com", password="user_c_passwd",
+        )
+        self.site_a1 = Site.objects.create(name="Site A1", owner=self.user_a)
+        self.site_a2 = Site.objects.create(name="Site A2", owner=self.user_a)
+        self.site_b1 = Site.objects.create(name="Site B1", owner=self.user_b)
+
+    def tearDown(self):
+        # Reenable HTP request warnings
+        logging.disable(logging.NOTSET)
+
+    def test_site_list(self):
+        """Test that the list of owned sites are shown"""
+
+        # Check that authentication is required
+        response = self.client.get(reverse("site-list"))
+        self.assertContains(response, "Authentication credentials", status_code=401)
+
+        # Check that the sites of the first user are listed
+        self.assertTrue(
+            self.client.login(username=self.user_a.email, password="user_a_passwd")
+        )
+        response = self.client.get(reverse("site-list"))
+        self.assertContains(response, self.site_a1.name)
+        self.assertContains(response, self.site_a2.name)
+        self.assertNotContains(response, self.site_b1.name)
+
+        # Check the sites of the second user
+        self.assertTrue(
+            self.client.login(username=self.user_b.email, password="user_b_passwd")
+        )
+        response = self.client.get(reverse("site-list"))
+        self.assertNotContains(response, self.site_a1.name)
+        self.assertNotContains(response, self.site_a2.name)
+        self.assertContains(response, self.site_b1.name)
+
+        # Check that the last user not shown any sites
+        self.assertTrue(
+            self.client.login(username=self.user_c.email, password="user_c_passwd")
+        )
+        response = self.client.get(reverse("site-list"))
+        self.assertEqual(response.content, b"[]")
+
+    def test_site_details(self):
+        """Test that the details of a site are shown"""
+
+        # Check that authentication is required
+        response = self.client.get(
+            reverse("site-detail", kwargs={"pk": self.site_a1.id})
+        )
+        self.assertContains(response, "Authentication credentials", status_code=401)
+
+        # Check that a user can only see their own sites
+        self.assertTrue(
+            self.client.login(username=self.user_a.email, password="user_a_passwd")
+        )
+        response = self.client.get(
+            reverse("site-detail", kwargs={"pk": self.site_b1.id})
+        )
+        self.assertContains(response, "Not found", status_code=404)
+        response = self.client.get(
+            reverse("site-detail", kwargs={"pk": self.site_a2.id})
+        )
+        self.assertContains(response, self.site_a2.name)
+
+        # Check that a link from the list view to the detail site works
+        response = self.client.get(reverse("site-list"))
+        self.assertContains(
+            response, reverse("site-detail", kwargs={"pk": self.site_a1.id})
+        )
+        self.assertNotContains(
+            response, reverse("site-detail", kwargs={"pk": self.site_b1.id})
+        )
+
+
 class CoordinatorAPITests(TestCase):
     def setUp(self):
         self.client = Client()

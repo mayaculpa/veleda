@@ -11,3 +11,4 @@ ignore_errors = True
 omit =
     tests/*
     oauth2_test.py
+    core/wsgi.py
