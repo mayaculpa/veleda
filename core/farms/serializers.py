@@ -1,6 +1,7 @@
 import uuid
 from rest_framework import serializers
 from rest_framework.reverse import reverse
+from rest_framework.exceptions import MethodNotAllowed
 from address.models import Address
 from accounts.models import User
 
@@ -13,34 +14,47 @@ class SiteAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = [
+            "street_number",
+            "route",
+            "locality",
             "raw",
+            "formatted",
+            "latitude",
+            "longitude",
         ]
-
-
-class SiteOwnerField(serializers.HyperlinkedRelatedField):
-    """Field to only list the logged in user. In future all group members?"""
-
-    # How to limit related members https://stackoverflow.com/a/57184103
-
-    def get_queryset(self):
-        user = self.context["request"].user
-        return User.objects.filter(pk=user.id)
+        read_only_fields = [
+            "street_number",
+            "route",
+            "locality",
+            "formatted",
+            "latitude",
+            "longitude",
+        ]
 
 
 class SiteSerializer(serializers.HyperlinkedModelSerializer):
     """Serialize a farm site and limit owner and address listings"""
 
-    address = SiteAddressSerializer(read_only=True)
-    owner = SiteOwnerField(view_name="user-detail", read_only=True)
+    address = SiteAddressSerializer()
 
     class Meta:
         model = Site
         fields = ["url", "name", "owner", "address", "coordinator_set"]
-        read_only_fields = ["coordinator_set"]
+        read_only_fields = ["coordinator_set", "owner"]
 
     def create(self, validated_data):
-        validated_data.pop("coordinator_set")
+        """Create a new site with the logged in user as owner"""
         return Site.objects.create(**validated_data, owner=self.context["request"].user)
+
+    def update(self, instance, validated_data):
+        """Only support PUT. validated data must contain name + address.raw"""
+        address_raw = validated_data["address"]["raw"]
+        if instance.address.raw != address_raw:
+            instance.address.delete()
+            instance.address = Address.objects.create(raw=address_raw)
+        instance.name = validated_data["name"]
+        instance.save()
+        return instance
 
 
 class CoordinatorSiteField(serializers.HyperlinkedRelatedField):

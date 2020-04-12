@@ -513,8 +513,65 @@ class SiteAPITests(TestCase):
             response, reverse("site-detail", kwargs={"pk": self.site_b1.id})
         )
 
+    def test_create_update_delete_site(self):
+        """Test the creation of sites via the API"""
 
-class CoordinatorAPITests(TestCase):
+        # Check that authentication is required
+        data = {}
+        response = self.client.post(reverse("site-list"), data=data)
+        self.assertContains(response, "Authentication credentials", status_code=401)
+
+        # Create a site from list view
+        self.assertTrue(
+            self.client.login(username=self.user_a.email, password="user_a_passwd")
+        )
+        data = {
+            "name": "Site A3",
+            "address": {"raw": "Some street 22, Some City, Some Country",},
+        }
+        response = self.client.post(
+            reverse("site-list"), data=data, content_type="application/json"
+        )
+
+        self.assertContains(response, data["name"], status_code=201)
+        self.assertContains(response, data["address"]["raw"], status_code=201)
+
+        # Put a site
+        put_data = json.loads(response.content)
+        put_data["name"] = "Void Site A3 Void"
+        response = self.client.put(
+            put_data["url"], data=put_data, content_type="application/json"
+        )
+
+        self.assertContains(response, put_data["name"])
+        self.assertContains(response, put_data["address"]["raw"])
+
+        # Patch a site
+        patch_data = {"name": "New Site A3 New"}
+        response = self.client.patch(
+            put_data["url"], data=patch_data, content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 405)
+
+        # Delete a site
+        response = self.client.delete(put_data["url"])
+        self.assertEqual(response.status_code, 204)
+
+
+# class CoordinatorAPITests(TestCase):
+#     def setUp(self):
+#         self.client = Client()
+#         # Disable HTTP request warnings
+#         logging.disable()
+
+#     def tearDown(self):
+#         # Reenable HTTP request warnings
+#         logging.disable(logging.NOTSET)
+
+#     def test_coordinator_list(self):
+
+
+class CoordinatorPingAPITests(TestCase):
     def setUp(self):
         self.client = Client()
         # Disable HTTP request warnings

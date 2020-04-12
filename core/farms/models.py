@@ -55,7 +55,7 @@ class Coordinator(models.Model):
     )
     site = models.ForeignKey(
         Site,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         help_text="The site to which the coordinator belongs.",

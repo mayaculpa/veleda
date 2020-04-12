@@ -1,5 +1,11 @@
 #!/bin/bash
 
+function finish {
+  # Kills all forked processes (Celery worker)
+  pkill -P $$
+}
+trap finish EXIT
+
 # Exit with nonzero exit code if anything fails
 set -e
 

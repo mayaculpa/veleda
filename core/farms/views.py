@@ -255,6 +255,7 @@ class APISiteDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     permission_classes = (IsAuthenticated,)
     serializer_class = SiteSerializer
+    http_method_names = ['get', 'head', 'put', 'options', 'delete']
 
     def get_queryset(self):
         return Site.objects.filter(owner=self.request.user)
