@@ -134,6 +134,20 @@ elif [[ $1 == "coverage" ]]; then
   pipenv run coverage html
   DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
   echo "Coverage analysis created: file:$DIR/htmlcov/index.html"
+elif [[ $1 == "dumpdata" ]]; then
+  if [[ -z $2 ]]; then
+    echo "Missing file name"
+    exit 1
+  fi
+  echo "Dumping database to $2"
+  pipenv run ./manage.py dumpdata > "$2"
+elif [[ $1 == "loaddata" ]]; then
+  if [[ -z $2 ]]; then
+    echo "Missing file name"
+    exit 1
+  fi
+  echo "Loading database from $2"
+  pipenv run ./manage.py loaddata "$2"
 else
   echo "$@"
   pipenv run ./manage.py "$@"

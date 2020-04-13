@@ -43,6 +43,16 @@ For a database migration, the web app has to be started outside Docker (the data
 
 The `migrate` command is called by default by the `start.sh` script
 
+# Save and Load Seed Data
+
+To save the current state of the database to a file:
+
+    ./start.sh dumpdata /path/to/db_seed.json
+
+To load the saved data into a database:
+
+    ./start.sh loaddata /path/to/db_seed.json
+
 ## Options
 
 To start the web server with a custom port and host binding:
@@ -77,10 +87,22 @@ To register a new OAuth2 application (such as Grafana)
 2. Click the link to register a new application
 3. Type in an application name
 4. Copy the client ID and secret into the `grafana/secrets.grafana` file
-5. Set the client type and authorization grant type (usually *Confidential* and *Authorization Code*)
+5. Set the client type and authorization grant type (*Confidential* and *Authorization Code*)
 6. Add the redirect URI from the `grafana/secrets.grafana` file
 7. Save the new OAuth2 application
 8. Go to the Admin Dashboard (https://core.openfarming.ai/admin/)
 9. Go to the new application (Oauth2_Provider --> Applications --> *Application Name*)
 10. Enable *Skip authorization* at the bottom of the page
 11. Save the changes
+
+To start a NodeRED instance (part of the sdg-coordinator), start the following Docker service:
+
+    docker run -it --rm --network host -v /path/to/sdg-coordinator/node-red/settings.js:/data/settings.js --name mynodered nodered/node-red
+
+To register a NodeRED application
+1. Go to the OAuth2 Dashboard (https://core.openfarming.ai/o/applications/)
+2. Click the link to register a new application
+3. Type in an application name
+4. Copy the client ID and secret into the `Secrets` node on the `SDG Login` tab
+5. Set the client type: *Confidential* and authorization grant type: *Resource owner password-based / password*
+6. Save the new OAuth2 application
