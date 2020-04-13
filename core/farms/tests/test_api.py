@@ -1,0 +1,360 @@
+import json
+import logging
+
+from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from ..models import Site, Coordinator, Controller
+
+
+class SiteAPITests(TestCase):
+    """Test the site REST API endpoints"""
+    def setUp(self):
+        self.client = Client()
+        # Disable HTTP request warnings
+        logging.disable()
+
+        # Create 3 users, with total 2, 1, and 0 sites respectively
+        self.user_a = get_user_model().objects.create_user(
+            email="user_a@example.com", password="user_a_passwd",
+        )
+        self.user_b = get_user_model().objects.create_user(
+            email="user_b@example.com", password="user_b_passwd",
+        )
+        self.user_c = get_user_model().objects.create_user(
+            email="user_c@example.com", password="user_c_passwd",
+        )
+        self.site_a1 = Site.objects.create(name="Site A1", owner=self.user_a)
+        self.site_a2 = Site.objects.create(name="Site A2", owner=self.user_a)
+        self.site_b1 = Site.objects.create(name="Site B1", owner=self.user_b)
+
+    def tearDown(self):
+        # Reenable HTP request warnings
+        logging.disable(logging.NOTSET)
+
+    def test_site_list(self):
+        """Test that the list of owned sites are shown"""
+
+        # Check that authentication is required
+        response = self.client.get(reverse("site-list"))
+        self.assertContains(response, "Authentication credentials", status_code=401)
+
+        # Check that the sites of the first user are listed
+        self.assertTrue(
+            self.client.login(username=self.user_a.email, password="user_a_passwd")
+        )
+        response = self.client.get(reverse("site-list"))
+        self.assertContains(response, self.site_a1.name)
+        self.assertContains(response, self.site_a2.name)
+        self.assertNotContains(response, self.site_b1.name)
+
+        # Check the sites of the second user
+        self.assertTrue(
+            self.client.login(username=self.user_b.email, password="user_b_passwd")
+        )
+        response = self.client.get(reverse("site-list"))
+        self.assertNotContains(response, self.site_a1.name)
+        self.assertNotContains(response, self.site_a2.name)
+        self.assertContains(response, self.site_b1.name)
+
+        # Check that the last user not shown any sites
+        self.assertTrue(
+            self.client.login(username=self.user_c.email, password="user_c_passwd")
+        )
+        response = self.client.get(reverse("site-list"))
+        self.assertEqual(response.content, b"[]")
+
+    def test_site_details(self):
+        """Test that the details of a site are shown"""
+
+        # Check that authentication is required
+        response = self.client.get(
+            reverse("site-detail", kwargs={"pk": self.site_a1.id})
+        )
+        self.assertContains(response, "Authentication credentials", status_code=401)
+
+        # Check that a user can only see their own sites
+        self.assertTrue(
+            self.client.login(username=self.user_a.email, password="user_a_passwd")
+        )
+        response = self.client.get(
+            reverse("site-detail", kwargs={"pk": self.site_b1.id})
+        )
+        self.assertContains(response, "Not found", status_code=404)
+        response = self.client.get(
+            reverse("site-detail", kwargs={"pk": self.site_a2.id})
+        )
+        self.assertContains(response, self.site_a2.name)
+
+        # Check that a link from the list view to the detail site works
+        response = self.client.get(reverse("site-list"))
+        self.assertContains(
+            response, reverse("site-detail", kwargs={"pk": self.site_a1.id})
+        )
+        self.assertNotContains(
+            response, reverse("site-detail", kwargs={"pk": self.site_b1.id})
+        )
+
+    def test_create_update_delete_site(self):
+        """Test the creation of sites via the API"""
+
+        # Check that authentication is required
+        data = {}
+        response = self.client.post(reverse("site-list"), data=data)
+        self.assertContains(response, "Authentication credentials", status_code=401)
+
+        # Create a site from list view
+        self.assertTrue(
+            self.client.login(username=self.user_a.email, password="user_a_passwd")
+        )
+        data = {
+            "name": "Site A3",
+            "address": {"raw": "Some street 22, Some City, Some Country",},
+        }
+        response = self.client.post(
+            reverse("site-list"), data=data, content_type="application/json"
+        )
+
+        self.assertContains(response, data["name"], status_code=201)
+        self.assertContains(response, data["address"]["raw"], status_code=201)
+
+        # Put a site
+        put_data = json.loads(response.content)
+        put_data["name"] = "Void Site A3 Void"
+        response = self.client.put(
+            put_data["url"], data=put_data, content_type="application/json"
+        )
+
+        self.assertContains(response, put_data["name"])
+        self.assertContains(response, put_data["address"]["raw"])
+
+        # Patch a site
+        patch_data = {"name": "New Site A3 New"}
+        response = self.client.patch(
+            put_data["url"], data=patch_data, content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 405)
+
+        # Delete a site
+        response = self.client.delete(put_data["url"])
+        self.assertEqual(response.status_code, 204)
+
+
+# class CoordinatorAPITests(TestCase):
+#     def setUp(self):
+#         self.client = Client()
+#         # Disable HTTP request warnings
+#         logging.disable()
+
+#     def tearDown(self):
+#         # Reenable HTTP request warnings
+#         logging.disable(logging.NOTSET)
+
+#     def test_coordinator_list(self):
+
+
+class CoordinatorPingAPITests(TestCase):
+    """Test the coordinator ping API endpoints"""
+    def setUp(self):
+        self.client = Client()
+        # Disable HTTP request warnings
+        logging.disable()
+
+    def tearDown(self):
+        # Reenable HTTP request warnings
+        logging.disable(logging.NOTSET)
+
+    def test_controller_ping(self):
+        """Test unregistered coordinators pinging the server"""
+
+        # Test passing an empty POST request
+        data = {}
+        response = self.client.post(
+            reverse("coordiantor-ping"), data=data, REMOTE_ADDR="1.1.1.1"
+        )
+        self.assertContains(response, "This field is required", status_code=400)
+
+        # Test passing invalid JSON
+        data = "{hello there}"
+        response = self.client.post(
+            reverse("coordiantor-ping"),
+            data=data,
+            content_type="application/json",
+            REMOTE_ADDR="1.1.1.1",
+        )
+        self.assertContains(response, "JSON parse error", status_code=400)
+
+        # Test passing 127.0.0.1 as the remote IP address. Should fail as not routable
+        data = {"local_ip_address": "192.168.0.2"}
+        response = self.client.post(reverse("coordiantor-ping"), data=data)
+        self.assertContains(response, "IP address is not routable", status_code=400)
+
+        # Test a valid ping
+        data = {"local_ip_address": "192.168.0.2"}
+        response = self.client.post(
+            reverse("coordiantor-ping"), data=data, REMOTE_ADDR="1.1.1.1"
+        )
+        self.assertContains(response, "local_ip_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Test another anonymous valid ping
+        data = {"local_ip_address": "192.168.0.2"}
+        response = self.client.post(
+            reverse("coordiantor-ping"), data=data, REMOTE_ADDR="1.1.1.2"
+        )
+        self.assertContains(response, "local_ip_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Test a valid ping from a known coordinator
+        data = {
+            "local_ip_address": "192.168.0.2",
+            id: json.loads(response.content)["id"],
+        }
+        response = self.client.post(
+            reverse("coordiantor-ping"), data=data, REMOTE_ADDR="1.1.1.2"
+        )
+        self.assertContains(response, "local_ip_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Register the coordinator and send an invalid ping. Expect the response to
+        # contain the correct URL (consists of the coordinator-detail view + id)
+        site = Site.objects.create(name="TestSite")
+        coordinator = Coordinator.objects.create(
+            site=site, local_ip_address="192.168.0.1", external_ip_address="1.1.1.3"
+        )
+        data = {"local_ip_address": "192.168.0.2", "id": coordinator.id}
+        response = self.client.post(
+            reverse("coordiantor-ping"), data=data, REMOTE_ADDR="1.1.1.2"
+        )
+        self.assertContains(response, "Unauthenticated ping", status_code=403)
+        self.assertContains(response, coordinator.id, status_code=403)
+
+
+class ControllerAPITests(TestCase):
+    """Test the controller REST API endpoints"""
+    def setUp(self):
+        self.client = Client()
+        # Disable HTTP request warnings
+        logging.disable()
+
+    def tearDown(self):
+        # Reenable HTTP request warnings
+        logging.disable(logging.NOTSET)
+
+    def test_controller_ping_post(self):
+        """Test unregistered controllers pinging the server"""
+
+        # Test passing an empty POST request
+        data = {}
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR="1.1.1.1"
+        )
+        self.assertContains(response, "This field is required", status_code=400)
+
+        # Test passing 127.0.0.1 as the remote IP address. Should fail as not routable
+        data = {"wifi_mac_address": "AA:BB:CC:DD:EE:FF"}
+        ip_address = "127.0.0.1"
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR=ip_address
+        )
+        self.assertContains(response, "is not routable", status_code=400)
+        self.assertContains(response, ip_address, status_code=400)
+
+        # Test passing an IPv6 remote IP address. Should fail as not currently supported
+        data = {"wifi_mac_address": "AA:BB:CC:DD:EE:FF"}
+        ip_address = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR=ip_address,
+        )
+        self.assertContains(response, "IPv6 address", status_code=400)
+        self.assertContains(response, ip_address, status_code=400)
+
+        # Test a valid ping
+        data = {"wifi_mac_address": "AA:BB:CC:DD:EE:FF"}
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR="1.1.1.1"
+        )
+        self.assertContains(response, "wifi_mac_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Test another anonymous valid ping
+        data = {"wifi_mac_address": "AA:BB:CC:DD:EE:FF"}
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR="1.1.1.1"
+        )
+        self.assertContains(response, "wifi_mac_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Test a valid ping from a known coordinator
+        data = {
+            "wifi_mac_address": "AA:BB:CC:DD:EE:FF",
+            id: json.loads(response.content)["id"],
+        }
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR="1.1.1.2"
+        )
+        self.assertContains(response, "wifi_mac_address", status_code=201)
+        self.assertContains(response, "external_ip_address", status_code=201)
+        self.assertContains(response, "id", status_code=201)
+
+        # Register the coordinator and send an invalid ping. Expect the response to
+        # contain the correct URL (consists of the coordinator-detail view + id)
+        coordinator = Coordinator.objects.create(
+            local_ip_address="127.0.0.1", external_ip_address="1.1.1.1"
+        )
+        controller = Controller.objects.create(
+            coordinator=coordinator,
+            wifi_mac_address="AA:BB:CC:DD:EE:FF",
+            external_ip_address="1.1.1.1",
+        )
+        data = {"wifi_mac_address": "AA:BB:CC:DD:EE:FF", "id": controller.id}
+        response = self.client.post(
+            reverse("controller-ping"), data=data, REMOTE_ADDR="1.1.1.2"
+        )
+        self.assertContains(response, "Unauthenticated ping", status_code=403)
+        self.assertContains(response, controller.id, status_code=403)
+
+    def test_controller_ping_get(self):
+        """Test unregistered controllers requesting local coordinators"""
+
+        # Test passing 127.0.0.1 as the remote IP address. Should fail as not routable
+        ip_address = "127.0.0.1"
+        response = self.client.get(reverse("controller-ping"), REMOTE_ADDR=ip_address)
+        self.assertContains(response, "is not routable", status_code=400)
+        self.assertContains(response, ip_address, status_code=400)
+
+        # Test passing an IPv6 remote IP address. Should fail as not currently supported
+        ip_address = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+        response = self.client.get(reverse("controller-ping"), REMOTE_ADDR=ip_address,)
+        self.assertContains(response, "IPv6 address", status_code=400)
+        self.assertContains(response, ip_address, status_code=400)
+
+        # Test a valid ping. Result should be empty
+        response = self.client.get(reverse("controller-ping"), REMOTE_ADDR="1.1.1.1")
+        self.assertFalse(json.loads(response.content)["coordinator_local_ip_address"])
+        self.assertEqual(response.status_code, 200)
+
+        # Test a valid ping. Should not return coordinator from different subnet
+        coordinator = Coordinator.objects.create(
+            local_ip_address="192.168.0.1", external_ip_address="1.1.1.2"
+        )
+        ip_address = "1.1.1.1"
+        self.assertNotEqual(coordinator.external_ip_address, ip_address)
+        response = self.client.get(reverse("controller-ping"), REMOTE_ADDR=ip_address)
+        self.assertFalse(json.loads(response.content)["coordinator_local_ip_address"])
+        self.assertEqual(response.status_code, 200)
+
+        # Test a valid ping. Should return coordinator from the same subnet
+        ip_address = coordinator.external_ip_address
+        response = self.client.get(reverse("controller-ping"), REMOTE_ADDR=ip_address)
+        self.assertEqual(
+            json.loads(response.content)["coordinator_local_ip_address"],
+            coordinator.local_ip_address,
+        )
+        self.assertEqual(response.status_code, 200)
