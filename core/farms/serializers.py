@@ -1,9 +1,8 @@
 import uuid
+
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-from rest_framework.exceptions import MethodNotAllowed
 from address.models import Address
-from accounts.models import User
 
 from .models import Site, Coordinator, Controller, HydroponicSystem, MqttMessage
 
@@ -66,7 +65,8 @@ class CoordinatorSiteField(serializers.HyperlinkedRelatedField):
 
 
 class CoordinatorMqttMessagesField(serializers.HyperlinkedRelatedField):
-    # We define these as class attributes, so we don't need to pass them as arguments.
+    """Field to list MQTT messages in a coordinator"""
+
     view_name = "mqttmessage-detail"
 
     def get_url(self, obj, view_name, request, format):

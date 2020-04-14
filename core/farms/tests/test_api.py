@@ -10,6 +10,7 @@ from ..models import Site, Coordinator, Controller
 
 class SiteAPITests(TestCase):
     """Test the site REST API endpoints"""
+
     def setUp(self):
         self.client = Client()
         # Disable HTTP request warnings
@@ -17,13 +18,13 @@ class SiteAPITests(TestCase):
 
         # Create 3 users, with total 2, 1, and 0 sites respectively
         self.user_a = get_user_model().objects.create_user(
-            email="user_a@example.com", password="user_a_passwd",
+            email="user_a@example.com", password="passwd_a",
         )
         self.user_b = get_user_model().objects.create_user(
-            email="user_b@example.com", password="user_b_passwd",
+            email="user_b@example.com", password="passwd_b",
         )
         self.user_c = get_user_model().objects.create_user(
-            email="user_c@example.com", password="user_c_passwd",
+            email="user_c@example.com", password="passwd_c",
         )
         self.site_a1 = Site.objects.create(name="Site A1", owner=self.user_a)
         self.site_a2 = Site.objects.create(name="Site A2", owner=self.user_a)
@@ -42,7 +43,7 @@ class SiteAPITests(TestCase):
 
         # Check that the sites of the first user are listed
         self.assertTrue(
-            self.client.login(username=self.user_a.email, password="user_a_passwd")
+            self.client.login(username=self.user_a.email, password="passwd_a")
         )
         response = self.client.get(reverse("site-list"))
         self.assertContains(response, self.site_a1.name)
@@ -51,7 +52,7 @@ class SiteAPITests(TestCase):
 
         # Check the sites of the second user
         self.assertTrue(
-            self.client.login(username=self.user_b.email, password="user_b_passwd")
+            self.client.login(username=self.user_b.email, password="passwd_b")
         )
         response = self.client.get(reverse("site-list"))
         self.assertNotContains(response, self.site_a1.name)
@@ -60,7 +61,7 @@ class SiteAPITests(TestCase):
 
         # Check that the last user not shown any sites
         self.assertTrue(
-            self.client.login(username=self.user_c.email, password="user_c_passwd")
+            self.client.login(username=self.user_c.email, password="passwd_c")
         )
         response = self.client.get(reverse("site-list"))
         self.assertEqual(response.content, b"[]")
@@ -76,7 +77,7 @@ class SiteAPITests(TestCase):
 
         # Check that a user can only see their own sites
         self.assertTrue(
-            self.client.login(username=self.user_a.email, password="user_a_passwd")
+            self.client.login(username=self.user_a.email, password="passwd_a")
         )
         response = self.client.get(
             reverse("site-detail", kwargs={"pk": self.site_b1.id})
@@ -99,15 +100,9 @@ class SiteAPITests(TestCase):
     def test_create_update_delete_site(self):
         """Test the creation of sites via the API"""
 
-        # Check that authentication is required
-        data = {}
-        response = self.client.post(reverse("site-list"), data=data)
-        self.assertContains(response, "Authentication credentials", status_code=401)
-
         # Create a site from list view
-        self.assertTrue(
-            self.client.login(username=self.user_a.email, password="user_a_passwd")
-        )
+        logged_in = self.client.login(username=self.user_a.email, password="passwd_a")
+        self.assertTrue(logged_in)
         data = {
             "name": "Site A3",
             "address": {"raw": "Some street 22, Some City, Some Country",},
@@ -141,21 +136,160 @@ class SiteAPITests(TestCase):
         self.assertEqual(response.status_code, 204)
 
 
-# class CoordinatorAPITests(TestCase):
-#     def setUp(self):
-#         self.client = Client()
-#         # Disable HTTP request warnings
-#         logging.disable()
+class CoordinatorAPITests(TestCase):
+    """Test the coordinator REST API endpoints"""
 
-#     def tearDown(self):
-#         # Reenable HTTP request warnings
-#         logging.disable(logging.NOTSET)
+    def setUp(self):
+        self.client = Client()
+        # Disable HTTP request warnings
+        logging.disable()
 
-#     def test_coordinator_list(self):
+        # Create coordinators and some sites
+        self.user_a = get_user_model().objects.create_user(
+            email="user_a@example.com", password="passwd_a"
+        )
+        self.user_b = get_user_model().objects.create_user(
+            email="user_b@example.com", password="passwd_b"
+        )
+        self.site_a1 = Site.objects.create(name="Site A", owner=self.user_a)
+        self.coordinator_a1 = Coordinator.objects.create(
+            site=self.site_a1,
+            local_ip_address="10.0.0.2",
+            external_ip_address="1.1.1.1",
+        )
+        self.site_a2 = Site.objects.create(name="Site A2", owner=self.user_a)
+        self.coordinator_a2 = Coordinator.objects.create(
+            site=self.site_a2,
+            local_ip_address="10.0.0.2",
+            external_ip_address="1.1.1.2",
+        )
+
+    def tearDown(self):
+        # Reenable HTTP request warnings
+        logging.disable(logging.NOTSET)
+
+    def test_coordinator_list(self):
+        """Test listing coordinators with the REST API"""
+
+        # Check that authentication is required
+        response = self.client.get(reverse("coordinator-list"))
+        self.assertContains(response, "Authentication credentials", status_code=401)
+
+        # Check that users find their own coordinators
+        logged_in = self.client.login(username=self.user_a.email, password="passwd_a")
+        self.assertTrue(logged_in)
+        response = self.client.get(reverse("coordinator-list"))
+        self.assertContains(response, self.coordinator_a1.external_ip_address)
+        self.assertContains(response, self.site_a2.id)
+
+        # Check that users can only see their own coordinators
+        logged_in = self.client.login(username=self.user_b.email, password="passwd_b")
+        self.assertTrue(logged_in)
+        response = self.client.get(reverse("coordinator-list"))
+        self.assertNotContains(response, self.coordinator_a1.external_ip_address)
+        self.assertNotContains(response, self.site_a2.id)
+
+    def test_coordinator_details(self):
+        """Test that the details of a coordinator are shown"""
+
+        # Check that authentication is required
+        response = self.client.get(
+            reverse("coordinator-detail", kwargs={"pk": self.coordinator_a1.id})
+        )
+        self.assertContains(response, "Authentication credentials", status_code=401)
+
+        # Check that a user can see the details of their coordinator
+        logged_in = self.client.login(username=self.user_a.email, password="passwd_a")
+        self.assertTrue(logged_in)
+        response = self.client.get(
+            reverse("coordinator-detail", kwargs={"pk": self.coordinator_a1.id})
+        )
+        self.assertContains(response, self.coordinator_a1.external_ip_address)
+        self.assertContains(response, self.coordinator_a1.id)
+
+        # Check that users cannot see details of other's coordinators
+        logged_in = self.client.login(username=self.user_b.email, password="passwd_b")
+        self.assertTrue(logged_in)
+        response = self.client.get(
+            reverse("coordinator-detail", kwargs={"pk": self.coordinator_a1.id})
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_limit_site_listing(self):
+        """Check that a user can not set the sites of other users. This prevents data
+           leaks in browsable API"""
+
+        # First test a valid case
+        logged_in = self.client.login(username=self.user_a.email, password="passwd_a")
+        self.assertTrue(logged_in)
+        data = {
+            "site": reverse("site-detail", kwargs={"pk": self.site_a1.id}),
+            "local_ip_address": "10.0.0.2",
+            "external_ip_address": "1.1.2.1",
+        }
+        response = self.client.post(
+            reverse("coordinator-list"), data=data, content_type="application/json"
+        )
+        self.assertContains(response, self.site_a1.id, status_code=201)
+        self.assertContains(response, data["local_ip_address"], status_code=201)
+
+        # Then a request that should be blocked
+        logged_in = self.client.login(username=self.user_b.email, password="passwd_b")
+        self.assertTrue(logged_in)
+        data = {
+            "site": reverse("site-detail", kwargs={"pk": self.site_a1.id}),
+            "local_ip_address": "10.0.0.2",
+            "external_ip_address": "1.1.2.2",
+        }
+        response = self.client.post(
+            reverse("coordinator-list"), data=data, content_type="application/json"
+        )
+        self.assertNotContains(response, self.site_a1.id, status_code=400)
+        self.assertContains(response, "Invalid hyperlink", status_code=400)
+
+    def test_create_update_delete_flow(self):
+        """Test the creating, updating and deleting coordinators"""
+
+        # Create a site from list view
+        logged_in = self.client.login(username=self.user_a.email, password="passwd_a")
+        self.assertTrue(logged_in)
+        site_a3 = Site.objects.create(name="Site A3", owner=self.user_a)
+        data = {
+            "site": reverse("site-detail", kwargs={"pk": site_a3.id}),
+            "local_ip_address": "10.0.0.2",
+            "external_ip_address": "1.1.2.1",
+        }
+        response = self.client.post(
+            reverse("coordinator-list"), data=data, content_type="application/json"
+        )
+        self.assertContains(response, site_a3.id, status_code=201)
+        self.assertContains(response, data["local_ip_address"], status_code=201)
+
+        # Put a site
+        put_data = json.loads(response.content)
+        put_data["local_ip_address"] = "10.0.0.5"
+        response = self.client.put(
+            put_data["url"], data=put_data, content_type="application/json"
+        )
+
+        self.assertContains(response, put_data["local_ip_address"])
+        self.assertContains(response, put_data["external_ip_address"])
+
+        # Patch a site
+        patch_data = {"local_ip_address": "10.0.0.6"}
+        response = self.client.patch(
+            put_data["url"], data=patch_data, content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 405)
+
+        # Delete a site
+        response = self.client.delete(put_data["url"])
+        self.assertEqual(response.status_code, 204)
 
 
 class CoordinatorPingAPITests(TestCase):
     """Test the coordinator ping API endpoints"""
+
     def setUp(self):
         self.client = Client()
         # Disable HTTP request warnings
@@ -236,6 +370,7 @@ class CoordinatorPingAPITests(TestCase):
 
 class ControllerAPITests(TestCase):
     """Test the controller REST API endpoints"""
+
     def setUp(self):
         self.client = Client()
         # Disable HTTP request warnings

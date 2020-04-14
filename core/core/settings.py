@@ -127,6 +127,8 @@ if TESTING:
     # Override user and password
     DATABASES["default"]["USER"] = "postgres"
     DATABASES["default"]["PASSWORD"] = os.environ.get("POSTGRES_PASSWORD")
+    # Override password hasher
+    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 
 # Celery and RabbitMQ
 if DEBUG:

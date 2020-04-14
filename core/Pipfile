@@ -10,6 +10,7 @@ ipdb = "*"
 pylint = "*"
 pylint-django = "*"
 codecov = "*"
+rope = "*"
 
 [packages]
 django = "~=3.0.0"

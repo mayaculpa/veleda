@@ -250,5 +250,6 @@ class MqttMessage(models.Model):
     )
     topic_suffix = models.CharField(
         max_length=30,
+        default="",
         help_text="The context of the message."
     )

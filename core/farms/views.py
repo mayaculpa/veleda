@@ -271,11 +271,12 @@ class APICoordinatorListCreateView(generics.ListCreateAPIView):
         return Coordinator.objects.filter(site__owner=self.request.user)
 
 
-class APICoordinatorDetailView(generics.RetrieveUpdateAPIView):
+class APICoordinatorDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Details of one coordinator"""
 
     permission_classes = (IsAuthenticated,)
     serializer_class = CoordinatorSerializer
+    http_method_names = ['get', 'head', 'put', 'options', 'delete']
 
     def get_queryset(self):
         return Coordinator.objects.filter(site__owner=self.request.user)
