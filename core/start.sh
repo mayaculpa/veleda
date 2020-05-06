@@ -12,6 +12,7 @@ set -e
 DATABASE_HOST="postgres"
 RABBITMQ_HOST="rabbitmq"
 GUNICORN_HOST="0.0.0.0"
+REDIS_HOST="redis"
 
 # Source and export all required env variables from the respective files
 # for local development
@@ -23,12 +24,16 @@ source_debug_env_variables() {
   source ./secrets.core
   source ./env.rabbitmq
   source ./secrets.rabbitmq
+  source ../postgres/secrets.postgres
+  source ../redis/env.redis
+  source ../redis/secrets.redis
   DJANGO_DEBUG=True
   
-  echo "Updating postgres and rabbitmq hostnames to localhost"
+  echo "Updating the service hostnames to localhost"
   export DATABASE_HOST="127.0.0.1"
   export RABBITMQ_HOST="127.0.0.1"
   export GUNICORN_HOST="127.0.0.1"
+  export REDIS_HOST="127.0.0.1"
   
   set +a
 }
@@ -60,6 +65,18 @@ start_docker_services() {
   else
     echo "RabbitMQ docker service already running"
   fi
+  if [[ ! "$(docker ps -a | grep sdg-server-dev-redis)" ]]; then
+    echo "Starting Redis docker service"
+    docker run \
+      --rm \
+      --name sdg-server-dev-redis \
+      -p $REDIS_HOST:6379:6379 \
+      -d \
+      redis:5 \
+      "redis-server" "--requirepass" "$REDIS_PASSWORD"
+  else
+    echo "Redis docker service already running"
+  fi
 }
 
 if [[ $DJANGO_DEBUG != "False" ]]; then
@@ -74,9 +91,8 @@ while ! pg_isready -h "$DATABASE_HOST" -q; do
 done
 
 if [[ $DJANGO_DEBUG != "False" ]]; then
-  # Source and rename the password for the postgres user (superuser)
-  source ../postgres/secrets.postgres
-  PGPASSWORD=$POSTGRES_PASSWORD
+  # Rename the password for the postgres user (superuser)
+  export PGPASSWORD=$POSTGRES_PASSWORD
 
   if [[ $( psql -U postgres -h localhost -tAc "SELECT 1 FROM pg_database WHERE datname='$DATABASE_NAME'" ) != '1' ]]; then
     echo "Creating core database and user in PostgreSQL"
@@ -91,6 +107,12 @@ fi
 
 echo "Waiting for RabbitMQ to launch on 5672..."
 while ! nc -z $RABBITMQ_HOST 5672; do
+  echo "Waiting..."
+  sleep 0.5 # wait for half a second before checking again
+done
+
+echo "Waiting for Redis to launch on 6379..."
+while ! nc -z $REDIS_HOST 6379; do
   echo "Waiting..."
   sleep 0.5 # wait for half a second before checking again
 done
@@ -134,6 +156,8 @@ elif [[ $1 == "coverage" ]]; then
   pipenv run coverage html
   DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
   echo "Coverage analysis created: file:$DIR/htmlcov/index.html"
+elif [[ $1 == "pytest" ]]; then
+  pytest
 elif [[ $1 == "dumpdata" ]]; then
   if [[ -z $2 ]]; then
     echo "Missing file name"

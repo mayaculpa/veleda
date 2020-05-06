@@ -1,6 +1,6 @@
-from django.urls import path, register_converter
+from django.urls import path
 
-from . import views
+from . import views_api as views
 
 # fmt: off
 urlpatterns = [
@@ -40,12 +40,12 @@ urlpatterns = [
         name="controller-detail",
     ),
     path(
-        "v1/farms/coordinators/<uuid:pk>/mqtt/",
+        "v1/farms/coordinators/<uuid:pk>/mqtt-messages/",
         views.APIMqttMessageListView.as_view(),
         name="mqttmessage-list",
     ),
     path(
-        "v1/farms/coordinators/<uuid:pk>/mqtt/<str:created_at>/",
+        "v1/farms/coordinators/<uuid:pk>/mqtt-messages/<str:created_at>/",
         views.APIMqttMessageDetailView.as_view(),
         name="mqttmessage-detail",
     ),

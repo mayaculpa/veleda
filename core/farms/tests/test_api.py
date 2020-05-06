@@ -2,7 +2,7 @@ import json
 import logging
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, TestCase, TransactionTestCase
 from django.urls import reverse
 
 from ..models import Site, Coordinator, Controller
@@ -136,7 +136,7 @@ class SiteAPITests(TestCase):
         self.assertEqual(response.status_code, 204)
 
 
-class CoordinatorAPITests(TestCase):
+class CoordinatorAPITests(TransactionTestCase):
     """Test the coordinator REST API endpoints"""
 
     def setUp(self):
@@ -258,6 +258,7 @@ class CoordinatorAPITests(TestCase):
             "site": reverse("site-detail", kwargs={"pk": site_a3.id}),
             "local_ip_address": "10.0.0.2",
             "external_ip_address": "1.1.2.1",
+            "password": "coord_a3_passwd",
         }
         response = self.client.post(
             reverse("coordinator-list"), data=data, content_type="application/json"

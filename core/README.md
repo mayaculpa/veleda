@@ -6,7 +6,7 @@ The Django application is responisble for the user authentication.
 
 Local install requires *Docker* and the following commands:
 
-    sudo apt install python3-pip libpq-dev
+    sudo apt install python3-pip libpq-dev postgresql-client-12
     python3 -m pip install --user pipenv
     pipenv install
     pipenv shell
@@ -26,6 +26,7 @@ In order to create the farm subdomains, the server domain and the subdomain name
 The tests try to mirror the production environment throught the use of the respective Docker services. The command to run tests:
 
     ./start.sh test
+    ./start.sh test farms.tests.test_ws_api.TestMqttMessages
 
 The command to create an HTML report of the test coverage:
 

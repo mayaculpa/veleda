@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 from address.models import Address
 
-from .models import Site, Coordinator, Controller, HydroponicSystem, MqttMessage
+from .models import Site, Coordinator, Controller, HydroponicSystem, MqttMessage, User
 
 
 class SiteAddressSerializer(serializers.ModelSerializer):
@@ -85,13 +85,35 @@ class CoordinatorSerializer(serializers.HyperlinkedModelSerializer):
     """Serialize a coordinator and limit site selection to own sites"""
 
     site = CoordinatorSiteField(view_name="site-detail")
+    email = serializers.EmailField(read_only=True, source="user.email")
+    password = serializers.CharField(write_only=True, max_length=100, required=False)
     mqttmessage_set = CoordinatorMqttMessagesField(read_only=True, many=True)
+
+    def create(self, validated_data):
+        password = validated_data.pop("password", None)
+        coordinator = super().create(validated_data)
+        if password:
+            coordinator.create_user_account(password, False)
+        return coordinator
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        coordinator = super().update(instance, validated_data)
+        if password:
+            if coordinator.user:
+                coordinator.user.set_password(password)
+                coordinator.user.save()
+            else:
+                coordinator.create_user_account(password, False)
+        return coordinator
 
     class Meta:
         model = Coordinator
         fields = [
             "url",
             "site",
+            "email",
+            "password",
             "local_ip_address",
             "external_ip_address",
             "mqttmessage_set",
@@ -112,6 +134,12 @@ class MqttMessageSerializer(serializers.ModelSerializer):
             "topic_prefix",
             "topic_suffix",
         ]
+
+
+class WsMqttMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MqttMessage
+        fields = "__all__"
 
 
 class CoordinatorPingSerializer(serializers.ModelSerializer):

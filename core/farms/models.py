@@ -1,6 +1,5 @@
 import uuid
 from django.db import models
-from django.db.models.query import QuerySet
 from django.contrib.postgres.fields import JSONField
 from address.models import AddressField
 from macaddress.fields import MACAddressField
@@ -74,12 +73,36 @@ class Coordinator(models.Model):
         auto_now=True,
         help_text="The date and time when the coordinator was last updated.",
     )
+    channel_name = models.CharField(
+        null=False,
+        default="",
+        max_length=64,
+        help_text="The channel name of the connected WebSocket.",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="The user account with which the coordinator can log in.",
+    )
+
+    def get_email_address(self):
+        """Returns an email address based on a coordinator's ID"""
+        return f"{self.id}@coordinator.localhost"
+
+    def create_user_account(self, password, save=True):
+        """Creates a user account for this coordinator"""
+        self.user = User.objects.create(
+            email=self.get_email_address(), password=password,
+        )
+        if save:
+            self.save()
 
     def __str__(self):
         if self.site:
             return self.site.name + " Coordirnator"
-        
-        return self.id.hex
+        return str(self.id)
 
 
 class HydroponicSystem(models.Model):
@@ -132,8 +155,7 @@ class HydroponicSystem(models.Model):
     def __str__(self):
         if self.name:
             return self.get_system_type_display() + " (" + self.name + ")"
-        else:
-            return self.get_system_type_display() + " (" + self.id.hex + ")"
+        return self.get_system_type_display() + " (" + str(self.id) + ")"
 
 
 class ControllerManager(models.Manager):
@@ -206,15 +228,14 @@ class Controller(models.Model):
     def __str__(self):
         if self.name:
             return self.get_controller_type_display() + " (" + self.name + ")"
-        else:
-            return self.get_controller_type_display() + " (" + self.id.hex + ")"
+        return self.get_controller_type_display() + " (" + str(self.id) + ")"
 
 
 class MqttMessage(models.Model):
     """An MQTT message from a coordinator's MQTT broker"""
 
     class Meta:
-        unique_together = ['created_at', 'coordinator']
+        unique_together = ["created_at", "coordinator"]
 
     COMMAND_PREFIX = "cmd"
     TELEMETRY_PREFIX = "tel"
@@ -227,8 +248,7 @@ class MqttMessage(models.Model):
     ]
 
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="The datetime when the message was received",
+        auto_now_add=True, help_text="The datetime when the message was received",
     )
     coordinator = models.ForeignKey(
         Coordinator,
@@ -241,7 +261,7 @@ class MqttMessage(models.Model):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        help_text="If not None, the sender of the message."
+        help_text="If not None, the sender of the message.",
     )
     topic_prefix = models.CharField(
         max_length=3,
@@ -249,7 +269,5 @@ class MqttMessage(models.Model):
         help_text="The purpose of the message.",
     )
     topic_suffix = models.CharField(
-        max_length=30,
-        default="",
-        help_text="The context of the message."
+        max_length=30, default="", help_text="The context of the message."
     )

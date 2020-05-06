@@ -11,6 +11,9 @@ pylint = "*"
 pylint-django = "*"
 codecov = "*"
 rope = "*"
+pytest = "*"
+pytest-django = "*"
+pytest-asyncio = "*"
 
 [packages]
 django = "~=3.0.0"
@@ -28,6 +31,8 @@ django-macaddress = "~=1.6"
 django-ipware = "~=2.1"
 django-celery-results = "~=1.1"
 cloudflare = "~=2.3"
+channels = "*"
+channels-redis = "*"
 
 [requires]
 python_version = "3.8"

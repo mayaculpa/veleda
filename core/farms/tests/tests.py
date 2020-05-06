@@ -14,8 +14,9 @@ from ..models import Site, Coordinator, HydroponicSystem, Controller
 
 class ModelTests(TestCase):
     """Test the models"""
-    def test_site_components(self):
-        """Test creating a site and its components."""
+
+    def test_site(self):
+        """Test the site model"""
 
         proto_site_owner = get_user_model().objects.create_user(
             email="owner@example.com", password="owners_passwd",
@@ -34,15 +35,44 @@ class ModelTests(TestCase):
             site.owner.profile.short_name, proto_site_owner.profile.short_name
         )
         self.assertEqual(site.address.raw, proto_site_address.raw)
+        self.assertEqual(site.name, str(site))
+
+    def test_coordinator(self):
+        """Test the coordinator model"""
+
+        site = Site.objects.create(name="ProtoSite")
+        coordinator = Coordinator.objects.create(
+            site=site, local_ip_address="192.168.0.1", external_ip_address="1.1.1.1"
+        )
+        self.assertIn(coordinator.site.name, str(coordinator))
+        self.assertEqual(Coordinator.objects.filter(site=site.id)[0].id, coordinator.id)
+        anon_coordinator = Coordinator.objects.create(
+            local_ip_address="192.168.0.2", external_ip_address="1.1.1.2"
+        )
+        self.assertIn(str(anon_coordinator.id), str(anon_coordinator))
+
+        user_coordinator = Coordinator(
+            local_ip_address="192.168.0.3", external_ip_address="1.1.1.3"
+        )
+        user_coordinator.create_user_account("coord_passwd", save=True)
+        email_address = user_coordinator.get_email_address()
+        user = get_user_model().objects.get(email=email_address)
+        self.assertEqual(user_coordinator.user, user)
+
+        user_coordinator.delete()
+        user = get_user_model().objects.filter(email=email_address)
+        self.assertFalse(user)
+
+    def test_controller(self):
+        """Test the controller model"""
 
         coordinator = Coordinator.objects.create(
-            site=site, local_ip_address="192.168.0.2", external_ip_address="1.1.1.1"
+            local_ip_address="192.168.0.2", external_ip_address="1.1.1.1"
         )
-        hydroponic_system_a = HydroponicSystem.objects.create(site=site,)
-        hydroponic_system_b = HydroponicSystem.objects.create(site=site,)
         controller_a = Controller.objects.create(
             coordinator=coordinator,
             controller_type=Controller.SENSOR_TYPE,
+            name="Super Sensor",
             wifi_mac_address="00:11:22:33:44:55",
             external_ip_address="1.1.1.1",
         )
@@ -52,11 +82,23 @@ class ModelTests(TestCase):
             wifi_mac_address="00:11:22:33:44:56",
             external_ip_address="1.1.1.1",
         )
-        self.assertEqual(Coordinator.objects.filter(site=site.id)[0].id, coordinator.id)
         self.assertEqual(controller_a.coordinator.id, coordinator.id)
         self.assertEqual(controller_b.coordinator.id, coordinator.id)
+        self.assertIn(controller_a.name, str(controller_a))
+        self.assertIn(str(controller_b.id), str(controller_b))
+
+    def test_hydroponic_systems(self):
+        """Test the hydroponic system model"""
+
+        site = Site.objects.create(name="ProtoSite")
+        hydroponic_system_a = HydroponicSystem.objects.create(
+            site=site, name="system_a"
+        )
+        hydroponic_system_b = HydroponicSystem.objects.create(site=site)
         self.assertEqual(hydroponic_system_a.site.id, site.id)
         self.assertEqual(hydroponic_system_b.site.id, site.id)
+        self.assertIn(hydroponic_system_a.name, str(hydroponic_system_a))
+        self.assertIn(str(hydroponic_system_b.id), str(hydroponic_system_b))
 
     def test_site_timestamps(self):
         """Test creating a site and check that the timestamps update correctly"""
@@ -141,6 +183,7 @@ class ModelTests(TestCase):
 
 class CoordinatorSetupTests(TestCase):
     """Test the coordinator setup flow web pages"""
+
     def setUp(self):
         self.client = Client()
         self.user_a = get_user_model().objects.create_user(

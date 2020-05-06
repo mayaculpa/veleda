@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 import sys
 
-TESTING = sys.argv[1:2] == ["test"]
+TESTING = sys.argv[1:2] == ["test"] or "pytest" in sys.argv[0]
 
 # Workaround to enable logging errors via gunicorn in docker
 import logging
@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     #
     # Django Apps
     #
+    "channels",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -128,7 +129,7 @@ if TESTING:
     DATABASES["default"]["USER"] = "postgres"
     DATABASES["default"]["PASSWORD"] = os.environ.get("POSTGRES_PASSWORD")
     # Override password hasher
-    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # Celery and RabbitMQ
 if DEBUG:
@@ -219,3 +220,22 @@ if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# REDIS & Channels
+
+ASGI_APPLICATION = 'core.routing.application'
+
+REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", None)
+if REDIS_PASSWORD:
+    REDIS_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}"
+else:
+    REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [REDIS_URL],},
+    },
+}
