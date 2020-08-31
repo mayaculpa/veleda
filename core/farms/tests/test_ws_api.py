@@ -48,90 +48,131 @@ from farms.serializers import WsMqttMessageSerializer
 #         await communicator.disconnect()
 
 
-@database_sync_to_async
-def init_db():
-    """Seed database for WS tests"""
-    # import ipdb; ipdb.set_trace()
-    user = get_user_model().objects.create_user("user_a@example.com", "passwd_a")
-    site = Site.objects.create(name="Site A", owner=user)
-    coordinator = Coordinator.objects.create(
-        site=site, local_ip_address="10.0.0.2", external_ip_address="1.1.1.1",
-    )
-    return user, site, coordinator
+# @database_sync_to_async
+# def init_db():
+#     """Seed database for WS tests"""
+#     # import ipdb; ipdb.set_trace()
+#     user = get_user_model().objects.create_user("user_a@example.com", "passwd_a")
+#     site = Site.objects.create(name="Site A", owner=user)
+#     coordinator = Coordinator.objects.create(
+#         site=site, local_ip_address="10.0.0.2", external_ip_address="1.1.1.1",
+#     )
+#     return user, site, coordinator
 
-class TestMqttMessages(TransactionTestCase):
-    """Test the websockets MQTT messages API"""
 
-    def test_authentication(self):
-        """Test that only connections from authenticated users are accepted"""
+# class TestMqttMessages(TransactionTestCase):
+#     """Test the websockets MQTT messages API"""
 
-        async def test_body():
-            user, _, coordinator = await init_db()
+#     def test_authentication(self):
+#         """Test that only connections from authenticated users are accepted"""
 
-            # Connect as anonymous user
-            communicator = WebsocketCommunicator(
-                application, f"ws-api/v1/farms/coordinators/{coordinator.id}/",
-            )
-            connected, _ = await communicator.connect()
-            self.assertFalse(connected)
-            await communicator.disconnect()
+#         async def test_body():
+#             user, _, coordinator = await init_db()
 
-            # Connect as registered user
-            communicator = WebsocketCommunicator(
-                application, f"ws-api/v1/farms/coordinators/{coordinator.id}/",
-            )
-            communicator.scope["user"] = user
-            connected, _ = await communicator.connect()
-            self.assertTrue(connected)
-            await communicator.disconnect()
+#             # Connect as anonymous user
+#             communicator = WebsocketCommunicator(
+#                 application, f"ws-api/v1/farms/coordinators/{coordinator.id}/",
+#             )
+#             connected, _ = await communicator.connect()
+#             self.assertFalse(connected)
+#             await communicator.disconnect()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(test_body())
+#             # Connect as registered user
+#             communicator = WebsocketCommunicator(
+#                 application, f"ws-api/v1/farms/coordinators/{coordinator.id}/",
+#             )
+#             communicator.scope["user"] = user
+#             connected, _ = await communicator.connect()
+#             self.assertTrue(connected)
+#             await communicator.disconnect()
 
-    def test_writing_to_api(self):
-        """Test sending MQTT messages as a coordinator to the server"""
+#         loop = asyncio.get_event_loop()
+#         loop.run_until_complete(test_body())
 
-        async def test_body():
-            user, _, coordinator = await init_db()
+#     def test_writing_to_api(self):
+#         """Test sending MQTT messages as a coordinator to the server"""
 
-            # Connect as a registered user
-            communicator = WebsocketCommunicator(
-                application, f"ws-api/v1/farms/coordinators/{coordinator.id}/"
-            )
-            communicator.scope["user"] = user
-            connected, _ = await communicator.connect()
-            self.assertTrue(connected)
+#         async def test_body():
+#             user, _, coordinator = await init_db()
 
-            # Create a serialized MQTT message and send it
-            message = {"some": "json", "status": "ok"}
-            now = pytz.utc.localize(datetime.datetime.utcnow())
-            data = {
-                "type": "mqtt-message",
-                "created_at": now.isoformat(),
-                "coordinator": str(coordinator.id),
-                "message": message,
-                "topic_prefix": MqttMessage.REGISTER_PREFIX,
-            }
-            self.assertTrue(await communicator.receive_nothing())
+#             # Connect as a registered user
+#             communicator = WebsocketCommunicator(
+#                 application, f"ws-api/v1/farms/coordinators/{coordinator.id}/"
+#             )
+#             communicator.scope["user"] = user
+#             connected, _ = await communicator.connect()
+#             self.assertTrue(connected)
 
-            # Expect missing fields to cause the connection to be closed
-            data = {
-                "type": "hello world",
-            }
-            await communicator.send_json_to(data)
-            response = await communicator.receive_json_from()
-            self.assertIn("error", response)
+#             # Create a serialized MQTT message and send it
+#             message = {"some": "json", "status": "ok"}
+#             now = pytz.utc.localize(datetime.datetime.utcnow())
+#             data = {
+#                 "type": "mqtt-message",
+#                 "created_at": now.isoformat(),
+#                 "coordinator": str(coordinator.id),
+#                 "message": message,
+#                 "topic_prefix": MqttMessage.REGISTER_PREFIX,
+#             }
+#             await communicator.send_json_to(data)
+#             self.assertTrue(await communicator.receive_nothing())
 
-            # Send malformed JSON and expect to be disconnected
-            data = "This is not JSON"
-            await communicator.send_to(data)
-            response = await communicator.receive_json_from()
-            self.assertIn("error", response)
+#             # Expect missing fields to cause the connection to be closed
+#             data = {
+#                 "type": "hello world",
+#             }
+#             await communicator.send_json_to(data)
+#             response = await communicator.receive_json_from()
+#             self.assertIn("error", response)
 
-            # Check that the websocket is closed
-            await communicator.send_to(data)
-            output = await communicator.receive_output()
-            self.assertEqual("websocket.close", output["type"])
-            
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(test_body())
+#             # Send malformed JSON and expect to be disconnected
+#             data = "This is not JSON"
+#             await communicator.send_to(data)
+#             response = await communicator.receive_json_from()
+#             self.assertIn("error", response)
+
+#             # Check that the websocket was closed
+#             output = await communicator.receive_output()
+#             self.assertEqual("websocket.close", output["type"])
+
+#         loop = asyncio.get_event_loop()
+#         loop.run_until_complete(test_body())
+
+#     def test_double_connecting(self):
+#         """Test connecting two WS to the same endpoint. Should allow connections from
+#            different coordinators, but only one per coordinator."""
+
+#         async def test_body():
+#             user, _, coordinator = await init_db()
+#             alt_coordinator = await database_sync_to_async(Coordinator.objects.create)(
+#                 local_ip_address="10.0.0.3", external_ip_address="1.1.1.2",
+#             )
+
+#             # Connect as a registered user
+#             communicator = WebsocketCommunicator(
+#                 application, f"ws-api/v1/farms/coordinators/{coordinator.id}/"
+#             )
+#             communicator.scope["user"] = user
+#             connected, _ = await communicator.connect()
+#             self.assertTrue(connected)
+
+#             # Connect as an alternate user
+#             alt_communicator = WebsocketCommunicator(
+#                 application, f"ws-api/v1/farms/coordinators/{alt_coordinator.id}/"
+#             )
+#             alt_communicator.scope["user"] = user
+#             connected, _ = await alt_communicator.connect()
+#             self.assertTrue(connected)
+
+#             # Connect again as the orignial coordinator and expect the original
+#             # connection to be disconnected
+#             re_communicator = WebsocketCommunicator(
+#                 application, f"ws-api/v1/farms/coordinators/{coordinator.id}/"
+#             )
+#             re_communicator.scope["user"] = user
+#             connected, _ = await re_communicator.connect()
+#             self.assertTrue(connected)
+#             output = await communicator.receive_output()
+#             self.assertEqual("websocket.close", output["type"])
+
+#         loop = asyncio.get_event_loop()
+#         loop.run_until_complete(test_body())

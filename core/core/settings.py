@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     #
     # Third-Party Apps
     #
+    "corsheaders",
     "oauth2_provider",
     "rest_framework",
     "rest_framework.authtoken",
@@ -76,6 +77,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    "csp.middleware.CSPMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -195,6 +198,8 @@ OAUTH2_PROVIDER = {
     "SCOPES": {"userinfo-v1": "Userinfo API v1"}
 }
 
+CONTROLLER_TOKEN_BYTES = 20 # Length in bytes
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
@@ -223,7 +228,7 @@ else:
 
 # REDIS & Channels
 
-ASGI_APPLICATION = 'core.routing.application'
+ASGI_APPLICATION = "core.routing.application"
 
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
@@ -239,3 +244,27 @@ CHANNEL_LAYERS = {
         "CONFIG": {"hosts": [REDIS_URL],},
     },
 }
+
+# CORS (Cross-Origin Resource Sharing)
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:4200", # Angular dev server
+]
+
+# Content Security Policy
+CSP_DEFAULT_SRC = ("'self'", "ws://localhost:8000")
+CSP_STYLE_SRC = (
+    "'self'",
+    "'unsafe-inline'",
+    "cdn.jsdelivr.net",
+    "fonts.googleapis.com",
+    "http://netdna.bootstrapcdn.com",
+)
+CSP_FONT_SRC = (
+    "data:",
+    "cdn.jsdelivr.net",
+    "fonts.googleapis.com",
+    "fonts.gstatic.com",
+)
+CSP_SCRIPT_SRC = ("'unsafe-inline'", "https://code.jquery.com/")
+CSP_FRAME_ANCESTORS = ("'self'", "http://localhost:4200", "http://127.0.0.1:4200")

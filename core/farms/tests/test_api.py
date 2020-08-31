@@ -250,7 +250,7 @@ class CoordinatorAPITests(TransactionTestCase):
     def test_create_update_delete_flow(self):
         """Test the creating, updating and deleting coordinators"""
 
-        # Create a site from list view
+        # Create a coordinator from list view
         logged_in = self.client.login(username=self.user_a.email, password="passwd_a")
         self.assertTrue(logged_in)
         site_a3 = Site.objects.create(name="Site A3", owner=self.user_a)
@@ -266,7 +266,7 @@ class CoordinatorAPITests(TransactionTestCase):
         self.assertContains(response, site_a3.id, status_code=201)
         self.assertContains(response, data["local_ip_address"], status_code=201)
 
-        # Put a site
+        # Put a coordinator
         put_data = json.loads(response.content)
         put_data["local_ip_address"] = "10.0.0.5"
         response = self.client.put(
@@ -276,16 +276,63 @@ class CoordinatorAPITests(TransactionTestCase):
         self.assertContains(response, put_data["local_ip_address"])
         self.assertContains(response, put_data["external_ip_address"])
 
-        # Patch a site
+        # Patch a coordinator
         patch_data = {"local_ip_address": "10.0.0.6"}
         response = self.client.patch(
             put_data["url"], data=patch_data, content_type="application/json"
         )
         self.assertEqual(response.status_code, 405)
 
-        # Delete a site
+        # Delete a coordinator
         response = self.client.delete(put_data["url"])
         self.assertEqual(response.status_code, 204)
+
+    def test_update_password(self):
+        """Test a coordinator's login functionality"""
+
+        # Creating a coordiantor without password should not create a user
+        self.assertFalse(self.coordinator_a1.user)
+
+        # Create a coordinator with a user account check that a user was created
+        logged_in = self.client.login(username=self.user_a.email, password="passwd_a")
+        self.assertTrue(logged_in)
+        data = {
+            "site": reverse("site-detail", kwargs={"pk": self.site_a1.id}),
+            "local_ip_address": "10.0.0.2",
+            "external_ip_address": "1.1.2.1",
+            "password": "pass123",
+        }
+        response = self.client.post(
+            reverse("coordinator-list"), data=data, content_type="application/json"
+        )
+        # Check that a user instance was created
+        json_response = json.loads(response.content)
+        self.assertTrue(get_user_model().objects.get(email=json_response["email"]))
+        # Check that it is possible to login with those credentials
+        logged_in = Client().login(
+            username=json_response["email"], password=data["password"]
+        )
+        self.assertTrue(logged_in)
+
+        # Add a user account to an existing coordinator, then update the password
+        for i in range(2):
+            response = self.client.get(
+                reverse("coordinator-detail", kwargs={"pk": self.coordinator_a1.id})
+            )
+            put_data = json.loads(response.content)
+            put_data["password"] = f"passwd{i}"
+            response = self.client.put(
+                put_data["url"], data=put_data, content_type="application/json"
+            )
+            # Check that a user instance was created
+            self.assertTrue(
+                get_user_model().objects.get(email=self.coordinator_a1.get_email_address())
+            )
+            # Check that it is possible to login with those credentials
+            logged_in = Client().login(
+                username=json.loads(response.content)["email"], password=put_data["password"]
+            )
+            self.assertTrue(logged_in)
 
 
 class CoordinatorPingAPITests(TestCase):

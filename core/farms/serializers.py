@@ -1,10 +1,19 @@
 import uuid
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
 from address.models import Address
 
-from .models import Site, Coordinator, Controller, HydroponicSystem, MqttMessage, User
+from .models import (
+    Site,
+    Coordinator,
+    Controller,
+    ControllerMessage,
+    HydroponicSystem,
+    MqttMessage,
+    User,
+)
 
 
 class SiteAddressSerializer(serializers.ModelSerializer):
@@ -92,6 +101,7 @@ class CoordinatorSerializer(serializers.HyperlinkedModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop("password", None)
         coordinator = super().create(validated_data)
+
         if password:
             coordinator.create_user_account(password, False)
         return coordinator
@@ -99,12 +109,13 @@ class CoordinatorSerializer(serializers.HyperlinkedModelSerializer):
     def update(self, instance, validated_data):
         password = validated_data.pop("password", None)
         coordinator = super().update(instance, validated_data)
+
         if password:
             if coordinator.user:
                 coordinator.user.set_password(password)
                 coordinator.user.save()
             else:
-                coordinator.create_user_account(password, False)
+                coordinator.create_user_account(password)
         return coordinator
 
     class Meta:
@@ -170,6 +181,38 @@ class ControllerSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Controller
         fields = "__all__"
+
+
+class ControllerMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ControllerMessage
+        fields = "__all__"
+
+    def validate_message(self, message):
+        message_type = message.get("type")
+        if not message_type in ControllerMessage.TYPES:
+            raise ValidationError(detail="message type not recognized")
+        return message
+
+
+    # def is_valid(self, raise_exception=False):
+    #     """Validates the JSON message itself, after doing standard validation"""
+
+    #     if not super().is_valid():
+    #         return False
+
+    #     try:
+    #         message_type = self.validated_data["message"].get("type")
+    #         if not message_type in ControllerMessage.TYPES:
+    #             raise ValidationError(detail="message type not recognized")
+    #     except ValidationError as exc:
+    #         self._validated_data = {}
+    #         self._errors = exc.detail
+
+    #     if self.errors and raise_exception:
+    #         raise ValidationError(self.errors)
+
+    #     return not bool(self.errors)
 
 
 class ControllerPingGetSerializer(serializers.Serializer):

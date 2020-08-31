@@ -1,4 +1,8 @@
+import binascii
+import os
+
 import uuid
+from django.conf import settings
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from address.models import AddressField
@@ -93,9 +97,7 @@ class Coordinator(models.Model):
 
     def create_user_account(self, password, save=True):
         """Creates a user account for this coordinator"""
-        self.user = User.objects.create(
-            email=self.get_email_address(), password=password,
-        )
+        self.user = User.objects.create_user(self.get_email_address(), password)
         if save:
             self.save()
 
@@ -204,6 +206,12 @@ class Controller(models.Model):
         null=True,
         help_text="The coordinator with which the controller is connected to.",
     )
+    site = models.ForeignKey(
+        Site,
+        on_delete=models.CASCADE,
+        null=True,
+        help_text="The site to which the controller is assigned to.",
+    )
     wifi_mac_address = MACAddressField(
         help_text="The Wifi MAC address of the controller."
     )
@@ -215,6 +223,12 @@ class Controller(models.Model):
         choices=CONTROLLER_TYPE_CHOICES,
         default=UNKNOWN_TYPE,
         help_text="The main function of the controller (e.g., pump or sensor controller).",
+    )
+    channel_name = models.CharField(
+        null=False,
+        default="",
+        max_length=128,
+        help_text="The channel name of the connected WebSocket.",
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -229,6 +243,57 @@ class Controller(models.Model):
         if self.name:
             return self.get_controller_type_display() + " (" + self.name + ")"
         return self.get_controller_type_display() + " (" + str(self.id) + ")"
+
+
+class ControllerToken(models.Model):
+    """Token for controller models."""
+
+    key = models.CharField(max_length=128, primary_key=True)
+    controller = models.OneToOneField(
+        Controller, related_name="auth_token", on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs): # pylint: disable=arguments-differ
+        """Saves the controller token and generates a key if it has not been set"""
+        if not self.key:
+            self.key = self.generate_key()
+        return super().save(*args, **kwargs)
+
+    @staticmethod
+    def generate_key():
+        """Generates a random token based with a length of CONTROLLER_TOKEN_BYTES """
+        return binascii.hexlify(os.urandom(settings.CONTROLLER_TOKEN_BYTES)).decode()
+
+    def __str__(self):
+        return self.key
+
+
+class ControllerMessage(models.Model):
+    """A message to/from a controller"""
+
+    class Meta:
+        unique_together = ["created_at", "controller"]
+
+    COMMAND_TYPE = "cmd"
+    TELEMETRY_TYPE = "tel"
+    REGISTER_TYPE = "reg"
+
+    TYPES = [
+        COMMAND_TYPE,
+        TELEMETRY_TYPE,
+        REGISTER_TYPE,
+    ]
+
+    created_at = models.DateTimeField(
+        auto_now_add=True, help_text="The datetime when the message was received",
+    )
+    controller = models.ForeignKey(
+        Controller,
+        on_delete=models.CASCADE,
+        help_text="The controller associated with the message.",
+    )
+    message = JSONField()
 
 
 class MqttMessage(models.Model):

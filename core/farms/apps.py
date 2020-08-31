@@ -5,4 +5,4 @@ class FarmsConfig(AppConfig):
     name = "farms"
 
     def ready(self):
-        import farms.signals
+        import farms.signals  # pylint: disable=unused-import, import-outside-toplevel
