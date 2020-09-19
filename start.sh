@@ -6,28 +6,18 @@ set -e
 bold=$(tput bold)
 normal=$(tput sgr0)
 
-# Prefix 'sdg-server' has to match the parent deploy folder on the server.
-echo "${bold}sdg-server: Creating data volumes${normal}"
-docker volume create sdg-server_jekyll-data
+if [[ $1 == "production" ]]; then
+  DOCKER_COMPOSE_FILE="production.yml"
+elif [[ $1 == "development" ]]; then
+  DOCKER_COMPOSE_FILE="development.yml"
+else
+  echo "Please start as $0 production or $0 development"
+  exit 1
+fi
 
-echo "${bold}sdg-server: Building Jekyll site${normal}"
-docker run --rm \
-  --volume="$PWD/jekyll:/srv/jekyll" \
-  --volume="jekyll-cache:/usr/local/bundle" \
-  -it jekyll/jekyll:latest \
-  jekyll build
+echo "Starting with ${bold}$1${normal} configuration"
+echo "sdg-server: Building stack"
+docker-compose -f "$DOCKER_COMPOSE_FILE" build
 
-echo "${bold}sdg-server: Copying site to jekyll-data volume${normal}"
-docker run \
-  --name helper \
-  --volume="sdg-server_jekyll-data:/web" \
-  -it busybox \
-  true
-docker cp jekyll/web/. helper:/web
-docker rm helper
-
-echo "${bold}sdg-server: Building stack${normal}"
-docker-compose build
-
-echo "${bold}sdg-server: Starting stack${normal}"
-docker-compose up -d
+echo "sdg-server: Starting stack"
+docker-compose -f "$DOCKER_COMPOSE_FILE" up -d

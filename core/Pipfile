@@ -21,7 +21,6 @@ django-oauth-toolkit = "*"
 django-semanticui-forms = "*"
 djangorestframework = "*"
 oauth2-provider = "*"
-gunicorn = "~=20.0"
 django-registration = "~=3.0"
 psycopg2 = "~=2.8"
 whitenoise = {extras = ["brotli"],version = "~=4.1"}
@@ -35,6 +34,7 @@ channels = "*"
 channels-redis = "*"
 django-csp = "*"
 django-cors-headers = "*"
+daphne = "*"
 
 [requires]
 python_version = "3.8"

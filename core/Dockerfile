@@ -1,11 +1,12 @@
 FROM python:3.8
-LABEL maintainer="moritz.ulmer@posteo.de"
+LABEL maintainer="moritz@protohaus.org"
 
 # Install Python and Package Libraries
 RUN apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get autoclean
 RUN apt-get install -y \
     netcat-openbsd \
-    vim
+    vim \
+    postgresql-client
 
 # Project Files and Settings
 ARG USERNAME=core

@@ -11,7 +11,7 @@ set -e
 
 DATABASE_HOST="postgres"
 RABBITMQ_HOST="rabbitmq"
-GUNICORN_HOST="0.0.0.0"
+DAPHNE_HOST="0.0.0.0"
 REDIS_HOST="redis"
 
 # Source and export all required env variables from the respective files
@@ -80,8 +80,11 @@ start_docker_services() {
 }
 
 if [[ $DJANGO_DEBUG != "False" ]]; then
+  echo "Starting in debug mode"
   source_debug_env_variables
   start_docker_services
+else
+  echo "Starting in production mode"
 fi
 
 echo "Waiting for PostgreSQL to launch on $DATABASE_HOST:5432..."
@@ -120,7 +123,7 @@ done
 # Migrate the database and seed values for new dev databases
 echo "Performing database migration"
 pipenv run ./manage.py migrate
-if [[ $DJANGO_DEBUG != "FALSE" && EMPTY_DB -eq 1 ]]; then
+if [[ $DJANGO_DEBUG != "False" && EMPTY_DB -eq 1 ]]; then
   echo "Seeding DB with data"
   pipenv run ./manage.py loaddata db_seed.json
 fi
@@ -136,16 +139,14 @@ pipenv run celery -A core worker -l info &
 
 if [[ -z $1 ]]; then
   # Start the app server, either for the dev or prod environment
-  if [[ $DJANGO_DEBUG != "FALSE" ]]; then
+  if [[ $DJANGO_DEBUG != "False" ]]; then
     echo "Starting Django dev server"
     pipenv run ./manage.py runserver
   else
-    echo "Starting Gunicorn"
-    exec pipenv run gunicorn core.wsgi:application \
-        --bind "$GUNICORN_HOST:8000" \
-        --workers 3
-        --capture-output
-        --enable-stdio-inheritance
+    echo "Starting Daphne"
+    exec pipenv run daphne core.asgi:application \
+        --bind "$DAPHNE_HOST" \
+        --port "8000"
   fi
 elif [[ $1 == "test" ]]; then
   echo "Starting Django test runner"

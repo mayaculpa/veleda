@@ -38,9 +38,10 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
 # In docker use VIRTUAL_HOST environment variable, else use local address
-ALLOWED_HOSTS = os.environ.get(
-    "VIRTUAL_HOST", "core.sdg.local,localhost,127.0.0.1"
+CORE_DOMAIN = os.environ.get(
+    "CORE_DOMAIN", "localhost,localhost:8000,127.0.0.1"
 ).split(",")
+ALLOWED_HOSTS = CORE_DOMAIN
 # Allow internal communication between docker services
 ALLOWED_HOSTS.append("core")
 
@@ -252,19 +253,19 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Content Security Policy
-CSP_DEFAULT_SRC = ("'self'", "ws://localhost:8000")
-CSP_STYLE_SRC = (
-    "'self'",
+
+CSP_DEFAULT_SRC = CORE_DOMAIN + ["'self'", "ws://localhost:8000"]
+CSP_STYLE_SRC = CORE_DOMAIN + [
     "'unsafe-inline'",
     "cdn.jsdelivr.net",
     "fonts.googleapis.com",
     "http://netdna.bootstrapcdn.com",
-)
-CSP_FONT_SRC = (
+]
+CSP_FONT_SRC = CORE_DOMAIN + [
     "data:",
     "cdn.jsdelivr.net",
     "fonts.googleapis.com",
     "fonts.gstatic.com",
-)
-CSP_SCRIPT_SRC = ("'unsafe-inline'", "https://code.jquery.com/")
-CSP_FRAME_ANCESTORS = ("'self'", "http://localhost:4200", "http://127.0.0.1:4200")
+]
+CSP_SCRIPT_SRC = CORE_DOMAIN + ["'unsafe-inline'", "https://code.jquery.com/"]
+CSP_FRAME_ANCESTORS = ["'self'", "http://localhost:4200", "http://127.0.0.1:4200"]
