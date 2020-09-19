@@ -1,6 +1,6 @@
 version: "3"
-services:
 
+services:
 ## App Frontend
   core:
     build: ./core
@@ -10,7 +10,7 @@ services:
         max-size: '2m'
         max-file: '10'
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     env_file:
       - 'core/env.core'
       - 'core/secrets.core'
@@ -33,12 +33,12 @@ services:
     image: grafana/grafana:5.4.3
     container_name: grafana
     restart: always
-      logging:
-        options:
-          max-size: '2m'
-          max-file: '10'
+    logging:
+      options:
+        max-size: '2m'
+        max-file: '10'
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     env_file:
       - 'grafana/env.grafana'
       - 'grafana/secrets.grafana'
@@ -60,7 +60,7 @@ services:
         max-size: '2m'
         max-file: '10'
     ports:
-      - "4200:4200"
+      - "127.0.0.1:4200:4200"
     networks:
       - frontend
     depends_on:

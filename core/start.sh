@@ -128,8 +128,10 @@ if [[ $DJANGO_DEBUG != "False" && EMPTY_DB -eq 1 ]]; then
   pipenv run ./manage.py loaddata db_seed.json
 fi
 
-if [[ $(./manage.py createsuperuser --no-input >/dev/null 2>&1) ]]; then
-  echo "Creating superuser $DJANGO_SUPERUSER_EMAIL"
+if [[ -z $DJANGO_SUPERUSER_EMAIL ]]; then
+  echo "Missing variable DJANGO_SUPERUSER_EMAIL to set superuser"
+elif [[ $(pipenv run ./manage.py createsuperuser --no-input >/dev/null 2>&1) -eq 0 ]]; then
+  echo "Created superuser $DJANGO_SUPERUSER_EMAIL"
 else
   echo "Superuser $DJANGO_SUPERUSER_EMAIL already exists"
 fi

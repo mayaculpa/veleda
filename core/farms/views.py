@@ -135,7 +135,7 @@ class CoordinatorSetupRegisterView(LoginRequiredMixin, View):
             + "."
             + settings.FARMS_SUBDOMAIN_NAMESPACE
             + "."
-            + settings.SERVER_DOMAIN
+            + settings.CORE_DOMAIN
         )
         form.cleaned_data["site"].save()
         coordinator.site = form.cleaned_data["site"]

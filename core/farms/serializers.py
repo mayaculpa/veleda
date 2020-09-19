@@ -195,26 +195,6 @@ class ControllerMessageSerializer(serializers.ModelSerializer):
         return message
 
 
-    # def is_valid(self, raise_exception=False):
-    #     """Validates the JSON message itself, after doing standard validation"""
-
-    #     if not super().is_valid():
-    #         return False
-
-    #     try:
-    #         message_type = self.validated_data["message"].get("type")
-    #         if not message_type in ControllerMessage.TYPES:
-    #             raise ValidationError(detail="message type not recognized")
-    #     except ValidationError as exc:
-    #         self._validated_data = {}
-    #         self._errors = exc.detail
-
-    #     if self.errors and raise_exception:
-    #         raise ValidationError(self.errors)
-
-    #     return not bool(self.errors)
-
-
 class ControllerPingGetSerializer(serializers.Serializer):
     coordinator_local_ip_address = serializers.IPAddressField(allow_blank=True)
 
