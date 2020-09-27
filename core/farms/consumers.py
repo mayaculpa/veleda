@@ -53,3 +53,6 @@ class ControllerConsumer(WebsocketConsumer):
 
     def controller_disconnect(self, event):
         self.close()
+
+    def command_controller(self, message):
+        self.send(json.dumps(message["message"]))

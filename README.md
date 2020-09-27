@@ -46,6 +46,11 @@ List the individual services with `docker ps`. Key data to the individual servic
 
 The data is stored in volumes. List all active volumes with `docker volume ls`. To access Grafana, visit [localhost:3000](localhost:3000) after starting the services. The admin login credentials are defined in `web/secrets.flask`.
 
+## Stopping the Development Services
+
+Use `ctrl + C` to end the main server. The databases will remain as stopping them will clear their data. To stop them run `./start.sh clean`.
+
+
 [2]: https://docs.docker.com/install/linux/docker-ce/ubuntu/
 [3]: https://docs.docker.com/docker-for-mac/install/
 [4]: https://docs.docker.com/docker-for-windows/install/

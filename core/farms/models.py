@@ -204,6 +204,7 @@ class Controller(models.Model):
         Coordinator,
         on_delete=models.CASCADE,
         null=True,
+        blank=True,
         help_text="The coordinator with which the controller is connected to.",
     )
     site = models.ForeignKey(
@@ -226,6 +227,7 @@ class Controller(models.Model):
     )
     channel_name = models.CharField(
         null=False,
+        blank=True,
         default="",
         max_length=128,
         help_text="The channel name of the connected WebSocket.",
@@ -278,11 +280,13 @@ class ControllerMessage(models.Model):
     COMMAND_TYPE = "cmd"
     TELEMETRY_TYPE = "tel"
     REGISTER_TYPE = "reg"
+    ERROR_TYPE = "err"
 
     TYPES = [
         COMMAND_TYPE,
         TELEMETRY_TYPE,
         REGISTER_TYPE,
+        ERROR_TYPE,
     ]
 
     created_at = models.DateTimeField(

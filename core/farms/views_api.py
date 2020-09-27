@@ -1,23 +1,27 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
+from ipware import get_client_ip
+from ipware.utils import is_valid_ipv6
 from rest_framework import generics
 from rest_framework.exceptions import APIException
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
-from ipware import get_client_ip
-from ipware.utils import is_valid_ipv6
-from django.conf import settings
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist
 
-from .models import Site, Coordinator, Controller, MqttMessage
+from .models import Controller, Coordinator, MqttMessage, Site
+from .permissions import ControllerAPIPermission
 from .serializers import (
-    CoordinatorPingSerializer,
-    CoordinatorSerializer,
-    ControllerSerializer,
+    ControllerMessageSerializer,
     ControllerPingGetSerializer,
     ControllerPingPostSerializer,
-    SiteSerializer,
+    ControllerSerializer,
+    CoordinatorPingSerializer,
+    CoordinatorSerializer,
     MqttMessageSerializer,
+    SiteSerializer,
 )
 
 
@@ -216,9 +220,45 @@ class APIControllerPingView(APIView):
 
 
 class APIControllerDetailView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (
+        IsAuthenticated,
+        ControllerAPIPermission,
+    )
 
-    def get(self, request):
+    def get(self, request, pk):
+        controller = Controller.objects.get(id=pk)
+        self.check_object_permissions(request, controller)
         return JsonResponse(
-            ControllerSerializer(Controller.objects.get(pk=request.user))
+            ControllerSerializer(controller, context={"request": request}).data
         )
+
+
+class APIControllerCommandView(APIView):
+    permission_classes = (
+        IsAuthenticated,
+        ControllerAPIPermission,
+    )
+
+    def post(self, request, pk):
+        controller = Controller.objects.get(id=pk)
+        self.check_object_permissions(request, controller)
+
+        serializer = ControllerMessageSerializer(
+            data={"message": request.data, "controller": pk}
+        )
+        if not serializer.is_valid():
+            return JsonResponse(serializer.errors, status=400)
+
+        if not controller.channel_name:
+            return JsonResponse({"message": ["Controller channel not set"]}, status=400)
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.send)(
+            controller.channel_name,
+            {
+                "type": "command.controller",
+                "message": serializer.validated_data["message"],
+            },
+        )
+
+        return HttpResponse(f"channel name: {controller.channel_name}", status=200)

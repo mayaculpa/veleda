@@ -32,7 +32,7 @@ source_debug_env_variables() {
   echo "Updating the service hostnames to localhost"
   export DATABASE_HOST="127.0.0.1"
   export RABBITMQ_HOST="127.0.0.1"
-  export GUNICORN_HOST="127.0.0.1"
+  export DAPHNE_HOST="$CORE_DOMAIN"
   export REDIS_HOST="127.0.0.1"
   
   set +a
@@ -79,10 +79,35 @@ start_docker_services() {
   fi
 }
 
+stop_docker_services() {
+  echo "Stopping dev databases"
+  if [[ "$(docker ps -a | grep sdg-server-dev-postgres)" ]]; then
+    docker stop sdg-server-dev-postgres
+  else
+    echo "Postgres database already stopped"
+  fi
+  if [[ "$(docker ps -a | grep sdg-server-dev-rabbitmq)" ]]; then
+    docker stop sdg-server-dev-rabbitmq
+  else
+    echo "RabbitMQ database already stopped"
+  fi
+  if [[ "$(docker ps -a | grep sdg-server-dev-redis)" ]]; then
+    docker stop sdg-server-dev-redis
+  else
+    echo "Redis database already stopped"
+  fi
+}
+
 if [[ $DJANGO_DEBUG != "False" ]]; then
-  echo "Starting in debug mode"
-  source_debug_env_variables
-  start_docker_services
+  if [[ $1 == "clean" ]]; then
+    stop_docker_services
+    set +e
+    exit 0
+  else
+    echo "Starting in debug mode"
+    source_debug_env_variables
+    start_docker_services
+  fi
 else
   echo "Starting in production mode"
 fi
@@ -125,7 +150,7 @@ echo "Performing database migration"
 pipenv run ./manage.py migrate
 if [[ $DJANGO_DEBUG != "False" && EMPTY_DB -eq 1 ]]; then
   echo "Seeding DB with data"
-  pipenv run ./manage.py loaddata db_seed.json
+#  pipenv run ./manage.py loaddata db_seed.json
 fi
 
 if [[ -z $DJANGO_SUPERUSER_EMAIL ]]; then
@@ -143,7 +168,7 @@ if [[ -z $1 ]]; then
   # Start the app server, either for the dev or prod environment
   if [[ $DJANGO_DEBUG != "False" ]]; then
     echo "Starting Django dev server"
-    pipenv run ./manage.py runserver
+    pipenv run ./manage.py runserver "$DAPHNE_HOST:$CORE_DEV_SERVER_PORT"
   else
     echo "Starting Daphne"
     exec pipenv run daphne core.asgi:application \

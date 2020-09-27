@@ -38,10 +38,8 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
 # In docker use VIRTUAL_HOST environment variable, else use local address
-CORE_DOMAIN = os.environ.get(
-    "CORE_DOMAIN", "localhost,localhost:8000,127.0.0.1"
-).split(",")
-ALLOWED_HOSTS = CORE_DOMAIN
+CORE_DOMAIN = os.environ.get("CORE_DOMAIN", "localhost:8000")
+ALLOWED_HOSTS = [CORE_DOMAIN]
 # Allow internal communication between docker services
 ALLOWED_HOSTS.append("core")
 
@@ -199,13 +197,12 @@ OAUTH2_PROVIDER = {
     "SCOPES": {"userinfo-v1": "Userinfo API v1"}
 }
 
-CONTROLLER_TOKEN_BYTES = 20 # Length in bytes
+CONTROLLER_TOKEN_BYTES = 20  # Length in bytes
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
-        # "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
     ),
     # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
@@ -249,23 +246,31 @@ CHANNEL_LAYERS = {
 # CORS (Cross-Origin Resource Sharing)
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:4200", # Angular dev server
+    "http://127.0.0.1:4200",  # Angular dev server
 ]
 
 # Content Security Policy
 
-CSP_DEFAULT_SRC = CORE_DOMAIN + ["'self'", "ws://localhost:8000"]
-CSP_STYLE_SRC = CORE_DOMAIN + [
+if DEBUG:
+    CORE_CSP_HOST = f"{CORE_DOMAIN}:{os.environ.get('CORE_DEV_SERVER_PORT')}"
+else:
+    CORE_CSP_HOST = CORE_DOMAIN
+
+CSP_DEFAULT_SRC = [CORE_CSP_HOST] + ["'self'"]
+CSP_STYLE_SRC = [CORE_CSP_HOST] + [
     "'unsafe-inline'",
     "cdn.jsdelivr.net",
     "fonts.googleapis.com",
     "http://netdna.bootstrapcdn.com",
 ]
-CSP_FONT_SRC = CORE_DOMAIN + [
+CSP_FONT_SRC = [CORE_CSP_HOST] + [
     "data:",
     "cdn.jsdelivr.net",
     "fonts.googleapis.com",
     "fonts.gstatic.com",
 ]
-CSP_SCRIPT_SRC = CORE_DOMAIN + ["'unsafe-inline'", "https://code.jquery.com/"]
-CSP_FRAME_ANCESTORS = ["'self'", "http://localhost:4200", "http://127.0.0.1:4200"]
+CSP_SCRIPT_SRC = [CORE_CSP_HOST] + ["'unsafe-inline'", "https://code.jquery.com/"]
+if DEBUG:
+    CSP_FRAME_ANCESTORS = ["'self'", "http://localhost:4200", "http://127.0.0.1:4200"]
+else:
+    CSP_FRAME_ANCESTORS = ["'self'"]

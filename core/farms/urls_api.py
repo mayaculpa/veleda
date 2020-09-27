@@ -30,6 +30,16 @@ urlpatterns = [
         name="coordinator-detail",
     ),
     path(
+        "v1/farms/coordinators/<uuid:pk>/mqtt-messages/",
+        views.APIMqttMessageListView.as_view(),
+        name="mqttmessage-list",
+    ),
+    path(
+        "v1/farms/coordinators/<uuid:pk>/mqtt-messages/<str:created_at>/",
+        views.APIMqttMessageDetailView.as_view(),
+        name="mqttmessage-detail",
+    ),
+    path(
         "v1/farms/controllers/ping/",
         views.APIControllerPingView.as_view(),
         name="controller-ping",
@@ -40,14 +50,9 @@ urlpatterns = [
         name="controller-detail",
     ),
     path(
-        "v1/farms/coordinators/<uuid:pk>/mqtt-messages/",
-        views.APIMqttMessageListView.as_view(),
-        name="mqttmessage-list",
-    ),
-    path(
-        "v1/farms/coordinators/<uuid:pk>/mqtt-messages/<str:created_at>/",
-        views.APIMqttMessageDetailView.as_view(),
-        name="mqttmessage-detail",
-    ),
+        "v1/farms/controllers/<uuid:pk>/command/",
+        views.APIControllerCommandView.as_view(),
+        name="controller-command"
+    )
 ]
 # fmt: on
