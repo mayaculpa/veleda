@@ -48,7 +48,7 @@ start_docker_services() {
       -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
       -p $DATABASE_HOST:5432:5432 \
       -d \
-      postgres:10.2
+      timescale/timescaledb:latest-pg12
     # Flag for seeding the database with dummy data
     EMPTY_DB=1
   else
@@ -149,7 +149,8 @@ done
 echo "Performing database migration"
 pipenv run ./manage.py migrate
 if [[ $DJANGO_DEBUG != "False" && EMPTY_DB -eq 1 ]]; then
-  echo "Seeding DB with data"
+   true
+#  echo "Seeding DB with data"
 #  pipenv run ./manage.py loaddata db_seed.json
 fi
 
@@ -161,10 +162,10 @@ else
   echo "Superuser $DJANGO_SUPERUSER_EMAIL already exists"
 fi
 
-echo "Starting Celery processes"
-pipenv run celery -A core worker -l info &
-
 if [[ -z $1 ]]; then
+  echo "Starting Celery processes"
+  pipenv run celery -A core worker -l info &
+
   # Start the app server, either for the dev or prod environment
   if [[ $DJANGO_DEBUG != "False" ]]; then
     echo "Starting Django dev server"

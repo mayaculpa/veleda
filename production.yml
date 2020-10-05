@@ -79,7 +79,7 @@ services:
 
 ## App Backend
   postgres:
-    build: ./postgres
+    image: timescale/timescaledb:latest-pg12
     container_name: postgres
     restart: always
     logging:

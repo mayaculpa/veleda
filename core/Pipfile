@@ -16,7 +16,7 @@ pytest-django = "*"
 pytest-asyncio = "*"
 
 [packages]
-django = "~=3.0.0"
+django = "~=3.1.0"
 django-oauth-toolkit = "*"
 django-semanticui-forms = "*"
 djangorestframework = "*"
@@ -35,6 +35,8 @@ channels-redis = "*"
 django-csp = "*"
 django-cors-headers = "*"
 daphne = "*"
+graphene-django = "~=2.13.0"
+django-filter = "~=2.4.0"
 
 [requires]
 python_version = "3.8"

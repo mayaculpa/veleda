@@ -2,6 +2,13 @@ from django.contrib import admin
 
 from .models import (
     Site,
+    SiteEntity,
+    ControllerComponentType,
+    ControllerComponent,
+    PeripheralComponentType,
+    PeripheralComponent,
+    DataPointType,
+    DataPoint,
     Coordinator,
     HydroponicSystem,
     Controller,
@@ -15,6 +22,41 @@ from .models import (
 
 @admin.register(Site)
 class SiteAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(SiteEntity)
+class SiteEntityAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(ControllerComponentType)
+class ControllerComponentTypeAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(ControllerComponent)
+class ControllerComponentAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(PeripheralComponentType)
+class PeripheralComponentTypeAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(PeripheralComponent)
+class PeripheralComponentAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(DataPointType)
+class DataPointTypeAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(DataPoint)
+class DataPointAdmin(admin.ModelAdmin):
     pass
 
 
@@ -32,12 +74,14 @@ class HydroponicSystemAdmin(admin.ModelAdmin):
 class ControllerAdmin(admin.ModelAdmin):
     pass
 
+
 @admin.register(ControllerToken)
 class ControllerTokenAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         form = super(ControllerTokenAdmin, self).get_form(request, obj, **kwargs)
-        form.base_fields['key'].initial = ControllerToken.generate_key()
+        form.base_fields["key"].initial = ControllerToken.generate_key()
         return form
+
 
 @admin.register(ControllerMessage)
 class ControllerMessageAdmin(admin.ModelAdmin):

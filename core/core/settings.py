@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "address",
     "macaddress",
     "django_celery_results",
+    "graphene_django",
     #
     # Local Apps
     #
@@ -203,6 +204,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
         "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
     # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
@@ -223,6 +225,11 @@ if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# Graphene-Django
+# https://docs.graphene-python.org/projects/django/en/latest/
+
+GRAPHENE = {"SCHEMA": "core.schema.schema"}
 
 # REDIS & Channels
 
@@ -269,7 +276,12 @@ CSP_FONT_SRC = [CORE_CSP_HOST] + [
     "fonts.googleapis.com",
     "fonts.gstatic.com",
 ]
-CSP_SCRIPT_SRC = [CORE_CSP_HOST] + ["'unsafe-inline'", "https://code.jquery.com/"]
+CSP_SCRIPT_SRC = [CORE_CSP_HOST] + [
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "https://code.jquery.com/",
+    "https://cdn.jsdelivr.net",
+]
 if DEBUG:
     CSP_FRAME_ANCESTORS = ["'self'", "http://localhost:4200", "http://127.0.0.1:4200"]
 else:

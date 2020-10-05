@@ -1,11 +1,12 @@
 import binascii
+from datetime import timedelta, datetime
 import os
-
 import uuid
-from django.conf import settings
-from django.db import models
-from django.contrib.postgres.fields import JSONField
+
 from address.models import AddressField
+from django.conf import settings
+from django.db import models, IntegrityError
+from django.utils.dateparse import parse_datetime
 from macaddress.fields import MACAddressField
 
 from accounts.models import User
@@ -15,12 +16,7 @@ class Site(models.Model):
     """A site where plants are grown hydroponically. Contains all hydroponic systems
        and plants that are controlled by an on-site coordinator"""
 
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-        help_text="The UUID to identify the hydroponic system.",
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
     name = models.CharField(max_length=30, help_text="The name of the site.")
     owner = models.ForeignKey(
         User,
@@ -34,15 +30,184 @@ class Site(models.Model):
         help_text="The postal address and the coordinates of the site",
     )
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="The date and time when the site was first created.",
+        auto_now_add=True, help_text="The datetime of creation.",
     )
     modified_at = models.DateTimeField(
-        auto_now=True, help_text="The date and time when the site was last updated."
+        auto_now=True, help_text="The datetime of the last update."
     )
 
     def __str__(self):
         return self.name
+
+
+class SiteEntity(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
+    site = models.ForeignKey(
+        Site,
+        on_delete=models.CASCADE,
+        help_text="The site to which the site entity belongs.",
+    )
+    name = models.CharField(
+        max_length=255,
+        help_text="The name of the site entity which unifies all its components.",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, help_text="The datetime of creation.",
+    )
+    modified_at = models.DateTimeField(
+        auto_now=True, help_text="The datetime of the last update."
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class ControllerComponentType(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
+    name = models.CharField(
+        max_length=255, help_text="The name of this type, e.g., ESP32 or RasberryPi4"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, help_text="The datetime of creation.",
+    )
+    modified_at = models.DateTimeField(
+        auto_now=True, help_text="The datetime of the last update."
+    )
+
+    def __str__(self):
+        return f"{self.name}"
+
+
+class ControllerComponent(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
+    component_type = models.ForeignKey(
+        ControllerComponentType,
+        on_delete=models.CASCADE,
+        help_text="The type of which this component is an instance of.",
+    )
+    site_entity = models.OneToOneField(
+        SiteEntity,
+        on_delete=models.CASCADE,
+        help_text="Which site entity the component is a part of.",
+    )
+    channel_name = models.CharField(
+        null=False,
+        blank=True,
+        default="",
+        max_length=128,
+        help_text="The channel name of the connected WebSocket.",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, help_text="The datetime of creation.",
+    )
+    modified_at = models.DateTimeField(
+        auto_now=True, help_text="The datetime of the last update."
+    )
+
+    def __str__(self):
+        return f"Controller of {self.site_entity.name}"
+
+
+class PeripheralComponentType(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
+    name = models.CharField(
+        max_length=255, help_text="The name of this type, e.g., BME280 or LED."
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, help_text="The datetime of creation.",
+    )
+    modified_at = models.DateTimeField(
+        auto_now=True, help_text="The datetime of the last update."
+    )
+
+    def __str__(self):
+        return f"{self.name}"
+
+
+class PeripheralComponent(models.Model):
+    """The peripheral aspect of a site entity, such as a sensor or actuator."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
+    component_type = models.ForeignKey(
+        PeripheralComponentType,
+        on_delete=models.CASCADE,
+        help_text="The type of this peripheral component.",
+    )
+    site_entity = models.OneToOneField(
+        SiteEntity,
+        on_delete=models.CASCADE,
+        help_text="Which site entity the component is a part of.",
+    )
+    controller_component = models.ForeignKey(
+        ControllerComponent,
+        on_delete=models.CASCADE,
+        help_text="Which controller controls and is connected to this peripheral.",
+    )
+    config = models.JSONField(
+        help_text="The config sent to the controller to perform setup excl. the name."
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, help_text="The datetime of creation.",
+    )
+    modified_at = models.DateTimeField(
+        auto_now=True, help_text="The datetime of the last update."
+    )
+
+    def __str__(self):
+        return f"Peripheral of {self.site_entity.name}"
+
+
+class DataPointType(models.Model):
+    """The type of data stored and the unit the value is stored as."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
+    name = models.CharField(
+        max_length=50, help_text="The name, e.g., air temperature or acidity."
+    )
+    unit = models.CharField(
+        max_length=20, help_text="The unit of the value, e.g., °C or pH."
+    )
+
+    def __str__(self):
+        return f"{self.name} in {self.unit}"
+
+
+class DataPoint(models.Model):
+    """Data points generated by peripherals, described by the data point type."""
+
+    time = models.DateTimeField(primary_key=True, default=datetime.now)
+    peripheral_component = models.ForeignKey(
+        PeripheralComponent,
+        on_delete=models.CASCADE,
+        help_text="The peripheral that generated the data point.",
+    )
+    data_point_type = models.ForeignKey(
+        DataPointType,
+        on_delete=models.CASCADE,
+        help_text="The type of data recorded and its unit.",
+    )
+    value = models.FloatField(
+        help_text="The value of the data given by the data point type and peripheral."
+    )
+
+    def save(self, *args, **kwargs):
+        self.save_and_smear_timestamp(*args, **kwargs)
+
+    def save_and_smear_timestamp(self, *args, **kwargs):
+        """Recursivly try to save by incrementing the timestamp on duplicate error"""
+        try:
+            super().save(*args, **kwargs)
+        except IntegrityError as exception:
+            # Only handle the error:
+            #   psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "1_1_farms_sensorreading_pkey"
+            #   DETAIL:  Key ("time")=(2020-10-01 22:33:52.507782+00) already exists.
+            if all(k in exception.args[0] for k in ("Key", "time", "already exists")):
+                # Increment the timestamp by 1 µs and try again
+                self.time = str(parse_datetime(self.time) + timedelta(microseconds=1))
+                self.save_and_smear_timestamp(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.value} {self.data_point_type.unit} from {self.peripheral_component.site_entity.name}"
 
 
 class Coordinator(models.Model):
@@ -256,7 +421,7 @@ class ControllerToken(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def save(self, *args, **kwargs): # pylint: disable=arguments-differ
+    def save(self, *args, **kwargs):  # pylint: disable=arguments-differ
         """Saves the controller token and generates a key if it has not been set"""
         if not self.key:
             self.key = self.generate_key()
@@ -297,7 +462,7 @@ class ControllerMessage(models.Model):
         on_delete=models.CASCADE,
         help_text="The controller associated with the message.",
     )
-    message = JSONField()
+    message = models.JSONField()
 
 
 class MqttMessage(models.Model):
@@ -324,7 +489,7 @@ class MqttMessage(models.Model):
         on_delete=models.CASCADE,
         help_text="The coordinator that relayed the message.",
     )
-    message = JSONField()
+    message = models.JSONField()
     controller = models.ForeignKey(
         Controller,
         on_delete=models.CASCADE,
