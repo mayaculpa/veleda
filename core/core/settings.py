@@ -37,7 +37,7 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
-# In docker use VIRTUAL_HOST environment variable, else use local address
+# In docker use CORE_DOMAIN environment variable, else use local address
 CORE_DOMAIN = os.environ.get("CORE_DOMAIN", "localhost:8000")
 ALLOWED_HOSTS = [CORE_DOMAIN]
 # Allow internal communication between docker services
@@ -214,12 +214,13 @@ LOGIN_REDIRECT_URL = "/"
 # Email
 
 EMAIL_USE_TLS = True
-EMAIL_HOST = "smtp.mailgun.org"
+EMAIL_HOST = "smtp.office365.com"
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = 587
 
-DEFAULT_FROM_EMAIL = "notification@" + os.environ.get("VIRTUAL_HOST", "localhost")
+#DEFAULT_FROM_EMAIL = "notification@" + os.environ.get("CORE_DOMAIN", "localhost")
+
 
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

@@ -118,19 +118,17 @@ while ! pg_isready -h "$DATABASE_HOST" -q; do
   sleep 0.5 # wait for half a second before checking again
 done
 
-if [[ $DJANGO_DEBUG != "False" ]]; then
-  # Rename the password for the postgres user (superuser)
-  export PGPASSWORD=$POSTGRES_PASSWORD
-
-  if [[ $( psql -U postgres -h localhost -tAc "SELECT 1 FROM pg_database WHERE datname='$DATABASE_NAME'" ) != '1' ]]; then
-    echo "Creating core database and user in PostgreSQL"
-    psql -U postgres -h localhost -c \
-      "CREATE DATABASE $DATABASE_NAME WITH ENCODING 'UTF8';"
-    psql -U postgres -h localhost -c \
-      "CREATE USER $DATABASE_USER ENCRYPTED PASSWORD '$DATABASE_PASSWORD' NOSUPERUSER NOCREATEDB NOCREATEROLE;"
-    psql -U postgres -h localhost -c \
-      "GRANT ALL PRIVILEGES ON DATABASE $DATABASE_NAME TO $DATABASE_USER;"
-  fi
+export PGPASSWORD=$POSTGRES_PASSWORD
+if [[ $( psql -U postgres -h $DATABASE_HOST -tAc "SELECT 1 FROM pg_database WHERE datname='$DATABASE_NAME'" ) != '1' ]]; then
+  echo "Creating core database and user in PostgreSQL"
+  psql -U postgres -h $DATABASE_HOST -c \
+    "CREATE DATABASE $DATABASE_NAME WITH ENCODING 'UTF8';"
+  psql -U postgres -h $DATABASE_HOST -c \
+    "CREATE USER $DATABASE_USER ENCRYPTED PASSWORD '$DATABASE_PASSWORD' NOSUPERUSER NOCREATEDB NOCREATEROLE;"
+  psql -U postgres -h $DATABASE_HOST -c \
+    "GRANT ALL PRIVILEGES ON DATABASE $DATABASE_NAME TO $DATABASE_USER;"
+else
+  echo "$DATABASE_NAME already created on $DATABASE_HOST Postgres DB"
 fi
 
 echo "Waiting for RabbitMQ to launch on 5672..."
@@ -172,7 +170,7 @@ if [[ -z $1 ]]; then
     pipenv run ./manage.py runserver "$DAPHNE_HOST:$CORE_DEV_SERVER_PORT"
   else
     echo "Starting Daphne"
-    exec pipenv run daphne core.asgi:application \
+    pipenv run daphne core.asgi:application \
         --bind "$DAPHNE_HOST" \
         --port "8000"
   fi

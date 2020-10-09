@@ -17,6 +17,7 @@ services:
       - 'grafana/env.grafana'
       - 'grafana/secrets.grafana'
       - 'influxdb/secrets.influxdb'
+      - 'postgres/secrets.postgres'
       - 'redis/env.redis'
       - 'redis/secrets.redis'
     networks:
@@ -91,7 +92,7 @@ services:
     networks:
       - backend
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data-12:/var/lib/postgresql/data
 
   influxdb:
     image: influxdb:1.5
@@ -151,5 +152,5 @@ volumes:
   influxdb-data:
   grafana-data:
   grafana-config:
-  postgres-data:
+  postgres-data-12:
   rabbitmq-data:
