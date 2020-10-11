@@ -12,7 +12,7 @@ from .models import (
     Coordinator,
     HydroponicSystem,
     Controller,
-    ControllerToken,
+    ControllerAuthToken,
     ControllerMessage,
     MqttMessage,
 )
@@ -75,11 +75,11 @@ class ControllerAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(ControllerToken)
-class ControllerTokenAdmin(admin.ModelAdmin):
+@admin.register(ControllerAuthToken)
+class ControllerAuthTokenAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
-        form = super(ControllerTokenAdmin, self).get_form(request, obj, **kwargs)
-        form.base_fields["key"].initial = ControllerToken.generate_key()
+        form = super(ControllerAuthTokenAdmin, self).get_form(request, obj, **kwargs)
+        form.base_fields["key"].initial = ControllerAuthToken.generate_key()
         return form
 
 

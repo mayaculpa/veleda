@@ -4,7 +4,7 @@ from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 
 from farms.serializers import ControllerMessageSerializer
-from farms.models import Controller
+from farms.models import ControllerComponent
 
 
 class ControllerConsumer(WebsocketConsumer):
@@ -13,14 +13,17 @@ class ControllerConsumer(WebsocketConsumer):
     controller_id = None
 
     def handle_message(self, message):
-        controller_message = ControllerMessageSerializer(
-            data={"message": message, "controller": self.scope["controller"].id,}
+        serializer = ControllerMessageSerializer(
+            data={
+                "message": message,
+                "controller": self.scope["controller"].id,
+            }
         )
-        if not controller_message.is_valid():
-            self.send(json.dumps({"errors": controller_message.errors["message"]}))
+        if not serializer.is_valid():
+            self.send(json.dumps({"errors": serializer.errors["message"]}))
             self.close()
         else:
-            controller_message.save()
+            serializer.save()
 
     def connect(self):
         controller = self.scope["controller"]

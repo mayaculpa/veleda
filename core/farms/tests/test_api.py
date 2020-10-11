@@ -2,13 +2,13 @@ import json
 import logging
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase, TransactionTestCase
+from django.test import Client, TransactionTestCase
 from django.urls import reverse
 
 from ..models import Site, Coordinator, Controller
 
 
-class SiteAPITests(TestCase):
+class SiteAPITests(TransactionTestCase):
     """Test the site REST API endpoints"""
 
     def setUp(self):
@@ -335,7 +335,7 @@ class CoordinatorAPITests(TransactionTestCase):
             self.assertTrue(logged_in)
 
 
-class CoordinatorPingAPITests(TestCase):
+class CoordinatorPingAPITests(TransactionTestCase):
     """Test the coordinator ping API endpoints"""
 
     def setUp(self):
@@ -416,7 +416,7 @@ class CoordinatorPingAPITests(TestCase):
         self.assertContains(response, coordinator.id, status_code=403)
 
 
-class ControllerAPITests(TestCase):
+class ControllerAPITests(TransactionTestCase):
     """Test the controller REST API endpoints"""
 
     def setUp(self):

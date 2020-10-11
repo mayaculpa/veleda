@@ -11,7 +11,13 @@ from rest_framework.exceptions import APIException
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from .models import Controller, Coordinator, MqttMessage, Site
+from .models import (
+    Controller,
+    Coordinator,
+    MqttMessage,
+    Site,
+    SiteEntity,
+)
 from .permissions import ControllerAPIPermission
 from .serializers import (
     ControllerMessageSerializer,
@@ -240,25 +246,36 @@ class APIControllerCommandView(APIView):
     )
 
     def post(self, request, pk):
-        controller = Controller.objects.get(id=pk)
-        self.check_object_permissions(request, controller)
+        entity = (
+            SiteEntity.objects.select_related("controller_component")
+            .select_related("site__owner")
+            .get(id=pk)
+        )
+
+        # controller = Controller.objects.get(id=pk)
+        self.check_object_permissions(request, entity)
 
         serializer = ControllerMessageSerializer(
-            data={"message": request.data, "controller": pk}
+            data={
+                "message": request.data,
+                "controller": entity.controller_component.id,
+            }
         )
         if not serializer.is_valid():
             return JsonResponse(serializer.errors, status=400)
 
-        if not controller.channel_name:
+        if not entity.controller_component.channel_name:
             return JsonResponse({"message": ["Controller channel not set"]}, status=400)
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.send)(
-            controller.channel_name,
+            entity.controller_component.channel_name,
             {
                 "type": "command.controller",
                 "message": serializer.validated_data["message"],
             },
         )
 
-        return HttpResponse(f"channel name: {controller.channel_name}", status=200)
+        return HttpResponse(
+            f"channel name: {entity.controller_component.channel_name}", status=200
+        )

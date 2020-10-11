@@ -1,6 +1,6 @@
 from channels.auth import AuthMiddlewareStack
 from channels.db import database_sync_to_async
-from farms.models import ControllerToken
+from farms.models import ControllerAuthToken
 
 
 class TokenAuthMiddleware:
@@ -52,9 +52,9 @@ class TokenAuthMiddlewareInstance:
             tokens = list(filter(lambda x: x.startswith("token"), subprotocols))
             if tokens:
                 token = tokens[0].split("_")[1]
-                return ControllerToken.objects.get(key=token).controller
+                return ControllerAuthToken.objects.get(key=token).controller
             return None
-        except ControllerToken.DoesNotExist:
+        except ControllerAuthToken.DoesNotExist:
             return None
 
 
