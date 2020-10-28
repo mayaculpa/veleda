@@ -1,20 +1,20 @@
 from django.contrib import admin
 
 from .models import (
-    Site,
-    SiteEntity,
-    ControllerComponentType,
-    ControllerComponent,
-    PeripheralComponentType,
-    PeripheralComponent,
-    DataPointType,
-    DataPoint,
-    Coordinator,
-    HydroponicSystem,
     Controller,
     ControllerAuthToken,
+    ControllerComponent,
+    ControllerComponentType,
     ControllerMessage,
+    ControllerTask,
+    Coordinator,
+    DataPoint,
+    DataPointType,
+    HydroponicSystem,
     MqttMessage,
+    PeripheralComponent,
+    Site,
+    SiteEntity,
 )
 
 # Register your models here.
@@ -40,13 +40,13 @@ class ControllerComponentAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(PeripheralComponentType)
-class PeripheralComponentTypeAdmin(admin.ModelAdmin):
+@admin.register(PeripheralComponent)
+class PeripheralComponentAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(PeripheralComponent)
-class PeripheralComponentAdmin(admin.ModelAdmin):
+@admin.register(ControllerTask)
+class ControllerTaskAdmin(admin.ModelAdmin):
     pass
 
 

@@ -16,11 +16,43 @@ import sys
 TESTING = sys.argv[1:2] == ["test"] or "pytest" in sys.argv[0]
 
 # Workaround to enable logging errors via gunicorn in docker
-import logging
+# import logging
 
-logging.basicConfig(
-    level=logging.INFO, format=" %(levelname)s %(name)s: %(message)s",
-)
+# logging.basicConfig(
+#     level=logging.INFO, format=" %(levelname)s %(name)s: %(message)s",
+# )
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "request_id": {
+            "()": "log_request_id.filters.RequestIDFilter"
+        }
+    },
+    'formatters': {
+        'standard': {
+            'format': '%(levelname)-8s [%(asctime)s] [%(request_id)s] %(name)s: %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'filters': ['request_id'],
+            'formatter': 'standard',
+        },
+    },
+    'loggers': {
+        'myapp': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    }
+}
+LOG_REQUEST_ID_HEADER = "X-Request-ID"
+GENERATE_REQUEST_ID_IF_NOT_IN_HEADER = True
+REQUEST_ID_RESPONSE_HEADER = "X-Request-ID"
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -77,6 +109,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "log_request_id.middleware.RequestIDMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "csp.middleware.CSPMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -165,7 +198,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "CET"
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 

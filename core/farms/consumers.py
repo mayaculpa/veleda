@@ -1,37 +1,59 @@
 import json
+import uuid
 
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 
 from farms.serializers import ControllerMessageSerializer
-from farms.models import ControllerComponent
+from farms.models import (
+    ControllerMessage,
+    DataPoint,
+    DataPointType,
+    PeripheralComponent,
+)
 
 
 class ControllerConsumer(WebsocketConsumer):
     """Handle JSON messages being sent to and from controllers"""
 
-    controller_id = None
+    def handle_telemetry(self, message):
+        if message["name"] == "ReadSensor":
+            peripheral_component = PeripheralComponent.objects.get(
+                pk=uuid.UUID(message["peripheral"])
+            )
+            data_points = DataPoint.objects.bulk_create(
+                [
+                    DataPoint(
+                        value=data_point["value"],
+                        peripheral_component=peripheral_component,
+                        data_point_type=DataPointType.objects.get(
+                            pk=uuid.UUID(data_point["data_point_type"])
+                        ),
+                    )
+                    for data_point in message["data_points"]
+                ]
+            )
 
-    def handle_message(self, message):
+            print(data_points)
+
+    def handle_message(self, message, controller):
         serializer = ControllerMessageSerializer(
-            data={
-                "message": message,
-                "controller": self.scope["controller"].id,
-            }
+            data={"message": message, "controller": controller}
         )
         if not serializer.is_valid():
             self.send(json.dumps({"errors": serializer.errors["message"]}))
             self.close()
         else:
+            print(serializer.validated_data)
+            message_type = serializer.validated_data["message"]["type"]
+            if message_type == ControllerMessage.TELEMETRY_TYPE:
+                self.handle_telemetry(serializer.validated_data["message"])
+
             serializer.save()
 
     def connect(self):
         controller = self.scope["controller"]
         if controller:
-            if controller.channel_name:
-                async_to_sync(self.channel_layer.send)(
-                    controller.channel_name, {"type": "controller.disconnect"}
-                )
             controller.channel_name = self.channel_name
             controller.save()
 
@@ -40,15 +62,12 @@ class ControllerConsumer(WebsocketConsumer):
             self.close()
 
     def disconnect(self, code):
-        """On disconnect clear the channel name to its WebSocket"""
-        if controller := self.scope.get("controller"):
-            controller.channel_name = ""
-            controller.save()
+        pass
 
     def receive(self, text_data=None, bytes_data=None):
         try:
             data = json.loads(text_data)
-            self.handle_message(data)
+            self.handle_message(data, self.scope["controller"].id)
         except json.decoder.JSONDecodeError:
             error = {"error": "Invalid data"}
             self.send(json.dumps(error))
@@ -59,3 +78,15 @@ class ControllerConsumer(WebsocketConsumer):
 
     def command_controller(self, message):
         self.send(json.dumps(message["message"]))
+
+    def send_peripheral_commands(self, message):
+        request = ControllerMessage.to_peripheral_message(
+            message["commands"], message["request_id"]
+        )
+        self.send(json.dumps(request))
+
+    def send_controller_task_commands(self, message):
+        request = ControllerMessage.to_task_message(
+            message["commands"], message["request_id"]
+        )
+        self.send(json.dumps(request))

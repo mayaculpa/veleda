@@ -191,7 +191,9 @@ class ControllerMessageSerializer(serializers.ModelSerializer):
     def validate_message(self, message):
         message_type = message.get("type")
         if not message_type in ControllerMessage.TYPES:
-            raise ValidationError(detail="message type not recognized")
+            raise ValidationError(
+                detail=f"message type not recognized: {message_type}"
+            )
         return message
 
 

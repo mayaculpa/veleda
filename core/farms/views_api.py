@@ -13,8 +13,10 @@ from rest_framework.views import APIView
 
 from .models import (
     Controller,
+    ControllerTask,
     Coordinator,
     MqttMessage,
+    PeripheralComponent,
     Site,
     SiteEntity,
 )
@@ -246,18 +248,23 @@ class APIControllerCommandView(APIView):
     )
 
     def post(self, request, pk):
-        entity = (
-            SiteEntity.objects.select_related("controller_component")
-            .select_related("site__owner")
-            .get(id=pk)
-        )
+        try:
+            entity = (
+                SiteEntity.objects.select_related("controller_component")
+                .select_related("site__owner")
+                .get(id=pk)
+            )
+        except ObjectDoesNotExist:
+            return JsonResponse({"message": ["Controller not found"]}, status=400)
 
-        # controller = Controller.objects.get(id=pk)
         self.check_object_permissions(request, entity)
 
         serializer = ControllerMessageSerializer(
             data={
-                "message": request.data,
+                "message": {
+                    **request.data,
+                },
+                "request_id": request.id,
                 "controller": entity.controller_component.id,
             }
         )
@@ -267,15 +274,39 @@ class APIControllerCommandView(APIView):
         if not entity.controller_component.channel_name:
             return JsonResponse({"message": ["Controller channel not set"]}, status=400)
 
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.send)(
-            entity.controller_component.channel_name,
-            {
-                "type": "command.controller",
-                "message": serializer.validated_data["message"],
-            },
-        )
+        try:
+            peripherals = PeripheralComponent.objects.from_command_message(
+                serializer.validated_data["message"],
+                serializer.validated_data["controller"],
+            )
+            controller_tasks = ControllerTask.objects.from_command_message(
+                serializer.validated_data["message"],
+                serializer.validated_data["controller"],
+            )
+        except ValueError as err:
+            return JsonResponse({"message": [str(err)]}, status=400)
 
-        return HttpResponse(
-            f"channel name: {entity.controller_component.channel_name}", status=200
-        )
+        channel_layer = get_channel_layer()
+        response = {"request_id": serializer.validated_data["request_id"]}
+        if peripherals:
+            response["peripheral"] = PeripheralComponent.to_commands(peripherals)
+            async_to_sync(channel_layer.send)(
+                entity.controller_component.channel_name,
+                {
+                    "type": "send.peripheral.commands",
+                    "commands": response["peripheral"],
+                    "request_id": response["request_id"],
+                },
+            )
+        if controller_tasks:
+            response["task"] = ControllerTask.to_commands(controller_tasks)
+            async_to_sync(channel_layer.send)(
+                entity.controller_component.channel_name,
+                {
+                    "type": "send.controller.task.commands",
+                    "commands": response["task"],
+                    "request_id": response["request_id"],
+                },
+            )
+
+        return JsonResponse(response)

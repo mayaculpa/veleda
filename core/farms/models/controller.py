@@ -1,6 +1,7 @@
 import binascii
 import os
 import uuid
+from typing import Dict, Optional
 
 from django.conf import settings
 from django.db import models
@@ -9,12 +10,17 @@ from farms.models.site import SiteEntity
 
 
 class ControllerComponentType(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
     name = models.CharField(
         max_length=255, help_text="The name of this type, e.g., ESP32 or RasberryPi4"
     )
     created_at = models.DateTimeField(
-        auto_now_add=True, help_text="The datetime of creation.",
+        auto_now_add=True,
+        help_text="The datetime of creation.",
     )
     modified_at = models.DateTimeField(
         auto_now=True, help_text="The datetime of the last update."
@@ -25,7 +31,7 @@ class ControllerComponentType(models.Model):
 
 
 class ControllerComponent(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     component_type = models.ForeignKey(
         ControllerComponentType,
         on_delete=models.CASCADE,
@@ -45,7 +51,7 @@ class ControllerComponent(models.Model):
         help_text="The channel name of the connected WebSocket.",
     )
     created_at = models.DateTimeField(
-        auto_now_add=True, help_text="The datetime of creation.",
+        auto_now_add=True, help_text="The datetime of creation."
     )
     modified_at = models.DateTimeField(
         auto_now=True, help_text="The datetime of the last update."
@@ -89,16 +95,18 @@ class ControllerMessage(models.Model):
     TELEMETRY_TYPE = "tel"
     REGISTER_TYPE = "reg"
     ERROR_TYPE = "err"
+    RESULT_TYPE = "result"
 
     TYPES = [
         COMMAND_TYPE,
         TELEMETRY_TYPE,
         REGISTER_TYPE,
         ERROR_TYPE,
+        RESULT_TYPE,
     ]
 
     created_at = models.DateTimeField(
-        auto_now_add=True, help_text="The datetime when the message was received",
+        auto_now_add=True, help_text="The datetime when the message was received"
     )
     controller = models.ForeignKey(
         ControllerComponent,
@@ -106,3 +114,29 @@ class ControllerMessage(models.Model):
         help_text="The controller associated with the message.",
     )
     message = models.JSONField()
+
+    request_id = models.CharField(
+        max_length=255,
+        default="",
+        help_text="The ID of the request, to enable tracking requests",
+    )
+
+    @classmethod
+    def to_task_message(cls, commands: Dict, request_id="") -> Dict:
+        """Format task commands to a message for a controller"""
+
+        if not request_id:
+            return {"type": cls.COMMAND_TYPE, "task": commands}
+        return {"type": cls.COMMAND_TYPE, "task": commands, "request_id": request_id}
+
+    @classmethod
+    def to_peripheral_message(cls, commands: Dict, request_id="") -> Dict:
+        """Format peripheral commands to a message for a controller"""
+        
+        if not request_id:
+            return {"type": cls.COMMAND_TYPE, "peripheral": commands}
+        return {
+            "type": cls.COMMAND_TYPE,
+            "peripheral": commands,
+            "request_id": request_id,
+        }

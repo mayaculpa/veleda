@@ -147,9 +147,8 @@ done
 echo "Performing database migration"
 pipenv run ./manage.py migrate
 if [[ $DJANGO_DEBUG != "False" && EMPTY_DB -eq 1 ]]; then
-   true
-#  echo "Seeding DB with data"
-#  pipenv run ./manage.py loaddata db_seed.json
+  echo "Seeding DB with data"
+  pipenv run ./manage.py loaddata db_seed.json
 fi
 
 if [[ -z $DJANGO_SUPERUSER_EMAIL ]]; then
