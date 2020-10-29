@@ -80,13 +80,13 @@ class ControllerConsumer(WebsocketConsumer):
         self.send(json.dumps(message["message"]))
 
     def send_peripheral_commands(self, message):
-        request = ControllerMessage.to_peripheral_message(
-            message["commands"], message["request_id"]
+        request = ControllerMessage.to_command_message(
+            peripheral_commands=message["commands"], request_id=message["request_id"]
         )
         self.send(json.dumps(request))
 
     def send_controller_task_commands(self, message):
-        request = ControllerMessage.to_task_message(
-            message["commands"], message["request_id"]
+        request = ControllerMessage.to_command_message(
+            task_commands=message["commands"], request_id=message["request_id"]
         )
         self.send(json.dumps(request))

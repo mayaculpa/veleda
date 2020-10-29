@@ -1,20 +1,19 @@
 from typing import Dict, List, Type, Optional
 import uuid
 
-from django.db import models
+from django.db import models, IntegrityError
 
 from farms.models.site import SiteEntity
 from farms.models.controller import ControllerComponent
 
 
 class PeripheralComponentManager(models.Manager):
-    def from_command_message(
-        self, message: Dict, controller: Type[ControllerComponent]
+    def from_commands(
+        self, peripheral_commands: Dict, controller: Type[ControllerComponent]
     ) -> List[Type["PeripheralComponent"]]:
         """Create peripherals from add commands and get peripherals to be removed.
         Throws ValueError on missing keys."""
 
-        peripheral_commands = message.get("peripheral")
         peripherals: List[Type["PeripheralComponent"]] = []
         if peripheral_commands:
             add_commands = peripheral_commands.get("add")
@@ -54,7 +53,10 @@ class PeripheralComponentManager(models.Manager):
                     parameters=command,
                 )
             )
-        return self.bulk_create(peripherals)
+        try:
+            return self.bulk_create(peripherals)
+        except IntegrityError as err:
+            raise ValueError(f"Duplicate UUID") from err
 
     def from_remove_commands(
         self, remove_commands: Dict
@@ -66,7 +68,7 @@ class PeripheralComponentManager(models.Manager):
         except KeyError as err:
             raise ValueError(f"Missing key {err}") from err
         peripherals = list(
-            self.filter(id__in=uuids).filter(state__in=[self.model.REMOVABLE_STATES])
+            self.filter(id__in=uuids).filter(state__in=self.model.REMOVABLE_STATES)
         )
         for peripheral in peripherals:
             peripheral.state = self.model.REMOVING_STATE

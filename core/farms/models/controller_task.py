@@ -1,16 +1,15 @@
 from typing import Dict, List, Type, Optional
 import uuid
 
-from django.db import models
+from django.db import models, IntegrityError
 
 from farms.models.controller import ControllerComponent
 
 
 class ControllerTaskManager(models.Manager):
-    def from_command_message(self, message, controller) -> List[Type["ControllerTask"]]:
+    def from_commands(self, task_commands, controller) -> List[Type["ControllerTask"]]:
         """Parse a command message to create tasks and get those to be stopped"""
 
-        task_commands = message.get("task")
         tasks: List[Type["ControllerTask"]] = []
         if task_commands:
             create_commands = task_commands.get("create")
@@ -45,7 +44,12 @@ class ControllerTaskManager(models.Manager):
                     parameters=command,
                 )
             )
-        return self.bulk_create(tasks)
+        try:
+            return self.bulk_create(tasks)
+        except IntegrityError as err:
+            raise ValueError(
+                f"Integrity error: {str(err).split('DETAIL:  ',1)[1][:-1]}"
+            ) from err
 
     def from_stop_commands(
         self, stop_commands: List[Dict]
@@ -57,7 +61,7 @@ class ControllerTaskManager(models.Manager):
         except KeyError as err:
             raise ValueError(f"Missing key {err}") from err
         tasks = list(
-            self.filter(id__in=uuids).filter(state__in=[self.model.STOPPABLE_STATES])
+            self.filter(id__in=uuids).filter(state__in=self.model.STOPPABLE_STATES)
         )
         for task in tasks:
             task.state = self.model.STOPPING_STATE

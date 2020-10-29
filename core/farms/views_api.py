@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from .models import (
     Controller,
     ControllerTask,
+    ControllerMessage,
     Coordinator,
     MqttMessage,
     PeripheralComponent,
@@ -248,6 +249,7 @@ class APIControllerCommandView(APIView):
     )
 
     def post(self, request, pk):
+        # Check if the controller from the URL exists
         try:
             entity = (
                 SiteEntity.objects.select_related("controller_component")
@@ -257,8 +259,14 @@ class APIControllerCommandView(APIView):
         except ObjectDoesNotExist:
             return JsonResponse({"message": ["Controller not found"]}, status=400)
 
+        # Check if the user has permission to interact with the controller
         self.check_object_permissions(request, entity)
 
+        # Check that the controller has once connected
+        if not entity.controller_component.channel_name:
+            return JsonResponse({"message": ["Controller channel not set"]}, status=400)
+
+        # Parse the data into a ControllerMessage
         serializer = ControllerMessageSerializer(
             data={
                 "message": {
@@ -270,43 +278,46 @@ class APIControllerCommandView(APIView):
         )
         if not serializer.is_valid():
             return JsonResponse(serializer.errors, status=400)
+        message = serializer.save()
 
-        if not entity.controller_component.channel_name:
-            return JsonResponse({"message": ["Controller channel not set"]}, status=400)
-
+        # Extract peripheral and task commands from the message
         try:
-            peripherals = PeripheralComponent.objects.from_command_message(
-                serializer.validated_data["message"],
-                serializer.validated_data["controller"],
+            peripherals = PeripheralComponent.objects.from_commands(
+                message.to_peripheral_commands(), message.controller
             )
-            controller_tasks = ControllerTask.objects.from_command_message(
-                serializer.validated_data["message"],
-                serializer.validated_data["controller"],
+            controller_tasks = ControllerTask.objects.from_commands(
+                message.to_task_commands(), message.controller
             )
         except ValueError as err:
             return JsonResponse({"message": [str(err)]}, status=400)
 
+        # Forward the verified commands to the controller
         channel_layer = get_channel_layer()
-        response = {"request_id": serializer.validated_data["request_id"]}
-        if peripherals:
-            response["peripheral"] = PeripheralComponent.to_commands(peripherals)
+        peripheral_commands = PeripheralComponent.to_commands(peripherals)
+        task_commands = ControllerTask.to_commands(controller_tasks)
+        if peripheral_commands:
             async_to_sync(channel_layer.send)(
                 entity.controller_component.channel_name,
                 {
                     "type": "send.peripheral.commands",
-                    "commands": response["peripheral"],
-                    "request_id": response["request_id"],
+                    "commands": peripheral_commands,
+                    "request_id": message.request_id,
                 },
             )
-        if controller_tasks:
-            response["task"] = ControllerTask.to_commands(controller_tasks)
+        if task_commands:
             async_to_sync(channel_layer.send)(
                 entity.controller_component.channel_name,
                 {
                     "type": "send.controller.task.commands",
-                    "commands": response["task"],
-                    "request_id": response["request_id"],
+                    "commands": task_commands,
+                    "request_id": message.request_id,
                 },
             )
 
-        return JsonResponse(response)
+        return JsonResponse(
+            ControllerMessage.to_command_message(
+                peripheral_commands=peripheral_commands,
+                task_commands=task_commands,
+                request_id=message.request_id,
+            )
+        )

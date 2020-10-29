@@ -121,22 +121,28 @@ class ControllerMessage(models.Model):
         help_text="The ID of the request, to enable tracking requests",
     )
 
-    @classmethod
-    def to_task_message(cls, commands: Dict, request_id="") -> Dict:
-        """Format task commands to a message for a controller"""
+    def to_task_commands(self) -> Dict:
+        """Try to extract the task commands"""
 
-        if not request_id:
-            return {"type": cls.COMMAND_TYPE, "task": commands}
-        return {"type": cls.COMMAND_TYPE, "task": commands, "request_id": request_id}
+        return self.message.get("task", {})
+
+    def to_peripheral_commands(self) -> Dict:
+        """Try to extract the peripheral commands"""
+
+        return self.message.get("peripheral", {})
 
     @classmethod
-    def to_peripheral_message(cls, commands: Dict, request_id="") -> Dict:
-        """Format peripheral commands to a message for a controller"""
-        
-        if not request_id:
-            return {"type": cls.COMMAND_TYPE, "peripheral": commands}
-        return {
-            "type": cls.COMMAND_TYPE,
-            "peripheral": commands,
-            "request_id": request_id,
-        }
+    def to_command_message(
+        cls,
+        peripheral_commands: Optional[Dict] = None,
+        task_commands: Optional[Dict] = None,
+        request_id="",
+    ) -> Dict:
+        message = {"type": cls.COMMAND_TYPE}
+        if peripheral_commands:
+            message["peripheral"] = peripheral_commands
+        if task_commands:
+            message["task"] = task_commands
+        if request_id:
+            message["request_id"] = request_id
+        return message
