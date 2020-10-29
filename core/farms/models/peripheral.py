@@ -40,7 +40,7 @@ class PeripheralComponentManager(models.Manager):
                 peripheral_type = command.pop("type")
                 name = command.pop("name")
             except KeyError as err:
-                if peripheral_id:
+                if "peripheral_id" in locals():
                     raise ValueError(f"Missing key {err} for {peripheral_id}") from err
                 raise ValueError(f"Missing key {err}") from err
             peripherals.append(

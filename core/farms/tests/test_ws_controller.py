@@ -1,5 +1,6 @@
 import asyncio
 from asgiref.sync import sync_to_async
+import uuid
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TransactionTestCase
@@ -15,6 +16,8 @@ from farms.models import (
     ControllerComponent,
     ControllerMessage,
     ControllerAuthToken,
+    ControllerTask,
+    PeripheralComponent,
 )
 
 
@@ -152,7 +155,11 @@ class TestControllerMessage(TransactionTestCase):
             self.assertTrue(connected)
 
             # ... and send proper JSON...
-            data = {"type": "tel", "number": 12}
+            data = {
+                "type": ControllerMessage.TELEMETRY_TYPE,
+                "name": ControllerTask.POLL_SENSOR_TYPE,
+                "data_points": {},
+            }
             await communicator.send_json_to(data)
 
             self.assertTrue(await communicator.receive_nothing())
@@ -190,16 +197,13 @@ class TestControllerMessage(TransactionTestCase):
             connected, _ = await second_communicator.connect()
             self.assertTrue(connected)
 
-            # ... and expect the first one to be disconnected
-            output = await first_communicator.receive_output()
-            self.assertEqual("websocket.close", output["type"])
-
-            await first_communicator.disconnect()
-
-            # ... and send proper JSON...
-            data = {"type": "tel", "number": 99}
+            # ... and expect the second one to receive the data
+            data = {
+                "type": ControllerMessage.TELEMETRY_TYPE,
+                "name": ControllerTask.POLL_SENSOR_TYPE,
+                "data_points": {},
+            }
             await second_communicator.send_json_to(data)
-
             self.assertTrue(await second_communicator.receive_nothing())
 
             # ... and expect it to be saved
@@ -208,6 +212,7 @@ class TestControllerMessage(TransactionTestCase):
             )()
             self.assertDictEqual(data, saved_message.message)
 
+            await first_communicator.disconnect()
             await second_communicator.disconnect()
 
         loop = asyncio.get_event_loop()
@@ -234,8 +239,25 @@ class TestControllerMessage(TransactionTestCase):
             )
             self.assertTrue(logged_in)
             data = {
-                "type": "cmd",
-                "peripheral": {"add": [{"name": "led33", "type": "LED", "pin": 33}]},
+                "type": ControllerMessage.COMMAND_TYPE,
+                "peripheral": {
+                    "add": [
+                        {
+                            "uuid": str(uuid.uuid4()),
+                            "name": "led33",
+                            "type": PeripheralComponent.LED_TYPE,
+                            "pin": 33,
+                        }
+                    ]
+                },
+                "task": {
+                    "create": [
+                        {
+                            "uuid": str(uuid.uuid4()),
+                            "type": ControllerTask.READ_SENSOR_TYPE,
+                        }
+                    ]
+                },
             }
             response = await sync_to_async(client.post)(
                 reverse("controller-command", kwargs={"pk": self.controller_entity.id}),
@@ -246,9 +268,73 @@ class TestControllerMessage(TransactionTestCase):
 
             # Check that data was received
             received_data = await communicator.receive_json_from()
-            self.assertDictEqual(data, received_data)
-
+            command = data["peripheral"]["add"][0]
+            self.assertIn(command["uuid"], str(received_data))
+            self.assertIn(command["type"], str(received_data))
+            self.assertIn(str(command["pin"]), str(received_data))
             await communicator.disconnect()
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(test_body())
+
+    def test_error_handling(self):
+        """Test the error handling for invalid input"""
+
+        # Check authentication requirement
+        client = Client()
+        response = client.post(
+            reverse("controller-command", kwargs={"pk": uuid.uuid4()}),
+            data={},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 401)
+
+        # Check error for non-existant controller
+        client.force_login(self.controller_entity.site.owner)
+        response = client.post(
+            reverse("controller-command", kwargs={"pk": uuid.uuid4()}),
+            data={},
+            content_type="application/json",
+        )
+        self.assertContains(response, "not found", status_code=400)
+
+        # Check error for unauthorized user
+        user_b = get_user_model().objects.create_user("user_b@example.com", "passwd_b")
+        client.force_login(user_b)
+        response = client.post(
+            reverse("controller-command", kwargs={"pk": self.controller_entity.id}),
+            data={},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # Check that the channel has to be set
+        client.force_login(self.controller_entity.site.owner)
+        response = client.post(
+            reverse("controller-command", kwargs={"pk": self.controller_entity.id}),
+            data={},
+            content_type="application/json",
+        )
+        self.assertContains(response, "channel not set", status_code=400)
+
+        # Check sending an invalid message
+        self.controller_entity.controller_component.channel_name = "some_channel"
+        self.controller_entity.controller_component.save()
+        response = client.post(
+            reverse("controller-command", kwargs={"pk": self.controller_entity.id}),
+            data={
+                "type": "whatever",
+            },
+            content_type="application/json",
+        )
+        self.assertContains(response, "message type", status_code=400)
+
+        response = client.post(
+            reverse("controller-command", kwargs={"pk": self.controller_entity.id}),
+            data={
+                "type": ControllerMessage.COMMAND_TYPE,
+                "peripheral": {"add": [{"not_uuid": "something something"}]},
+            },
+            content_type="application/json",
+        )
+        self.assertContains(response, "Missing key", status_code=400)

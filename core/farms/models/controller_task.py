@@ -32,7 +32,7 @@ class ControllerTaskManager(models.Manager):
                 task_id = command.pop("uuid")
                 task_type = command.pop("type")
             except KeyError as err:
-                if task_id:
+                if "task_id" in locals():
                     raise ValueError(f"Missing key {err} for {task_id}") from err
                 raise ValueError(f"Missing key {err}") from err
             tasks.append(
