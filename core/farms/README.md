@@ -21,7 +21,7 @@ To turn the LED on, post a request to the same URL:
     {
       "type": "cmd",
       "task": {
-        "create": [
+        "start": [
           {
             "uuid": "01769b42-220c-43ee-831e-5571011cabf9",
             "peripheral_uuid": "5850349f-e633-4b4e-a387-916de884e77f",

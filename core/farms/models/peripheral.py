@@ -1,7 +1,7 @@
 from typing import Dict, List, Type, Optional
 import uuid
 
-from django.db import models, IntegrityError
+from django.db import models, IntegrityError, transaction
 
 from farms.models.site import SiteEntity
 from farms.models.controller import ControllerComponent
@@ -75,11 +75,38 @@ class PeripheralComponentManager(models.Manager):
         self.bulk_update(peripherals, ["state"])
         return peripherals
 
+    def from_results(self, results: Dict) -> List[Type["PeripheralComponent"]]:
+        """Update states from results commands"""
+
+        # Get all peripheral ids to update
+        uuids = [result["uuid"] for result in results.get("add", [])]
+        uuids.extend([result["uuid"] for result in results.get("remove", [])])
+        peripherals = self.select_for_update().filter(id__in=uuids)
+
+        with transaction.atomic():
+            for add_result in results.get("add", []):
+                next(
+                    peripheral
+                    for peripheral in peripherals
+                    if str(peripheral.id) == add_result["uuid"]
+                ).apply_add_result(add_result)
+            for remove_result in results.get("remove", []):
+                next(
+                    peripheral
+                    for peripheral in peripherals
+                    if str(peripheral.id) == remove_result["uuid"]
+                ).apply_remove_result(remove_result)
+            self.bulk_update(peripherals, ["state"])
+        return peripherals
+
 
 class PeripheralComponent(models.Model):
     """The peripheral aspect of a site entity, such as a sensor or actuator."""
 
     objects = PeripheralComponentManager()
+
+    class InvalidTransition(Exception):
+        """Thrown when an invalid state change is applied"""
 
     ADDING_STATE = "adding"
     ADDED_STATE = "added"
@@ -185,10 +212,34 @@ class PeripheralComponent(models.Model):
         """If in removing state, return a command that removes the peripheral, else None"""
 
         if self.state == self.REMOVING_STATE:
-            return {
-                "uuid": str(self.id),
-            }
+            return {"uuid": str(self.id)}
         return None
+
+    def apply_add_result(self, result):
+        """Modify the state accoring to the result"""
+
+        status = result["status"]
+        if self.state == self.ADDING_STATE and status == "success":
+            self.state = self.ADDED_STATE
+        elif self.state == self.ADDING_STATE and status == "fail":
+            self.state = self.FAILED_STATE
+        else:
+            raise self.InvalidTransition(
+                f"Apply add result {status} to {self.state}", id=self.id
+            )
+
+    def apply_remove_result(self, result):
+        """Modify the state with a remove result"""
+
+        status = result["status"]
+        if self.state == self.REMOVING_STATE and status == "success":
+            self.state = self.REMOVED_STATE
+        elif self.state == self.REMOVING_STATE and status == "fail":
+            self.state = self.ADDED_STATE
+        else:
+            raise self.InvalidTransition(
+                f"Apply remove result {status} to {self.state}", id=self.id
+            )
 
     def __str__(self):
         if self.site_entity.name:

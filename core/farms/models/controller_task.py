@@ -1,33 +1,34 @@
 from typing import Dict, List, Type, Optional
 import uuid
 
-from django.db import models, IntegrityError
+from django.db import models, IntegrityError, transaction
+from django.core.exceptions import ValidationError
 
 from farms.models.controller import ControllerComponent
 
 
 class ControllerTaskManager(models.Manager):
     def from_commands(self, task_commands, controller) -> List[Type["ControllerTask"]]:
-        """Parse a command message to create tasks and get those to be stopped"""
+        """Parse a command message to start tasks and get those to be stopped"""
 
         tasks: List[Type["ControllerTask"]] = []
         if task_commands:
-            create_commands = task_commands.get("create")
-            if create_commands:
-                tasks.extend(self.from_create_commands(create_commands, controller))
+            start_commands = task_commands.get("start")
+            if start_commands:
+                tasks.extend(self.from_start_commands(start_commands, controller))
             stop_commands = task_commands.get("stop")
             if stop_commands:
                 tasks.extend(self.from_stop_commands(stop_commands))
         return tasks
 
-    def from_create_commands(
-        self, create_commands: List[Dict], controller
+    def from_start_commands(
+        self, start_commands: List[Dict], controller
     ) -> List[Type["ControllerTask"]]:
-        """Create tasks from the task create command"""
+        """Start tasks from the task start command after validating model fields."""
 
         tasks: List[Type["ControllerTask"]] = []
-        for create_command in create_commands:
-            command = create_command.copy()
+        for start_command in start_commands:
+            command = start_command.copy()
             try:
                 task_id = command.pop("uuid")
                 task_type = command.pop("type")
@@ -35,18 +36,22 @@ class ControllerTaskManager(models.Manager):
                 if "task_id" in locals():
                     raise ValueError(f"Missing key {err} for {task_id}") from err
                 raise ValueError(f"Missing key {err}") from err
-            tasks.append(
-                self.model(
-                    id=task_id,
-                    controller_component=controller,
-                    state=self.model.STARTING_STATE,
-                    task_type=task_type,
-                    parameters=command,
-                )
+            model = self.model(
+                id=task_id,
+                controller_component=controller,
+                state=self.model.STARTING_STATE,
+                task_type=task_type,
+                parameters=command,
             )
+            try:
+                model.clean_fields()
+            except ValidationError as err:
+                raise ValueError(err) from err
+            tasks.append(model)
         try:
             return self.bulk_create(tasks)
         except IntegrityError as err:
+            # Handle errors regarding foreign keys
             raise ValueError(
                 f"Integrity error: {str(err).split('DETAIL:  ',1)[1][:-1]}"
             ) from err
@@ -54,7 +59,7 @@ class ControllerTaskManager(models.Manager):
     def from_stop_commands(
         self, stop_commands: List[Dict]
     ) -> List[Type["ControllerTask"]]:
-        """Request tasks to stop"""
+        """Request tasks to stop. Ignores tasks that cannot be stopped."""
 
         try:
             uuids = [command["uuid"] for command in stop_commands]
@@ -68,11 +73,37 @@ class ControllerTaskManager(models.Manager):
         self.bulk_update(tasks, ["state"])
         return tasks
 
+    def from_results(self, results: Dict) -> List[Type["ControllerTask"]]:
+        """Update states from results commands"""
+
+        # Get all task ids to update
+        try:
+            uuids = [result["uuid"] for result in results.get("start", [])]
+            uuids.extend([result["uuid"] for result in results.get("stop", [])])
+        except KeyError as err:
+            raise ValueError(f"Missing key {err}") from err
+        tasks = self.select_for_update().filter(id__in=uuids)
+
+        with transaction.atomic():
+            for start_result in results.get("start", []):
+                next(
+                    task for task in tasks if str(task.id) == start_result["uuid"]
+                ).apply_start_result(start_result)
+            for stop_result in results.get("stop", []):
+                next(
+                    task for task in tasks if str(task.id) == stop_result["uuid"]
+                ).apply_stop_result(stop_result)
+            self.bulk_update(tasks, ["state"])
+        return tasks
+
 
 class ControllerTask(models.Model):
     """Tasks interacting with peripherals on controllers"""
 
     objects = ControllerTaskManager()
+
+    class InvalidTransition(Exception):
+        """Thrown when an invalid state change is applied"""
 
     STARTING_STATE = "starting"
     RUNNING_STATE = "running"
@@ -127,7 +158,9 @@ class ControllerTask(models.Model):
         help_text="The state of the controller task.",
     )
     parameters = models.JSONField(
-        help_text="The construction parameters excl. UUID and type"
+        default=dict,
+        blank=True,
+        help_text="The construction parameters excl. UUID and type",
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -142,23 +175,23 @@ class ControllerTask(models.Model):
         """Convert a list of tasks to commands. Ignores tasks that cannot be converted
         to commands"""
 
-        create_tasks = []
+        start_tasks = []
         stop_tasks = []
         for task in tasks:
-            if task.state == cls.STARTING_STATE:
-                create_tasks.append(task.to_create_command())
-            if task.state == cls.STOPPING_STATE:
-                stop_tasks.append(task.to_stop_command())
+            if command := task.to_start_command():
+                start_tasks.append(command)
+            if command := task.to_stop_command():
+                stop_tasks.append(command)
 
         commands = {}
-        if create_tasks:
-            commands.update({"create": create_tasks})
+        if start_tasks:
+            commands.update({"start": start_tasks})
         if stop_tasks:
             commands.update({"stop": stop_tasks})
         return commands
 
-    def to_create_command(self) -> Optional[Dict]:
-        """If in starting state, return a command that creates the task, else None"""
+    def to_start_command(self) -> Optional[Dict]:
+        """If in starting state, return a command that starts the task, else None"""
 
         if self.state == self.STARTING_STATE:
             return {
@@ -175,5 +208,36 @@ class ControllerTask(models.Model):
             return {"uuid": str(self.id)}
         return None
 
+    def apply_start_result(self, result):
+        """Modify the state according to the result. Raises ValueError or
+        InvalidTransition on errors."""
+
+        try:
+            status = result["status"]
+        except KeyError as err:
+            raise ValueError(f"Missing key {err}") from err
+        if self.state == self.STARTING_STATE and status == "success":
+            self.state = self.RUNNING_STATE
+        elif self.state == self.STARTING_STATE and status == "fail":
+            self.state = self.FAILED_STATE
+        else:
+            raise self.InvalidTransition(f"Apply start result {status} to {self.state}")
+
+    def apply_stop_result(self, result):
+        """Modify the state according to the result. Raises ValueError or
+        InvalidTransition on errors."""
+
+        if (status := result.get("status")) is None:
+            raise ValueError("Missing 'status' property")
+        success_fail = ["success", "fail"]
+        if self.state == self.STARTING_STATE and status in success_fail:
+            self.state = self.STOPPED_STATE
+        elif self.state == self.RUNNING_STATE and status in success_fail:
+            self.state = self.STOPPED_STATE
+        elif self.state == self.STOPPING_STATE and status in success_fail:
+            self.state = self.STOPPED_STATE
+        else:
+            raise self.InvalidTransition(f"Apply stop result {status} to {self.state}")
+
     def __str__(self):
-        return f"{self.task_type} "
+        return f"{self.task_type}: {self.state}"

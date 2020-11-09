@@ -92,17 +92,17 @@ class ControllerMessage(models.Model):
         unique_together = ["created_at", "controller"]
 
     COMMAND_TYPE = "cmd"
-    TELEMETRY_TYPE = "tel"
-    REGISTER_TYPE = "reg"
     ERROR_TYPE = "err"
+    REGISTER_TYPE = "reg"
     RESULT_TYPE = "result"
+    TELEMETRY_TYPE = "tel"
 
     TYPES = [
         COMMAND_TYPE,
-        TELEMETRY_TYPE,
-        REGISTER_TYPE,
         ERROR_TYPE,
+        REGISTER_TYPE,
         RESULT_TYPE,
+        TELEMETRY_TYPE,
     ]
 
     created_at = models.DateTimeField(
@@ -121,15 +121,74 @@ class ControllerMessage(models.Model):
         help_text="The ID of the request, to enable tracking requests",
     )
 
-    def to_task_commands(self) -> Dict:
-        """Try to extract the task commands"""
+    def is_command_type(self):
+        """Checks if it is a command message"""
 
-        return self.message.get("task", {})
+        return self.message.get("type", "") == self.COMMAND_TYPE
 
+    def is_register_type(self):
+        """Checks if it is a register message"""
+
+        return self.message.get("type", "") == self.REGISTER_TYPE
+
+    def is_result_type(self):
+        """Checks if it is a result message"""
+
+        return self.message.get("type", "") == self.RESULT_TYPE
+
+    def to_errors(self) -> Dict:
+        """Try to extract errors"""
+
+        if self.message.get("type", "") == self.ERROR_TYPE:
+            return self.message
+        return {}
+    
     def to_peripheral_commands(self) -> Dict:
         """Try to extract the peripheral commands"""
 
-        return self.message.get("peripheral", {})
+        if self.message.get("type", "") == self.COMMAND_TYPE:
+            return self.message.get("peripheral", {})
+        return {}
+
+    def to_task_commands(self) -> Dict:
+        """Try to extract the task commands"""
+
+        if self.message.get("type", "") == self.COMMAND_TYPE:
+            return self.message.get("task", {})
+        return {}
+    
+    def to_peripheral_results(self) -> Dict:
+        """Try to extract the peripheral results"""
+
+        if self.message.get("type", "") == self.RESULT_TYPE:
+            return self.message.get("peripheral", {})
+        return {}
+
+    def to_task_results(self) -> Dict:
+        """Try to extract the task results"""
+
+        if self.message.get("type", "") == self.RESULT_TYPE:
+            return self.message.get("task", {})
+        return {}
+    
+    def to_register(self) -> Dict:
+        """Try to extract the register message"""
+
+        if self.message.get("type", "") == self.REGISTER_TYPE:
+            return self.message
+        return {}
+
+    def to_telemetry(self):
+        """"Try to extract telemetry"""
+
+        if self.message.get("type", "") == self.TELEMETRY_TYPE:
+            return self.message
+        return {}
+
+    def get_type(self):
+        """Get the message type"""
+
+        return self.message.get("type", "")
 
     @classmethod
     def to_command_message(

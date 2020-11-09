@@ -1,6 +1,7 @@
 import uuid
 
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 
 from farms.models import (
     PeripheralComponent,
@@ -9,7 +10,6 @@ from farms.models import (
     SiteEntity,
     Site,
 )
-from django.contrib.auth import get_user_model
 
 
 class PeripheralModelTests(TestCase):
@@ -131,5 +131,107 @@ class PeripheralModelTests(TestCase):
         self.assertNotEqual(failed_peripheral.id, remove_uuids)
         self.assertIn(remove_peripherals[0].id, remove_uuids)
 
-    def test_from_commands_message(self):
-        """Test parsing """
+
+class PeripheralModelResultsTests(TestCase):
+    """Test the handling of result messages"""
+
+    def setUp(self):
+        # Create two peripherals in the adding state and two in the removing state
+        self.site_a = Site.objects.create(
+            name="Site A",
+            owner=get_user_model().objects.create_user(
+                email="owner@bar.com",
+                password="foo",
+            ),
+        )
+        self.esp32_type = ControllerComponentType.objects.create(name="ESP32")
+        self.esp32_a_controller = ControllerComponent.objects.create(
+            id=uuid.uuid4(),
+            component_type=self.esp32_type,
+            site_entity=SiteEntity.objects.create(name="ESP32 A", site=self.site_a),
+        )
+        self.peripheral_a = PeripheralComponent.objects.create(
+            site_entity=SiteEntity.objects.create(
+                name="Peripheral A", site=self.site_a
+            ),
+            peripheral_type=PeripheralComponent.LED_TYPE,
+            controller_component=self.esp32_a_controller,
+            state=PeripheralComponent.ADDING_STATE,
+        )
+        self.peripheral_b = PeripheralComponent.objects.create(
+            site_entity=SiteEntity.objects.create(
+                name="Peripheral B", site=self.site_a
+            ),
+            peripheral_type=PeripheralComponent.LED_TYPE,
+            controller_component=self.esp32_a_controller,
+            state=PeripheralComponent.ADDING_STATE,
+        )
+        self.peripheral_c = PeripheralComponent.objects.create(
+            site_entity=SiteEntity.objects.create(
+                name="Peripheral C", site=self.site_a
+            ),
+            peripheral_type=PeripheralComponent.LED_TYPE,
+            controller_component=self.esp32_a_controller,
+            state=PeripheralComponent.REMOVING_STATE,
+        )
+        self.peripheral_d = PeripheralComponent.objects.create(
+            site_entity=SiteEntity.objects.create(
+                name="Peripheral D", site=self.site_a
+            ),
+            peripheral_type=PeripheralComponent.LED_TYPE,
+            controller_component=self.esp32_a_controller,
+            state=PeripheralComponent.REMOVING_STATE,
+        )
+
+    def test_result_success_handling(self):
+        """Test the handling of peripheral result messages"""
+
+        # Send success results to all peripherals (add and remove respectively)
+        data = {
+            "add": [
+                {"uuid": str(self.peripheral_a.id), "status": "success"},
+                {"uuid": str(self.peripheral_b.id), "status": "success"},
+            ],
+            "remove": [
+                {"uuid": str(self.peripheral_c.id), "status": "success"},
+                {"uuid": str(self.peripheral_d.id), "status": "success"},
+            ],
+        }
+        PeripheralComponent.objects.from_results(data)
+
+        # Expect all peripherals to have changed state
+        self.peripheral_a = PeripheralComponent.objects.get(id=self.peripheral_a.id)
+        self.peripheral_b = PeripheralComponent.objects.get(id=self.peripheral_b.id)
+        self.peripheral_c = PeripheralComponent.objects.get(id=self.peripheral_c.id)
+        self.peripheral_d = PeripheralComponent.objects.get(id=self.peripheral_d.id)
+
+        self.assertEqual(self.peripheral_a.state, PeripheralComponent.ADDED_STATE)
+        self.assertEqual(self.peripheral_b.state, PeripheralComponent.ADDED_STATE)
+        self.assertEqual(self.peripheral_c.state, PeripheralComponent.REMOVED_STATE)
+        self.assertEqual(self.peripheral_d.state, PeripheralComponent.REMOVED_STATE)
+
+    def test_result_success_fail_handling(self):
+        """Test that fail and success results are handled correctly"""
+
+        data = {
+            "add": [
+                {"uuid": str(self.peripheral_a.id), "status": "success"},
+                {"uuid": str(self.peripheral_b.id), "status": "fail", "detail": "ABC"},
+            ],
+            "remove": [
+                {"uuid": str(self.peripheral_c.id), "status": "success"},
+                {"uuid": str(self.peripheral_d.id), "status": "fail", "detail": "DEF"},
+            ],
+        }
+        PeripheralComponent.objects.from_results(data)
+
+        # Expect all peripherals to have changed state
+        self.peripheral_a = PeripheralComponent.objects.get(id=self.peripheral_a.id)
+        self.peripheral_b = PeripheralComponent.objects.get(id=self.peripheral_b.id)
+        self.peripheral_c = PeripheralComponent.objects.get(id=self.peripheral_c.id)
+        self.peripheral_d = PeripheralComponent.objects.get(id=self.peripheral_d.id)
+
+        self.assertEqual(self.peripheral_a.state, PeripheralComponent.ADDED_STATE)
+        self.assertEqual(self.peripheral_b.state, PeripheralComponent.FAILED_STATE)
+        self.assertEqual(self.peripheral_c.state, PeripheralComponent.REMOVED_STATE)
+        self.assertEqual(self.peripheral_d.state, PeripheralComponent.ADDED_STATE)

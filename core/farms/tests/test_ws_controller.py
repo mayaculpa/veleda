@@ -1,9 +1,8 @@
-import asyncio
 from asgiref.sync import sync_to_async
 import uuid
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TransactionTestCase
+from django.test import Client, TransactionTestCase, AsyncClient
 from django.urls import reverse
 from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
@@ -44,240 +43,203 @@ class TestControllerMessage(TransactionTestCase):
             f"token_{self.controller_entity.controller_component.auth_token.key}"
         )
 
-    def test_authentication(self):
+    async def test_authentication(self):
         """Test that only connections from authenticated controllers are accepted"""
 
-        async def test_body():
-            valid_auth_token = self.auth_token
-            invalid_auth_token = self.auth_token + "XYZ"
+        valid_auth_token = self.auth_token
+        invalid_auth_token = self.auth_token + "XYZ"
 
-            # Connect as anonymous controller
-            communicator = WebsocketCommunicator(
-                application,
-                self.ws_url,
-            )
-            connected, _ = await communicator.connect()
-            self.assertFalse(connected)
-            await communicator.disconnect()
+        # Connect as anonymous controller
+        communicator = WebsocketCommunicator(
+            application,
+            self.ws_url,
+        )
+        connected, _ = await communicator.connect()
+        self.assertFalse(connected)
+        await communicator.disconnect()
 
-            # Connect as registered user
-            communicator = WebsocketCommunicator(
-                application,
-                self.ws_url,
-                subprotocols=[valid_auth_token],
-            )
-            connected, _ = await communicator.connect()
-            self.assertTrue(connected)
-            await communicator.disconnect()
+        # Connect as registered user
+        communicator = WebsocketCommunicator(
+            application,
+            self.ws_url,
+            subprotocols=[valid_auth_token],
+        )
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
+        await communicator.disconnect()
 
-            # Connect with invalid token
-            communicator = WebsocketCommunicator(
-                application,
-                self.ws_url,
-                subprotocols=[invalid_auth_token],
-            )
-            connected, _ = await communicator.connect()
-            self.assertFalse(connected)
+        # Connect with invalid token
+        communicator = WebsocketCommunicator(
+            application,
+            self.ws_url,
+            subprotocols=[invalid_auth_token],
+        )
+        connected, _ = await communicator.connect()
+        self.assertFalse(connected)
 
-            # Close communicator
-            await communicator.disconnect()
+        # Close communicator
+        await communicator.disconnect()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(test_body())
-
-    def test_sending_malformed_json(self):
+    async def test_sending_malformed_json(self):
         """Test that the messages are validated"""
 
-        async def test_body():
-            # Connect...
-            communicator = WebsocketCommunicator(
-                application,
-                self.ws_url,
-                subprotocols=[self.auth_token],
-            )
-            connected, _ = await communicator.connect()
-            self.assertTrue(connected)
+        # Connect...
+        communicator = WebsocketCommunicator(
+            application,
+            self.ws_url,
+            subprotocols=[self.auth_token],
+        )
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
 
-            # ... and send malformed JSON...
-            data = "This is not JSON"
-            await communicator.send_to(data)
-            response = await communicator.receive_json_from()
-            self.assertIn("error", response)
+        # ... and send malformed JSON...
+        data = "This is not JSON"
+        await communicator.send_to(data)
+        response = await communicator.receive_json_from()
+        self.assertIn("errors", response)
 
-            # ... and expect to be disconnected
-            output = await communicator.receive_output()
-            self.assertEqual("websocket.close", output["type"])
+        # ... and expect to be disconnected
+        output = await communicator.receive_output()
+        self.assertEqual("websocket.close", output["type"])
 
-            await communicator.disconnect()
+        await communicator.disconnect()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(test_body())
-
-    def test_sending_without_type_in_json(self):
+    async def test_sending_without_type_in_json(self):
         """Test that the messages are validated"""
 
-        async def test_body():
-            # Connect...
-            communicator = WebsocketCommunicator(
-                application,
-                self.ws_url,
-                subprotocols=[self.auth_token],
-            )
-            connected, _ = await communicator.connect()
-            self.assertTrue(connected)
+        # Connect...
+        communicator = WebsocketCommunicator(
+            application,
+            self.ws_url,
+            subprotocols=[self.auth_token],
+        )
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
 
-            # ... and send malformed JSON...
-            data = {"hello": "there"}
-            await communicator.send_json_to(data)
-            response = await communicator.receive_json_from()
-            self.assertIn("errors", response)
+        # ... and send malformed JSON...
+        data = {"hello": "there"}
+        await communicator.send_json_to(data)
+        response = await communicator.receive_json_from()
+        self.assertIn("errors", response)
 
-            # ... and expect to be disconnected
-            output = await communicator.receive_output()
-            self.assertEqual("websocket.close", output["type"])
+        # ... and expect to be disconnected
+        output = await communicator.receive_output()
+        self.assertEqual("websocket.close", output["type"])
 
-            await communicator.disconnect()
+        await communicator.disconnect()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(test_body())
-
-    def test_sending_valid_message(self):
+    async def test_sending_valid_message(self):
         """Test that the messages are validated"""
 
-        async def test_body():
-            # Connect...
-            communicator = WebsocketCommunicator(
-                application,
-                self.ws_url,
-                subprotocols=[self.auth_token],
-            )
-            connected, _ = await communicator.connect()
-            self.assertTrue(connected)
+        # Connect...
+        communicator = WebsocketCommunicator(
+            application,
+            self.ws_url,
+            subprotocols=[self.auth_token],
+        )
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
 
-            # ... and send proper JSON...
-            data = {
-                "type": ControllerMessage.TELEMETRY_TYPE,
-                "name": ControllerTask.POLL_SENSOR_TYPE,
-                "data_points": {},
-            }
-            await communicator.send_json_to(data)
+        # ... and send proper JSON...
+        data = {"type": ControllerMessage.ERROR_TYPE, "errors": "The Error Details"}
+        await communicator.send_json_to(data)
+        self.assertTrue(await communicator.receive_nothing())
 
-            self.assertTrue(await communicator.receive_nothing())
+        # ... and expect it to be saved
+        saved_message = await database_sync_to_async(ControllerMessage.objects.first)()
+        self.assertDictEqual(data, saved_message.message)
 
-            # ... and expect it to be saved
-            saved_message = await database_sync_to_async(
-                ControllerMessage.objects.first
-            )()
-            self.assertDictEqual(data, saved_message.message)
+        await communicator.disconnect()
 
-            await communicator.disconnect()
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(test_body())
-
-    def test_multiple_connections(self):
+    async def test_multiple_connections(self):
         """Test that not more than one WS connection exists per controller"""
 
-        async def test_body():
-            # Connect...
-            first_communicator = WebsocketCommunicator(
-                application,
-                self.ws_url,
-                subprotocols=[self.auth_token],
-            )
-            connected, _ = await first_communicator.connect()
-            self.assertTrue(connected)
+        # Connect...
+        first_communicator = WebsocketCommunicator(
+            application,
+            self.ws_url,
+            subprotocols=[self.auth_token],
+        )
+        connected, _ = await first_communicator.connect()
+        self.assertTrue(connected)
 
-            # Connect...
-            second_communicator = WebsocketCommunicator(
-                application,
-                self.ws_url,
-                subprotocols=[self.auth_token],
-            )
-            connected, _ = await second_communicator.connect()
-            self.assertTrue(connected)
+        # Connect...
+        second_communicator = WebsocketCommunicator(
+            application,
+            self.ws_url,
+            subprotocols=[self.auth_token],
+        )
+        connected, _ = await second_communicator.connect()
+        self.assertTrue(connected)
 
-            # ... and expect the second one to receive the data
-            data = {
-                "type": ControllerMessage.TELEMETRY_TYPE,
-                "name": ControllerTask.POLL_SENSOR_TYPE,
-                "data_points": {},
-            }
-            await second_communicator.send_json_to(data)
-            self.assertTrue(await second_communicator.receive_nothing())
+        # ... and expect the second one to receive the data
+        data = {"type": ControllerMessage.ERROR_TYPE, "error": "some error"}
+        await second_communicator.send_json_to(data)
+        self.assertTrue(await second_communicator.receive_nothing())
 
-            # ... and expect it to be saved
-            saved_message = await database_sync_to_async(
-                ControllerMessage.objects.first
-            )()
-            self.assertDictEqual(data, saved_message.message)
+        # ... and expect it to be saved
+        saved_message = await database_sync_to_async(ControllerMessage.objects.first)()
+        self.assertDictEqual(data, saved_message.message)
 
-            await first_communicator.disconnect()
-            await second_communicator.disconnect()
+        await first_communicator.disconnect()
+        await second_communicator.disconnect()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(test_body())
-
-    def test_rest_api_to_ws_connection(self):
+    async def test_rest_api_to_ws_connection(self):
         """Test that the messages are validated"""
 
-        async def test_body():
-            client = Client()
+        client = Client()
 
-            # Connect...
-            communicator = WebsocketCommunicator(
-                application,
-                self.ws_url,
-                subprotocols=[self.auth_token],
-            )
-            connected, _ = await communicator.connect()
-            self.assertTrue(connected)
+        # Connect...
+        communicator = WebsocketCommunicator(
+            application,
+            self.ws_url,
+            subprotocols=[self.auth_token],
+        )
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
 
-            # Log in and send command over REST API
-            logged_in = await sync_to_async(client.login)(
-                username="user_a@example.com", password="passwd_a"
-            )
-            self.assertTrue(logged_in)
-            data = {
-                "type": ControllerMessage.COMMAND_TYPE,
-                "peripheral": {
-                    "add": [
-                        {
-                            "uuid": str(uuid.uuid4()),
-                            "name": "led33",
-                            "type": PeripheralComponent.LED_TYPE,
-                            "pin": 33,
-                        }
-                    ]
-                },
-                "task": {
-                    "create": [
-                        {
-                            "uuid": str(uuid.uuid4()),
-                            "type": ControllerTask.READ_SENSOR_TYPE,
-                        }
-                    ]
-                },
-            }
-            response = await sync_to_async(client.post)(
-                reverse("controller-command", kwargs={"pk": self.controller_entity.id}),
-                data=data,
-                content_type="application/json",
-            )
-            self.assertEqual(response.status_code, 200)
+        # Log in and send command over REST API
+        logged_in = await sync_to_async(client.login)(
+            username="user_a@example.com", password="passwd_a"
+        )
+        self.assertTrue(logged_in)
+        data = {
+            "type": ControllerMessage.COMMAND_TYPE,
+            "peripheral": {
+                "add": [
+                    {
+                        "uuid": str(uuid.uuid4()),
+                        "name": "led33",
+                        "type": PeripheralComponent.LED_TYPE,
+                        "pin": 33,
+                    }
+                ]
+            },
+            "task": {
+                "create": [
+                    {
+                        "uuid": str(uuid.uuid4()),
+                        "type": ControllerTask.READ_SENSOR_TYPE,
+                    }
+                ]
+            },
+        }
+        response = await database_sync_to_async(client.post)(
+            reverse("controller-command", kwargs={"pk": self.controller_entity.id}),
+            data=data,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
 
-            # Check that data was received
-            received_data = await communicator.receive_json_from()
-            command = data["peripheral"]["add"][0]
-            self.assertIn(command["uuid"], str(received_data))
-            self.assertIn(command["type"], str(received_data))
-            self.assertIn(str(command["pin"]), str(received_data))
-            await communicator.disconnect()
+        # Check that data was received
+        received_data = await communicator.receive_json_from()
+        command = data["peripheral"]["add"][0]
+        self.assertIn(command["uuid"], str(received_data))
+        self.assertIn(command["type"], str(received_data))
+        self.assertIn(str(command["pin"]), str(received_data))
+        await communicator.disconnect()
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(test_body())
-
-    def test_error_handling(self):
+    def test_rest_api_error_handling(self):
         """Test the error handling for invalid input"""
 
         # Check authentication requirement
@@ -296,7 +258,7 @@ class TestControllerMessage(TransactionTestCase):
             data={},
             content_type="application/json",
         )
-        self.assertContains(response, "not found", status_code=400)
+        self.assertEqual(response.status_code, 404)
 
         # Check error for unauthorized user
         user_b = get_user_model().objects.create_user("user_b@example.com", "passwd_b")
@@ -338,3 +300,83 @@ class TestControllerMessage(TransactionTestCase):
             content_type="application/json",
         )
         self.assertContains(response, "Missing key", status_code=400)
+
+    async def test_result_message(self):
+        """Test that the consumer handles result messages from the controller"""
+
+        # Connect...
+        communicator = WebsocketCommunicator(
+            application,
+            self.ws_url,
+            subprotocols=[self.auth_token],
+        )
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
+
+        # Set up peripherals
+        peripheral_a_entity = await database_sync_to_async(SiteEntity.objects.create)(
+            name="Peripheral A", site=self.controller_entity.site
+        )
+        peripheral_b_entity = await database_sync_to_async(SiteEntity.objects.create)(
+            name="Peripheral B", site=self.controller_entity.site
+        )
+        peripheral_a = await database_sync_to_async(PeripheralComponent.objects.create)(
+            site_entity=peripheral_a_entity,
+            peripheral_type=PeripheralComponent.LED_TYPE,
+            controller_component=self.controller_entity.controller_component,
+            state=PeripheralComponent.ADDING_STATE,
+        )
+        peripheral_b = await database_sync_to_async(PeripheralComponent.objects.create)(
+            site_entity=peripheral_b_entity,
+            peripheral_type=PeripheralComponent.LED_TYPE,
+            controller_component=self.controller_entity.controller_component,
+            state=PeripheralComponent.REMOVING_STATE,
+        )
+        # Set up tasks
+        task_a = await database_sync_to_async(ControllerTask.objects.create)(
+            task_type=ControllerTask.READ_SENSOR_TYPE,
+            controller_component=self.controller_entity.controller_component,
+            state=ControllerTask.STARTING_STATE,
+            parameters={},
+        )
+        task_b = await database_sync_to_async(ControllerTask.objects.create)(
+            task_type=ControllerTask.READ_SENSOR_TYPE,
+            controller_component=self.controller_entity.controller_component,
+            state=ControllerTask.STOPPING_STATE,
+            parameters={},
+        )
+
+        # Send successful and and remove result message
+        data = {
+            "type": "result",
+            "request_id": "some_request",
+            "peripheral": {
+                "add": [{"uuid": str(peripheral_a.id), "status": "success"}],
+                "remove": [{"uuid": str(peripheral_b.id), "status": "success"}],
+            },
+            "task": {
+                "start": [{"uuid": str(task_a.id), "status": "success"}],
+                "stop": [{"uuid": str(task_b.id), "status": "success"}],
+            },
+        }
+        await communicator.send_json_to(data)
+        self.assertTrue(await communicator.receive_nothing())
+
+        # Expect both peripherals and tasks to be in new states
+        peripheral_a = await database_sync_to_async(PeripheralComponent.objects.get)(
+            id=peripheral_a.id
+        )
+        self.assertEqual(peripheral_a.state, PeripheralComponent.ADDED_STATE)
+
+        peripheral_b = await database_sync_to_async(PeripheralComponent.objects.get)(
+            id=peripheral_b.id
+        )
+        self.assertEqual(peripheral_b.state, PeripheralComponent.REMOVED_STATE)
+
+        task_a = await database_sync_to_async(ControllerTask.objects.get)(id=task_a.id)
+        self.assertEqual(task_a.state, ControllerTask.RUNNING_STATE)
+
+        task_b = await database_sync_to_async(ControllerTask.objects.get)(id=task_b.id)
+        self.assertEqual(task_b.state, ControllerTask.STOPPED_STATE)
+
+        await communicator.disconnect()

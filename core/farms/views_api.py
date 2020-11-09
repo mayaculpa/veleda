@@ -249,15 +249,11 @@ class APIControllerCommandView(APIView):
     )
 
     def post(self, request, pk):
+        """Send a command to a controller"""
+        
         # Check if the controller from the URL exists
-        try:
-            entity = (
-                SiteEntity.objects.select_related("controller_component")
-                .select_related("site__owner")
-                .get(id=pk)
-            )
-        except ObjectDoesNotExist:
-            return JsonResponse({"message": ["Controller not found"]}, status=400)
+        entity_query = SiteEntity.objects.select_related("controller_component")
+        entity = get_object_or_404(entity_query, pk=pk)
 
         # Check if the user has permission to interact with the controller
         self.check_object_permissions(request, entity)

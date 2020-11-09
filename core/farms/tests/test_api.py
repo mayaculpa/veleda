@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TransactionTestCase
 from django.urls import reverse
 
-from ..models import Site, Coordinator, Controller
+from farms.models import Site, Coordinator, Controller
 
 
 class SiteAPITests(TransactionTestCase):

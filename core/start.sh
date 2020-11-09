@@ -175,7 +175,7 @@ if [[ -z $1 ]]; then
   fi
 elif [[ $1 == "test" ]]; then
   echo "Starting Django test runner"
-  pipenv run ./manage.py test $2
+  pipenv run ./manage.py "${@:1}"
 elif [[ $1 == "coverage" ]]; then
   echo "Starting test coverage analysis"
   pipenv run coverage run --source='.' manage.py test
