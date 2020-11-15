@@ -1,6 +1,6 @@
 import uuid
 from datetime import timedelta, datetime, timezone
-from typing import List, Dict, Type, Any
+from typing import List, Dict, Any
 
 from django.db import models, IntegrityError, transaction
 from django.utils.dateparse import parse_datetime
@@ -30,26 +30,29 @@ class DataPointType(models.Model):
 class DataPointManager(models.Manager):
     """Handles telemetry messages for the DataPoint class"""
 
-    def from_telemetry(self, message: Dict) -> List[Type["DataPoint"]]:
-        """Create data points from a telemetry message"""
+    def from_telemetry(self, message: Dict) -> List["DataPoint"]:
+        """Create data points from a telemetry message. Raises ValueError on error"""
 
         # Get, parse and validate the time
         time = message.get("time", datetime.now(timezone.utc))
         time = self.model.to_timezone_datetime(time)
 
-        peripheral_id = message["peripheral"]
-        data_points: List[Type["DataType"]] = []
-        for data_point in message["data_points"]:
-            data_points.append(
-                self.model(
-                    value=data_point["value"],
-                    time=time,
-                    data_point_type_id=data_point["data_point_type"],
-                    peripheral_component_id=peripheral_id,
+        try:
+            peripheral_id = message["peripheral"]
+            data_points: List["DataType"] = []
+            for data_point in message["data_points"]:
+                data_points.append(
+                    self.model(
+                        value=data_point["value"],
+                        time=time,
+                        data_point_type_id=data_point["data_point_type"],
+                        peripheral_component_id=peripheral_id,
+                    )
                 )
-            )
-            # Smear time to avoid integriy errors
-            time += timedelta(microseconds=1)
+                # Smear time to avoid integriy errors
+                time += timedelta(microseconds=1)
+        except KeyError as err:
+            raise ValueError(f"Missing property {err}") from err
         self.bulk_create(data_points)
         return data_points
 
@@ -95,7 +98,7 @@ class DataPoint(models.Model):
                 self._save_and_smear_timestamp(*args, **kwargs)
 
     @staticmethod
-    def to_timezone_datetime(raw_time: Any) -> Type[datetime]:
+    def to_timezone_datetime(raw_time: Any) -> datetime:
         """Try to convert it to a valid datetime with timezone"""
 
         if isinstance(raw_time, datetime):

@@ -1,5 +1,6 @@
 from typing import Dict, List, Type, Optional
 import uuid
+from datetime import datetime, timezone
 
 from django.db import models, IntegrityError, transaction
 from django.core.exceptions import ValidationError
@@ -32,6 +33,11 @@ class ControllerTaskManager(models.Manager):
             try:
                 task_id = command.pop("uuid")
                 task_type = command.pop("type")
+                run_until = command.pop("run_until", None)
+                if "duration_ms" in command:
+                    raise ValueError(
+                        "Use 'run_until' instead of 'duration_ms' for task running duration."
+                    )
             except KeyError as err:
                 if "task_id" in locals():
                     raise ValueError(f"Missing key {err} for {task_id}") from err
@@ -41,6 +47,7 @@ class ControllerTaskManager(models.Manager):
                 controller_component=controller,
                 state=self.model.STARTING_STATE,
                 task_type=task_type,
+                run_until=run_until,
                 parameters=command,
             )
             try:
@@ -96,6 +103,32 @@ class ControllerTaskManager(models.Manager):
             self.bulk_update(tasks, ["state"])
         return tasks
 
+    def commands_from_register(
+        self, running_tasks: List[str], controller_id: uuid.UUID
+    ) -> Dict:
+        """Updates tasks to be re-started to the starting state and returns commands to
+        be re-start tasks on a controller. However, exclude the tasks that the
+        controller reports to already be running."""
+
+        tasks = (
+            ControllerTask.objects.filter(controller_component__pk=controller_id)
+            .filter(state__in=ControllerTask.RE_START_STATES)
+            .exclude(pk__in=running_tasks)
+            .select_for_update()
+        )
+
+        with transaction.atomic():
+            for task in tasks:
+                task.state = ControllerTask.STARTING_STATE
+            self.bulk_update(tasks, ["state"])
+
+        commands = []
+        for task in tasks:
+            commands.append(task.to_start_command())
+        if commands:
+            return {"start": commands}
+        return {}
+
 
 class ControllerTask(models.Model):
     """Tasks interacting with peripherals on controllers"""
@@ -111,7 +144,10 @@ class ControllerTask(models.Model):
     FAILED_STATE = "failed"
     STOPPED_STATE = "stopped"
 
+    # States for which stop commands can be created
     STOPPABLE_STATES = [STARTING_STATE, RUNNING_STATE, STOPPING_STATE]
+    # States to start tasks again (registration after reboot)
+    RE_START_STATES = [STARTING_STATE, RUNNING_STATE]
 
     STATE_CHOICES = [
         (STARTING_STATE, "Starting"),
@@ -162,6 +198,9 @@ class ControllerTask(models.Model):
         blank=True,
         help_text="The construction parameters excl. UUID and type",
     )
+    run_until = models.DateTimeField(
+        blank=True, null=True, help_text="Until when the task should run."
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         help_text="The datetime of creation.",
@@ -194,6 +233,17 @@ class ControllerTask(models.Model):
         """If in starting state, return a command that starts the task, else None"""
 
         if self.state == self.STARTING_STATE:
+            if self.run_until:
+                now = datetime.now(tz=timezone.utc)
+                if self.run_until > now:
+                    self.state = self.STOPPED_STATE
+                    self.save()
+                    return None
+                return {
+                    "uuid": str(self.id),
+                    "type": self.task_type,
+                    "duration_ms": (self.run_until - now).seconds(),
+                }
             return {
                 "uuid": str(self.id),
                 "type": self.task_type,

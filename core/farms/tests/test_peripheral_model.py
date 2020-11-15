@@ -12,7 +12,7 @@ from farms.models import (
 )
 
 
-class PeripheralModelTests(TestCase):
+class PeripheralModelAddRemoveTests(TestCase):
     """Test the peripheral model"""
 
     def setUp(self):
@@ -132,11 +132,12 @@ class PeripheralModelTests(TestCase):
         self.assertIn(remove_peripherals[0].id, remove_uuids)
 
 
-class PeripheralModelResultsTests(TestCase):
+class PeripheralModelResultRegisterTests(TestCase):
     """Test the handling of result messages"""
 
     def setUp(self):
-        # Create two peripherals in the adding state and two in the removing state
+        """Create two peripherals in the adding state and two in the removing state"""
+
         self.site_a = Site.objects.create(
             name="Site A",
             owner=get_user_model().objects.create_user(
@@ -235,3 +236,34 @@ class PeripheralModelResultsTests(TestCase):
         self.assertEqual(self.peripheral_b.state, PeripheralComponent.FAILED_STATE)
         self.assertEqual(self.peripheral_c.state, PeripheralComponent.REMOVED_STATE)
         self.assertEqual(self.peripheral_d.state, PeripheralComponent.ADDED_STATE)
+
+    def test_commands_from_register(self):
+        """Test the commands that are generated from a registration request"""
+
+        # Create peripherals to be tested
+        self.peripheral_a.state = PeripheralComponent.ADDING_STATE
+        self.peripheral_b.state = PeripheralComponent.ADDED_STATE
+        self.peripheral_c.state = PeripheralComponent.ADDED_STATE
+        self.peripheral_d.state = PeripheralComponent.FAILED_STATE
+        PeripheralComponent.objects.bulk_update(
+            [
+                self.peripheral_a,
+                self.peripheral_b,
+                self.peripheral_c,
+                self.peripheral_d,
+            ],
+            ["state"],
+        )
+        added_peripherals = [str(self.peripheral_c.id)]
+
+        # Perform query
+        commands = PeripheralComponent.objects.commands_from_register(
+            added_peripherals, self.esp32_a_controller.id
+        )
+
+        # Check the results
+        add_uuids = [peripheral["uuid"] for peripheral in commands.get("add", [])]
+        self.assertIn(str(self.peripheral_a.id), add_uuids)
+        self.assertIn(str(self.peripheral_b.id), add_uuids)
+        self.assertNotIn(str(self.peripheral_c.id), add_uuids)
+        self.assertNotIn(str(self.peripheral_d.id), add_uuids)

@@ -1,7 +1,7 @@
 import binascii
 import os
 import uuid
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from django.conf import settings
 from django.db import models
@@ -96,6 +96,7 @@ class ControllerMessage(models.Model):
     REGISTER_TYPE = "reg"
     RESULT_TYPE = "result"
     TELEMETRY_TYPE = "tel"
+    SYSTEM_TYPE = "sys"
 
     TYPES = [
         COMMAND_TYPE,
@@ -103,6 +104,7 @@ class ControllerMessage(models.Model):
         REGISTER_TYPE,
         RESULT_TYPE,
         TELEMETRY_TYPE,
+        SYSTEM_TYPE,
     ]
 
     created_at = models.DateTimeField(
@@ -118,6 +120,7 @@ class ControllerMessage(models.Model):
     request_id = models.CharField(
         max_length=255,
         default="",
+        blank=True,
         help_text="The ID of the request, to enable tracking requests",
     )
 
@@ -135,6 +138,11 @@ class ControllerMessage(models.Model):
         """Checks if it is a result message"""
 
         return self.message.get("type", "") == self.RESULT_TYPE
+
+    def is_system_type(self):
+        """Checks if it is a system message"""
+
+        return self.message.get("type", "") == self.SYSTEM_TYPE
 
     def to_errors(self) -> Dict:
         """Try to extract errors"""
@@ -170,13 +178,20 @@ class ControllerMessage(models.Model):
         if self.message.get("type", "") == self.RESULT_TYPE:
             return self.message.get("task", {})
         return {}
-    
-    def to_register(self) -> Dict:
-        """Try to extract the register message"""
+
+    def to_peripheral_register(self) -> List[str]:
+        """Try to extract the peripheral register message"""
 
         if self.message.get("type", "") == self.REGISTER_TYPE:
-            return self.message
-        return {}
+            return self.message.get("peripherals", [])
+        return []
+
+    def to_task_register(self) -> List[str]:
+        """Try to extract the task register message"""
+
+        if self.message.get("type", "") == self.REGISTER_TYPE:
+            return self.message.get("tasks", [])
+        return []
 
     def to_telemetry(self):
         """"Try to extract telemetry"""

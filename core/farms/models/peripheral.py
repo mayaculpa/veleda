@@ -1,7 +1,8 @@
-from typing import Dict, List, Type, Optional
+from typing import Dict, List, Optional
 import uuid
 
 from django.db import models, IntegrityError, transaction
+from django.core.exceptions import ObjectDoesNotExist
 
 from farms.models.site import SiteEntity
 from farms.models.controller import ControllerComponent
@@ -9,12 +10,12 @@ from farms.models.controller import ControllerComponent
 
 class PeripheralComponentManager(models.Manager):
     def from_commands(
-        self, peripheral_commands: Dict, controller: Type[ControllerComponent]
-    ) -> List[Type["PeripheralComponent"]]:
+        self, peripheral_commands: Dict, controller: ControllerComponent
+    ) -> List["PeripheralComponent"]:
         """Create peripherals from add commands and get peripherals to be removed.
         Throws ValueError on missing keys."""
 
-        peripherals: List[Type["PeripheralComponent"]] = []
+        peripherals: List["PeripheralComponent"] = []
         if peripheral_commands:
             add_commands = peripheral_commands.get("add")
             if add_commands:
@@ -25,13 +26,11 @@ class PeripheralComponentManager(models.Manager):
         return peripherals
 
     def from_add_commands(
-        self,
-        add_commands: Dict,
-        controller: Type[ControllerComponent],
-    ) -> List[Type["PeripheralComponent"]]:
+        self, add_commands: Dict, controller: ControllerComponent
+    ) -> List["PeripheralComponent"]:
         """Create peripherals from add commands. Throws ValueError on missing keys."""
 
-        peripherals: List[Type["PeripheralComponent"]] = []
+        peripherals: List["PeripheralComponent"] = []
         site = controller.site_entity.site
         for add_command in add_commands:
             command = add_command.copy()
@@ -60,7 +59,7 @@ class PeripheralComponentManager(models.Manager):
 
     def from_remove_commands(
         self, remove_commands: Dict
-    ) -> List[Type["PeripheralComponent"]]:
+    ) -> List["PeripheralComponent"]:
         """Get the list of peripherals to be removed. Throws ValueError on missing keys."""
 
         try:
@@ -75,7 +74,7 @@ class PeripheralComponentManager(models.Manager):
         self.bulk_update(peripherals, ["state"])
         return peripherals
 
-    def from_results(self, results: Dict) -> List[Type["PeripheralComponent"]]:
+    def from_results(self, results: Dict) -> List["PeripheralComponent"]:
         """Update states from results commands"""
 
         # Get all peripheral ids to update
@@ -99,6 +98,32 @@ class PeripheralComponentManager(models.Manager):
             self.bulk_update(peripherals, ["state"])
         return peripherals
 
+    def commands_from_register(
+        self, added_peripherals: List[str], controller_id: uuid.UUID
+    ) -> Dict:
+        """Updates peripherals to be re-added to the adding state and returns commands
+        to re-add peripherals to a controller. However, exclude those that the
+        controller reports to have already been added."""
+
+        peripherals = (
+            PeripheralComponent.objects.filter(controller_component__pk=controller_id)
+            .filter(state__in=PeripheralComponent.RE_ADD_STATES)
+            .exclude(pk__in=added_peripherals)
+            .select_for_update()
+        )
+
+        with transaction.atomic():
+            for peripheral in peripherals:
+                peripheral.state = PeripheralComponent.ADDING_STATE
+            self.bulk_update(peripherals, ["state"])
+
+        commands = []
+        for peripheral in peripherals:
+            commands.append(peripheral.to_add_command())
+        if commands:
+            return {"add": commands}
+        return {}
+
 
 class PeripheralComponent(models.Model):
     """The peripheral aspect of a site entity, such as a sensor or actuator."""
@@ -114,7 +139,10 @@ class PeripheralComponent(models.Model):
     REMOVING_STATE = "removing"
     REMOVED_STATE = "removed"
 
+    # States for which remove commands for peripherals can be created
     REMOVABLE_STATES = [ADDING_STATE, ADDED_STATE, REMOVING_STATE]
+    # States to add peripherals again (registration after reboot)
+    RE_ADD_STATES = [ADDING_STATE, ADDED_STATE]
 
     STATE_CHOICES = [
         (ADDING_STATE, "Adding"),
@@ -167,7 +195,7 @@ class PeripheralComponent(models.Model):
         help_text="The state of the controller task.",
     )
     parameters = models.JSONField(
-        default=list, help_text="Parameters for setup on controller excl. type"
+        default=dict, help_text="Parameters for setup on controller excl. type"
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -178,7 +206,7 @@ class PeripheralComponent(models.Model):
     )
 
     @classmethod
-    def to_commands(cls, peripherals: List[Type["PeripheralComponent"]]) -> Dict:
+    def to_commands(cls, peripherals: List["PeripheralComponent"]) -> Dict:
         """Convert a list of peripherals to commands. Ignores peripherals that cannot
         be converted to commands"""
 

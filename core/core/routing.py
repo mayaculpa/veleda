@@ -11,7 +11,7 @@ application = ProtocolTypeRouter(
                 [
                     path(
                         "ws-api/v1/farms/controllers/",
-                        ControllerConsumer,
+                        ControllerConsumer.as_asgi(),
                         name="ws-controller",
                     )
                 ]

@@ -1,18 +1,13 @@
 import json
-import uuid
-from typing import Union, Type
 
 from channels.generic.websocket import WebsocketConsumer
-from rest_framework.utils.serializer_helpers import ReturnDict
 
 from farms.serializers import ControllerMessageSerializer
 from farms.models import (
     ControllerMessage,
     ControllerTask,
     DataPoint,
-    DataPointType,
     PeripheralComponent,
-    PeripheralComponentManager,
 )
 
 
@@ -26,36 +21,57 @@ class ControllerConsumer(WebsocketConsumer):
         """Handle errors sent by the controller. Currently only prints them."""
         # print(data)
 
-    def handle_register(self, data):
+    def handle_register(self, message: ControllerMessage):
         """Handle register messages"""
-        # print(data)
 
-    def handle_message(self, message, controller):
+        peripheral_commands = PeripheralComponent.objects.commands_from_register(
+            message.to_peripheral_register(), message.controller_id
+        )
+        self.send_peripheral_commands(
+            {"commands": peripheral_commands, "request_id": message.request_id}
+        )
+        task_commands = ControllerTask.objects.commands_from_register(
+            message.to_task_register(), message.controller_id
+        )
+        self.send_controller_task_commands(
+            {"commands": task_commands, "request_id": message.request_id}
+        )
+
+    def handle_message(self, json_message, controller):
         """Handle messages sent from the controller"""
 
         serializer = ControllerMessageSerializer(
-            data={"message": message, "controller": controller}
+            data={
+                "message": json_message,
+                "controller": controller,
+                "request_id": json_message.pop("request_id", ""),
+            }
         )
         if not serializer.is_valid():
-            raise self.InvalidData(serializer.errors["message"])
-        message: Type[ControllerMessage] = serializer.save()
+            raise self.InvalidData(str(serializer.errors))
+        message: ControllerMessage = serializer.save()
 
         # Handle the different message types
-        if data := message.to_telemetry():
-            DataPoint.objects.from_telemetry(data)
-        elif data := message.to_errors():
-            self.handle_errors(data)
-        elif data := message.to_register():
-            self.handle_register(data)
-        elif message.is_result_type():
-            if data := message.to_peripheral_results():
-                PeripheralComponent.objects.from_results(data)
-            if data := message.to_task_results():
-                ControllerTask.objects.from_results(data)
-        elif message.is_command_type():
-            raise self.InvalidData("Command message type only sent to controller")
-        else:
-            raise self.InvalidData(f"Unkown message type: {message.get_type()}")
+        try:
+            if data := message.to_telemetry():
+                DataPoint.objects.from_telemetry(data)
+            elif data := message.to_errors():
+                self.handle_errors(data)
+            elif message.is_register_type():
+                self.handle_register(message)
+            elif message.is_result_type():
+                if data := message.to_peripheral_results():
+                    PeripheralComponent.objects.from_results(data)
+                if data := message.to_task_results():
+                    ControllerTask.objects.from_results(data)
+            elif message.is_system_type():
+                pass
+            elif message.is_command_type():
+                raise self.InvalidData("Command message type only sent to controller")
+            else:
+                raise self.InvalidData(f"Unkown message type: {message.get_type()}")
+        except ValueError as err:
+            raise self.InvalidData(err) from err
 
     def connect(self):
         controller = self.scope["controller"]
@@ -81,7 +97,7 @@ class ControllerConsumer(WebsocketConsumer):
         except json.decoder.JSONDecodeError:
             self.disconnect_controller({"errors": "Invalid JSON data"})
         except self.InvalidData as err:
-            self.disconnect_controller({"errors": err.args})
+            self.disconnect_controller({"errors": str(err.args)})
 
     def send_peripheral_commands(self, message):
         """Send peripheral commands to the controller"""

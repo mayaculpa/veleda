@@ -284,6 +284,52 @@ class ControllerTaskTests(TestCase):
             with self.assertRaises(ControllerTask.InvalidTransition):
                 task.apply_stop_result({"status": "fail"})
 
+    def test_commands_from_register(self):
+        """Test the commands that are generated from a registration request"""
+
+        starting_task = ControllerTask.objects.create(
+            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            controller_component=self.controller_a,
+            state=ControllerTask.STARTING_STATE,
+        )
+        running_task_a = ControllerTask.objects.create(
+            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            controller_component=self.controller_a,
+            state=ControllerTask.RUNNING_STATE,
+        )
+        running_task_b = ControllerTask.objects.create(
+            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            controller_component=self.controller_a,
+            state=ControllerTask.RUNNING_STATE,
+        )
+        stopping_task = ControllerTask.objects.create(
+            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            controller_component=self.controller_a,
+            state=ControllerTask.STOPPING_STATE,
+        )
+        stopped_task = ControllerTask.objects.create(
+            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            controller_component=self.controller_a,
+            state=ControllerTask.STOPPED_STATE,
+        )
+        failed_task = ControllerTask.objects.create(
+            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            controller_component=self.controller_a,
+            state=ControllerTask.FAILED_STATE,
+        )
+        started_tasks = [str(running_task_b.id)]
+
+        commands = ControllerTask.objects.commands_from_register(
+            started_tasks, self.controller_a.id
+        )
+        start_uuids = [task["uuid"] for task in commands.get("start", [])]
+        self.assertIn(str(starting_task.id), start_uuids)
+        self.assertIn(str(running_task_a.id), start_uuids)
+        self.assertNotIn(str(running_task_b.id), start_uuids)
+        self.assertNotIn(str(stopping_task.id), start_uuids)
+        self.assertNotIn(str(stopped_task.id), start_uuids)
+        self.assertNotIn(str(failed_task.id), start_uuids)
+
     def test_to_string(self):
         """Test the to string method"""
 
