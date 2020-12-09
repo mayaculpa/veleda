@@ -219,7 +219,7 @@ class TestControllerMessage(TransactionTestCase):
                 "create": [
                     {
                         "uuid": str(uuid.uuid4()),
-                        "type": ControllerTask.READ_SENSOR_TYPE,
+                        "type": ControllerTask.TaskType.READ_SENSOR,
                     }
                 ]
             },
@@ -334,15 +334,15 @@ class TestControllerMessage(TransactionTestCase):
         )
         # Set up tasks
         task_a = await database_sync_to_async(ControllerTask.objects.create)(
-            task_type=ControllerTask.READ_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.READ_SENSOR,
             controller_component=self.controller_entity.controller_component,
-            state=ControllerTask.STARTING_STATE,
+            state=ControllerTask.State.STARTING,
             parameters={},
         )
         task_b = await database_sync_to_async(ControllerTask.objects.create)(
-            task_type=ControllerTask.READ_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.READ_SENSOR,
             controller_component=self.controller_entity.controller_component,
-            state=ControllerTask.STOPPING_STATE,
+            state=ControllerTask.State.STOPPING,
             parameters={},
         )
 
@@ -374,9 +374,9 @@ class TestControllerMessage(TransactionTestCase):
         self.assertEqual(peripheral_b.state, PeripheralComponent.REMOVED_STATE)
 
         task_a = await database_sync_to_async(ControllerTask.objects.get)(id=task_a.id)
-        self.assertEqual(task_a.state, ControllerTask.RUNNING_STATE)
+        self.assertEqual(task_a.state, ControllerTask.State.RUNNING)
 
         task_b = await database_sync_to_async(ControllerTask.objects.get)(id=task_b.id)
-        self.assertEqual(task_b.state, ControllerTask.STOPPED_STATE)
+        self.assertEqual(task_b.state, ControllerTask.State.STOPPED)
 
         await communicator.disconnect()

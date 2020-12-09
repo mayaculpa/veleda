@@ -14,6 +14,23 @@ RABBITMQ_HOST="rabbitmq"
 DAPHNE_HOST="0.0.0.0"
 REDIS_HOST="redis"
 
+print_help() {
+  printf "%s\n" \
+"Commands:
+  [none]      Start dev server (Default)
+  test        Run tests (takes standard Django manage.py test arguments)
+  coverage    Create test coverage in htmlcov folder
+  shell       Creates a Django shell
+  clean       Remove docker services. Useful to reload DB seed data
+  dumpdata    Dumps PostgreSQL data to JSON file
+  loaddata    Loads data dump into PostgreSQL
+  pytest      Run pytests (Depreciated)
+  help        Print help
+
+Unknown commands will be passed to ./manage.py as parameters. DB seed data is
+loaded on first creation of the PostgreSQL database."
+}
+
 # Source and export all required env variables from the respective files
 # for local development
 source_debug_env_variables() {
@@ -97,6 +114,11 @@ stop_docker_services() {
     echo "Redis database already stopped"
   fi
 }
+
+if [[ $1 == "help" ]]; then
+  print_help
+  exit 0
+fi
 
 if [[ $DJANGO_DEBUG != "False" ]]; then
   if [[ $1 == "clean" ]]; then

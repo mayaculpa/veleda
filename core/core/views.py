@@ -29,7 +29,6 @@ class UserInfo(ScopedProtectedResourceView):
 
 
 class TokenLoginRequiredMixin(AccessMixin):
-
     """A login required mixin that allows token authentication."""
 
     def dispatch(self, request, *args, **kwargs):

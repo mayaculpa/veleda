@@ -175,12 +175,14 @@ class PeripheralComponent(models.Model):
     )
     site_entity = models.OneToOneField(
         SiteEntity,
+        related_name="peripheral_component",
         on_delete=models.CASCADE,
         help_text="Which site entity the component is a part of.",
     )
     controller_component = models.ForeignKey(
         ControllerComponent,
         on_delete=models.CASCADE,
+        related_name="peripheral_component_set",
         help_text="Which controller controls and is connected to this peripheral.",
     )
     peripheral_type = models.CharField(
@@ -195,7 +197,9 @@ class PeripheralComponent(models.Model):
         help_text="The state of the controller task.",
     )
     parameters = models.JSONField(
-        default=dict, help_text="Parameters for setup on controller excl. type"
+        default=dict,
+        help_text="The setup parameters excl. the peripheral's ID, state,"
+        " type and data point type parameters.",
     )
     created_at = models.DateTimeField(
         auto_now_add=True,

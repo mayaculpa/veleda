@@ -66,11 +66,13 @@ class DataPoint(models.Model):
     peripheral_component = models.ForeignKey(
         PeripheralComponent,
         on_delete=models.CASCADE,
+        related_name="data_point_set",
         help_text="The peripheral that generated the data point.",
     )
     data_point_type = models.ForeignKey(
         DataPointType,
         on_delete=models.CASCADE,
+        related_name="data_point_set",
         help_text="The type of data recorded and its unit.",
     )
     value = models.FloatField(

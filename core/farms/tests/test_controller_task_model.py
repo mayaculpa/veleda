@@ -33,11 +33,11 @@ class ControllerTaskTests(TestCase):
         """Test that commands can be parsed"""
 
         task_c = ControllerTask.objects.create(
-            task_type=ControllerTask.READ_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.READ_SENSOR,
             controller_component=self.controller_a,
         )
         task_d = ControllerTask.objects.create(
-            task_type=ControllerTask.WRITE_ACTUATOR_TYPE,
+            task_type=ControllerTask.TaskType.WRITE_ACTUATOR,
             controller_component=self.controller_a,
         )
 
@@ -45,12 +45,12 @@ class ControllerTaskTests(TestCase):
             "start": [
                 {
                     "uuid": str(uuid.uuid4()),
-                    "type": ControllerTask.POLL_SENSOR_TYPE,
+                    "type": ControllerTask.TaskType.POLL_SENSOR,
                     "foo": "bar",
                 },
                 {
                     "uuid": str(uuid.uuid4()),
-                    "type": ControllerTask.SET_LIGHT_TYPE,
+                    "type": ControllerTask.TaskType.SET_LIGHT,
                     "hi": "there",
                 },
             ],
@@ -66,11 +66,11 @@ class ControllerTaskTests(TestCase):
         ][0]
         self.assertEqual(task_a.task_type, commands["start"][0]["type"])
         self.assertEqual(task_a.controller_component_id, self.controller_a.id)
-        self.assertEqual(task_a.state, ControllerTask.STARTING_STATE)
+        self.assertEqual(task_a.state, ControllerTask.State.STARTING)
         self.assertEqual(task_a.parameters["foo"], commands["start"][0]["foo"])
         self.assertEqual(task_b.task_type, commands["start"][1]["type"])
         self.assertEqual(task_b.controller_component_id, self.controller_a.id)
-        self.assertEqual(task_b.state, ControllerTask.STARTING_STATE)
+        self.assertEqual(task_b.state, ControllerTask.State.STARTING)
         self.assertEqual(task_b.parameters["hi"], commands["start"][1]["hi"])
 
     def test_from_start_commands_errors(self):
@@ -79,7 +79,7 @@ class ControllerTaskTests(TestCase):
         # Test uuid key check
         with self.assertRaisesMessage(ValueError, "uuid"):
             ControllerTask.objects.from_start_commands(
-                start_commands=[{"type": ControllerTask.READ_SENSOR_TYPE}],
+                start_commands=[{"type": ControllerTask.TaskType.READ_SENSOR}],
                 controller=self.controller_a,
             )
         # Test type key check
@@ -94,7 +94,7 @@ class ControllerTaskTests(TestCase):
                 start_commands=[
                     {
                         "uuid": "bar",
-                        "type": ControllerTask.READ_SENSOR_TYPE,
+                        "type": ControllerTask.TaskType.READ_SENSOR,
                     }
                 ],
                 controller=self.controller_a,
@@ -108,12 +108,12 @@ class ControllerTaskTests(TestCase):
         # Test integrity check
         with self.assertRaisesMessage(ValueError, "Integrity"):
             task_a = ControllerTask.objects.create(
-                task_type=ControllerTask.READ_SENSOR_TYPE,
+                task_type=ControllerTask.TaskType.READ_SENSOR,
                 controller_component=self.controller_a,
             )
             ControllerTask.objects.from_start_commands(
                 start_commands=[
-                    {"uuid": str(task_a.id), "type": ControllerTask.READ_SENSOR_TYPE}
+                    {"uuid": str(task_a.id), "type": ControllerTask.TaskType.READ_SENSOR}
                 ],
                 controller=self.controller_a,
             )
@@ -127,15 +127,15 @@ class ControllerTaskTests(TestCase):
 
         # Check that only stoppable tasks are marked as stopping
         task_stopped = ControllerTask.objects.create(
-            task_type=ControllerTask.READ_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.READ_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STOPPED_STATE,
+            state=ControllerTask.State.STOPPED,
         )
         self.assertNotIn(task_stopped.state, ControllerTask.STOPPABLE_STATES)
         task_started = ControllerTask.objects.create(
-            task_type=ControllerTask.READ_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.READ_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STARTING_STATE,
+            state=ControllerTask.State.STARTING,
         )
         tasks = ControllerTask.objects.from_stop_commands(
             [{"uuid": str(task_stopped.id)}, {"uuid": str(task_started.id)}]
@@ -147,20 +147,20 @@ class ControllerTaskTests(TestCase):
         """Test the to_commands method used to generate necessary commands"""
 
         starting_task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STARTING_STATE,
+            state=ControllerTask.State.STARTING,
             parameters={"foo": "bar"},
         )
         stopping_task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STOPPING_STATE,
+            state=ControllerTask.State.STOPPING,
         )
         running_task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.RUNNING_STATE,
+            state=ControllerTask.State.RUNNING,
         )
 
         tasks = [starting_task, stopping_task, running_task]
@@ -188,29 +188,29 @@ class ControllerTaskTests(TestCase):
         """Test the handling of results"""
 
         starting_task_a = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STARTING_STATE,
+            state=ControllerTask.State.STARTING,
         )
         starting_task_b = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STARTING_STATE,
+            state=ControllerTask.State.STARTING,
         )
         starting_task_c = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STARTING_STATE,
+            state=ControllerTask.State.STARTING,
         )
         stopping_task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STOPPING_STATE,
+            state=ControllerTask.State.STOPPING,
         )
         running_task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.RUNNING_STATE,
+            state=ControllerTask.State.RUNNING,
         )
 
         self.assertFalse(ControllerTask.objects.from_results({"foo": "bar"}))
@@ -231,32 +231,32 @@ class ControllerTaskTests(TestCase):
         tasks = ControllerTask.objects.from_results(results)
         self.assertEqual(
             [task for task in tasks if task.id == starting_task_a.id][0].state,
-            ControllerTask.RUNNING_STATE,
+            ControllerTask.State.RUNNING,
         )
         self.assertEqual(
             [task for task in tasks if task.id == starting_task_b.id][0].state,
-            ControllerTask.FAILED_STATE,
+            ControllerTask.State.FAILED,
         )
         self.assertEqual(
             [task for task in tasks if task.id == starting_task_c.id][0].state,
-            ControllerTask.STOPPED_STATE,
+            ControllerTask.State.STOPPED,
         )
         self.assertEqual(
             [task for task in tasks if task.id == stopping_task.id][0].state,
-            ControllerTask.STOPPED_STATE,
+            ControllerTask.State.STOPPED,
         )
         self.assertEqual(
             [task for task in tasks if task.id == running_task.id][0].state,
-            ControllerTask.STOPPED_STATE,
+            ControllerTask.State.STOPPED,
         )
 
     def test_from_results_errors(self):
         """Test the error handling of handling task results"""
 
         task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STARTING_STATE,
+            state=ControllerTask.State.STARTING,
         )
         with self.assertRaisesMessage(ValueError, "status"):
             task.apply_start_result({"foo": "bar"})
@@ -265,10 +265,10 @@ class ControllerTaskTests(TestCase):
 
         # Check handling of invalid transitions for start results
         for state in [
-            task.RUNNING_STATE,
-            task.STOPPING_STATE,
-            task.FAILED_STATE,
-            task.STOPPED_STATE,
+            task.State.RUNNING,
+            task.State.STOPPING,
+            task.State.FAILED,
+            task.State.STOPPED,
         ]:
             task.state = state
             with self.assertRaises(ControllerTask.InvalidTransition):
@@ -277,7 +277,7 @@ class ControllerTaskTests(TestCase):
                 task.apply_start_result({"status": "fail"})
 
         # Check handling of invalid transitions for stop results
-        for state in [task.STOPPED_STATE, task.FAILED_STATE]:
+        for state in [task.State.STOPPED, task.State.FAILED]:
             task.state = state
             with self.assertRaises(ControllerTask.InvalidTransition):
                 task.apply_stop_result({"status": "success"})
@@ -288,34 +288,34 @@ class ControllerTaskTests(TestCase):
         """Test the commands that are generated from a registration request"""
 
         starting_task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STARTING_STATE,
+            state=ControllerTask.State.STARTING,
         )
         running_task_a = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.RUNNING_STATE,
+            state=ControllerTask.State.RUNNING,
         )
         running_task_b = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.RUNNING_STATE,
+            state=ControllerTask.State.RUNNING,
         )
         stopping_task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STOPPING_STATE,
+            state=ControllerTask.State.STOPPING,
         )
         stopped_task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STOPPED_STATE,
+            state=ControllerTask.State.STOPPED,
         )
         failed_task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.FAILED_STATE,
+            state=ControllerTask.State.FAILED,
         )
         started_tasks = [str(running_task_b.id)]
 
@@ -334,9 +334,9 @@ class ControllerTaskTests(TestCase):
         """Test the to string method"""
 
         task = ControllerTask.objects.create(
-            task_type=ControllerTask.POLL_SENSOR_TYPE,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
             controller_component=self.controller_a,
-            state=ControllerTask.STARTING_STATE,
+            state=ControllerTask.State.STARTING,
         )
         self.assertIn(task.task_type, str(task))
         self.assertIn(task.state, str(task))

@@ -1,14 +1,72 @@
-from typing import Dict, List, Type, Optional
-import uuid
+from asgiref.sync import async_to_sync
 from datetime import datetime, timezone
+from typing import Dict, List, Optional, Type
+import uuid
 
-from django.db import models, IntegrityError, transaction
+from channels.layers import get_channel_layer
+from channels.exceptions import InvalidChannelLayerError
 from django.core.exceptions import ValidationError
-
+from django.db import IntegrityError, models, transaction
 from farms.models.controller import ControllerComponent
 
 
 class ControllerTaskManager(models.Manager):
+    """Manages starting and stopping of tasks, in addition to CRUD methods. On select
+    methods also handles sending the commands to the connected controller."""
+
+    def start(
+        self,
+        controller_component_id: uuid.UUID,
+        task_type: Type["ControllerTask.TaskType"],
+        parameters: Dict,
+        run_until: datetime = None,
+    ) -> "ControllerTask":
+        """Create and start a task on the specified controller"""
+
+        with transaction.atomic():
+            controller_task = self.select_related("controller_component").create(
+                controller_component_id=controller_component_id,
+                task_type=task_type,
+                state=self.model.State.STARTING.value,
+                parameters=parameters,
+                run_until=run_until,
+            )
+            task_commands = self.model.to_commands([controller_task])
+            self._send_controller_task_commands(
+                controller_task.controller_component.channel_name, task_commands
+            )
+        return controller_task
+
+    def restart(self, task_id: uuid.UUID) -> "ControllerTask":
+        """Restart a stopped or failed task on a controller"""
+
+        with transaction.atomic():
+            controller_task = self.select_related("controller_component").get(
+                pk=task_id
+            )
+            controller_task.state = self.model.State.STARTING
+            controller_task.save()
+            task_commands = self.model.to_commands([controller_task])
+            self._send_controller_task_commands(
+                controller_task.controller_component.channel_name, task_commands
+            )
+        return controller_task
+
+    def stop(self, task_id: uuid.UUID) -> "ControllerTask":
+        """Stop a task on a controller"""
+
+        with transaction.atomic():
+            controller_task = self.select_related("controller_component").get(
+                pk=task_id
+            )
+            controller_task.state = self.model.State.STOPPING
+            controller_task.save()
+            task_commands = self.model.to_commands([controller_task])
+            self._send_controller_task_commands(
+                controller_task.controller_component.channel_name, task_commands
+            )
+        return controller_task
+
     def from_commands(self, task_commands, controller) -> List[Type["ControllerTask"]]:
         """Parse a command message to start tasks and get those to be stopped"""
 
@@ -45,7 +103,7 @@ class ControllerTaskManager(models.Manager):
             model = self.model(
                 id=task_id,
                 controller_component=controller,
-                state=self.model.STARTING_STATE,
+                state=self.model.State.STARTING,
                 task_type=task_type,
                 run_until=run_until,
                 parameters=command,
@@ -76,7 +134,7 @@ class ControllerTaskManager(models.Manager):
             self.filter(id__in=uuids).filter(state__in=self.model.STOPPABLE_STATES)
         )
         for task in tasks:
-            task.state = self.model.STOPPING_STATE
+            task.state = self.model.State.STOPPING
         self.bulk_update(tasks, ["state"])
         return tasks
 
@@ -119,7 +177,7 @@ class ControllerTaskManager(models.Manager):
 
         with transaction.atomic():
             for task in tasks:
-                task.state = ControllerTask.STARTING_STATE
+                task.state = ControllerTask.State.STARTING
             self.bulk_update(tasks, ["state"])
 
         commands = []
@@ -128,6 +186,22 @@ class ControllerTaskManager(models.Manager):
         if commands:
             return {"start": commands}
         return {}
+
+    @staticmethod
+    def _send_controller_task_commands(
+        channel_name: str, task_commands: List[Dict], request_id: str = None
+    ):
+        if not channel_name:
+            raise ValueError("Controller has not connected to the server")
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.send)(
+            channel_name,
+            {
+                "type": "send.controller.task.commands",
+                "commands": task_commands,
+                "request_id": request_id,
+            },
+        )
 
 
 class ControllerTask(models.Model):
@@ -138,40 +212,29 @@ class ControllerTask(models.Model):
     class InvalidTransition(Exception):
         """Thrown when an invalid state change is applied"""
 
-    STARTING_STATE = "starting"
-    RUNNING_STATE = "running"
-    STOPPING_STATE = "stopping"
-    FAILED_STATE = "failed"
-    STOPPED_STATE = "stopped"
+    class State(models.TextChoices):
+        """Possible task states."""
+
+        STARTING = ("starting", "Starting")
+        RUNNING = ("running", "Running")
+        STOPPING = ("stopping", "Stopping")
+        FAILED = ("failed", "Failed")
+        STOPPED = ("stopped", "Stopped")
 
     # States for which stop commands can be created
-    STOPPABLE_STATES = [STARTING_STATE, RUNNING_STATE, STOPPING_STATE]
+    STOPPABLE_STATES = [State.STARTING.value, State.RUNNING.value, State.STOPPING.value]
     # States to start tasks again (registration after reboot)
-    RE_START_STATES = [STARTING_STATE, RUNNING_STATE]
+    RE_START_STATES = [State.STARTING.value, State.RUNNING.value]
 
-    STATE_CHOICES = [
-        (STARTING_STATE, "Starting"),
-        (RUNNING_STATE, "Running"),
-        (STOPPING_STATE, "Stopping"),
-        (FAILED_STATE, "Failed"),
-        (STOPPED_STATE, "Stopped"),
-    ]
+    class TaskType(models.TextChoices):
+        """Possible task types"""
 
-    INVALID_TYPE = "InvalidTask"
-    ALERT_SENSOR_TYPE = "AlertSensor"
-    POLL_SENSOR_TYPE = "PollSensor"
-    READ_SENSOR_TYPE = "ReadSensor"
-    SET_LIGHT_TYPE = "SetLight"
-    WRITE_ACTUATOR_TYPE = "WriteActuator"
-
-    TYPE_CHOICES = [
-        (INVALID_TYPE, "Invalid task"),
-        (ALERT_SENSOR_TYPE, "Alert sensor"),
-        (POLL_SENSOR_TYPE, "Poll sensor"),
-        (READ_SENSOR_TYPE, "Read sensor"),
-        (SET_LIGHT_TYPE, "Set light"),
-        (WRITE_ACTUATOR_TYPE, "Write actuator"),
-    ]
+        INVALID_TYPE = "InvalidType", "Invalid type"
+        ALERT_SENSOR = "AlertSensor", "Alert sensor"
+        POLL_SENSOR = "PollSensor", "Poll sensor"
+        READ_SENSOR = "ReadSensor", "Read sensor"
+        SET_LIGHT = "SetLight", "Set light"
+        WRITE_ACTUATOR = "WriteActuator", "Write actuator"
 
     id = models.UUIDField(
         primary_key=True,
@@ -180,23 +243,26 @@ class ControllerTask(models.Model):
     )
     controller_component = models.ForeignKey(
         ControllerComponent,
+        related_name="controller_task_set",
         on_delete=models.CASCADE,
         help_text="On which controller this task is executed.",
     )
     task_type = models.CharField(
-        choices=TYPE_CHOICES,
+        choices=TaskType.choices,
         max_length=64,
         help_text="The type of the task on the controller",
     )
     state = models.CharField(
-        choices=STATE_CHOICES,
+        choices=State.choices,
         max_length=64,
         help_text="The state of the controller task.",
     )
     parameters = models.JSONField(
         default=dict,
         blank=True,
-        help_text="The construction parameters excl. UUID and type",
+        help_text="The setup parameters excl. the task's ID, state and type. The"
+        "peripheral ID parameter has to use the peripheral component's ID instead that"
+        "of its site entity.",
     )
     run_until = models.DateTimeField(
         blank=True, null=True, help_text="Until when the task should run."
@@ -232,11 +298,11 @@ class ControllerTask(models.Model):
     def to_start_command(self) -> Optional[Dict]:
         """If in starting state, return a command that starts the task, else None"""
 
-        if self.state == self.STARTING_STATE:
+        if self.state == self.State.STARTING:
             if self.run_until:
                 now = datetime.now(tz=timezone.utc)
                 if self.run_until > now:
-                    self.state = self.STOPPED_STATE
+                    self.state = self.State.STOPPED
                     self.save()
                     return None
                 return {
@@ -254,7 +320,7 @@ class ControllerTask(models.Model):
     def to_stop_command(self) -> Optional[Dict]:
         """If in stopping state, return a command that stops the task, else None"""
 
-        if self.state == self.STOPPING_STATE:
+        if self.state == self.State.STOPPING:
             return {"uuid": str(self.id)}
         return None
 
@@ -266,10 +332,10 @@ class ControllerTask(models.Model):
             status = result["status"]
         except KeyError as err:
             raise ValueError(f"Missing key {err}") from err
-        if self.state == self.STARTING_STATE and status == "success":
-            self.state = self.RUNNING_STATE
-        elif self.state == self.STARTING_STATE and status == "fail":
-            self.state = self.FAILED_STATE
+        if self.state == self.State.STARTING and status == "success":
+            self.state = self.State.RUNNING
+        elif self.state == self.State.STARTING and status == "fail":
+            self.state = self.State.FAILED
         else:
             raise self.InvalidTransition(f"Apply start result {status} to {self.state}")
 
@@ -280,12 +346,12 @@ class ControllerTask(models.Model):
         if (status := result.get("status")) is None:
             raise ValueError("Missing 'status' property")
         success_fail = ["success", "fail"]
-        if self.state == self.STARTING_STATE and status in success_fail:
-            self.state = self.STOPPED_STATE
-        elif self.state == self.RUNNING_STATE and status in success_fail:
-            self.state = self.STOPPED_STATE
-        elif self.state == self.STOPPING_STATE and status in success_fail:
-            self.state = self.STOPPED_STATE
+        if self.state == self.State.STARTING and status in success_fail:
+            self.state = self.State.STOPPED
+        elif self.state == self.State.RUNNING and status in success_fail:
+            self.state = self.State.STOPPED
+        elif self.state == self.State.STOPPING and status in success_fail:
+            self.state = self.State.STOPPED
         else:
             raise self.InvalidTransition(f"Apply stop result {status} to {self.state}")
 
