@@ -54,22 +54,22 @@ class ControllerTaskTests(TestCase):
                     "hi": "there",
                 },
             ],
-            "stop": [{"uuid": str(task_c.id)}, {"uuid": str(task_d.id)}],
+            "stop": [{"uuid": str(task_c.pk)}, {"uuid": str(task_d.pk)}],
         }
         tasks = ControllerTask.objects.from_commands(commands, self.controller_a)
 
         task_a = [
-            task for task in tasks if str(task.id) == commands["start"][0]["uuid"]
+            task for task in tasks if str(task.pk) == commands["start"][0]["uuid"]
         ][0]
         task_b = [
-            task for task in tasks if str(task.id) == commands["start"][1]["uuid"]
+            task for task in tasks if str(task.pk) == commands["start"][1]["uuid"]
         ][0]
         self.assertEqual(task_a.task_type, commands["start"][0]["type"])
-        self.assertEqual(task_a.controller_component_id, self.controller_a.id)
+        self.assertEqual(task_a.controller_component_id, self.controller_a.pk)
         self.assertEqual(task_a.state, ControllerTask.State.STARTING)
         self.assertEqual(task_a.parameters["foo"], commands["start"][0]["foo"])
         self.assertEqual(task_b.task_type, commands["start"][1]["type"])
-        self.assertEqual(task_b.controller_component_id, self.controller_a.id)
+        self.assertEqual(task_b.controller_component_id, self.controller_a.pk)
         self.assertEqual(task_b.state, ControllerTask.State.STARTING)
         self.assertEqual(task_b.parameters["hi"], commands["start"][1]["hi"])
 
@@ -113,7 +113,7 @@ class ControllerTaskTests(TestCase):
             )
             ControllerTask.objects.from_start_commands(
                 start_commands=[
-                    {"uuid": str(task_a.id), "type": ControllerTask.TaskType.READ_SENSOR}
+                    {"uuid": str(task_a.pk), "type": ControllerTask.TaskType.READ_SENSOR}
                 ],
                 controller=self.controller_a,
             )
@@ -138,10 +138,10 @@ class ControllerTaskTests(TestCase):
             state=ControllerTask.State.STARTING,
         )
         tasks = ControllerTask.objects.from_stop_commands(
-            [{"uuid": str(task_stopped.id)}, {"uuid": str(task_started.id)}]
+            [{"uuid": str(task_stopped.pk)}, {"uuid": str(task_started.pk)}]
         )
-        self.assertIn(task_started.id, [task.id for task in tasks])
-        self.assertNotIn(task_stopped.id, [task.id for task in tasks])
+        self.assertIn(task_started.pk, [task.pk for task in tasks])
+        self.assertNotIn(task_stopped.pk, [task.pk for task in tasks])
 
     def test_to_commands(self):
         """Test the to_commands method used to generate necessary commands"""
@@ -164,24 +164,24 @@ class ControllerTaskTests(TestCase):
         )
 
         tasks = [starting_task, stopping_task, running_task]
-        commands = ControllerTask.to_commands(tasks)
+        commands = ControllerTask.objects.to_commands(tasks)
         start_uuids = [command["uuid"] for command in commands["start"]]
         stop_uuids = [command["uuid"] for command in commands["stop"]]
-        self.assertIn(str(starting_task.id), start_uuids)
-        self.assertNotIn(str(starting_task.id), stop_uuids)
-        self.assertIn(str(stopping_task.id), stop_uuids)
-        self.assertNotIn(str(stopping_task.id), start_uuids)
-        self.assertNotIn(str(running_task.id), start_uuids)
-        self.assertNotIn(str(running_task.id), stop_uuids)
+        self.assertIn(str(starting_task.pk), start_uuids)
+        self.assertNotIn(str(starting_task.pk), stop_uuids)
+        self.assertIn(str(stopping_task.pk), stop_uuids)
+        self.assertNotIn(str(stopping_task.pk), start_uuids)
+        self.assertNotIn(str(running_task.pk), start_uuids)
+        self.assertNotIn(str(running_task.pk), stop_uuids)
 
         command = starting_task.to_start_command()
-        self.assertEqual(str(starting_task.id), command["uuid"])
+        self.assertEqual(str(starting_task.pk), command["uuid"])
         self.assertEqual(starting_task.task_type, command["type"])
         self.assertEqual(starting_task.parameters["foo"], command["foo"])
         self.assertFalse(starting_task.to_stop_command())
 
         command = stopping_task.to_stop_command()
-        self.assertEqual(str(stopping_task.id), command["uuid"])
+        self.assertEqual(str(stopping_task.pk), command["uuid"])
         self.assertFalse(stopping_task.to_start_command())
 
     def test_from_results(self):
@@ -219,34 +219,34 @@ class ControllerTaskTests(TestCase):
 
         results = {
             "start": [
-                {"uuid": str(starting_task_a.id), "status": "success"},
-                {"uuid": str(starting_task_b.id), "status": "fail"},
+                {"uuid": str(starting_task_a.pk), "status": "success"},
+                {"uuid": str(starting_task_b.pk), "status": "fail"},
             ],
             "stop": [
-                {"uuid": str(stopping_task.id), "status": "success"},
-                {"uuid": str(running_task.id), "status": "success"},
-                {"uuid": str(starting_task_c.id), "status": "success"},
+                {"uuid": str(stopping_task.pk), "status": "success"},
+                {"uuid": str(running_task.pk), "status": "success"},
+                {"uuid": str(starting_task_c.pk), "status": "success"},
             ],
         }
         tasks = ControllerTask.objects.from_results(results)
         self.assertEqual(
-            [task for task in tasks if task.id == starting_task_a.id][0].state,
+            [task for task in tasks if task.pk == starting_task_a.pk][0].state,
             ControllerTask.State.RUNNING,
         )
         self.assertEqual(
-            [task for task in tasks if task.id == starting_task_b.id][0].state,
+            [task for task in tasks if task.pk == starting_task_b.pk][0].state,
             ControllerTask.State.FAILED,
         )
         self.assertEqual(
-            [task for task in tasks if task.id == starting_task_c.id][0].state,
+            [task for task in tasks if task.pk == starting_task_c.pk][0].state,
             ControllerTask.State.STOPPED,
         )
         self.assertEqual(
-            [task for task in tasks if task.id == stopping_task.id][0].state,
+            [task for task in tasks if task.pk == stopping_task.pk][0].state,
             ControllerTask.State.STOPPED,
         )
         self.assertEqual(
-            [task for task in tasks if task.id == running_task.id][0].state,
+            [task for task in tasks if task.pk == running_task.pk][0].state,
             ControllerTask.State.STOPPED,
         )
 
@@ -317,18 +317,18 @@ class ControllerTaskTests(TestCase):
             controller_component=self.controller_a,
             state=ControllerTask.State.FAILED,
         )
-        started_tasks = [str(running_task_b.id)]
+        started_tasks = [str(running_task_b.pk)]
 
         commands = ControllerTask.objects.commands_from_register(
-            started_tasks, self.controller_a.id
+            started_tasks, self.controller_a.pk
         )
         start_uuids = [task["uuid"] for task in commands.get("start", [])]
-        self.assertIn(str(starting_task.id), start_uuids)
-        self.assertIn(str(running_task_a.id), start_uuids)
-        self.assertNotIn(str(running_task_b.id), start_uuids)
-        self.assertNotIn(str(stopping_task.id), start_uuids)
-        self.assertNotIn(str(stopped_task.id), start_uuids)
-        self.assertNotIn(str(failed_task.id), start_uuids)
+        self.assertIn(str(starting_task.pk), start_uuids)
+        self.assertIn(str(running_task_a.pk), start_uuids)
+        self.assertNotIn(str(running_task_b.pk), start_uuids)
+        self.assertNotIn(str(stopping_task.pk), start_uuids)
+        self.assertNotIn(str(stopped_task.pk), start_uuids)
+        self.assertNotIn(str(failed_task.pk), start_uuids)
 
     def test_to_string(self):
         """Test the to string method"""

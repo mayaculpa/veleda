@@ -93,7 +93,7 @@ class ControllerConsumer(WebsocketConsumer):
     def receive(self, text_data=None, bytes_data=None):
         try:
             data = json.loads(text_data)
-            self.handle_message(data, self.scope["controller"].id)
+            self.handle_message(data, self.scope["controller"].pk)
         except json.decoder.JSONDecodeError:
             self.disconnect_controller({"errors": "Invalid JSON data"})
         except self.InvalidData as err:

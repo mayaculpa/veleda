@@ -29,7 +29,6 @@ class DataPointTests(TestCase):
         )
         self.esp32_type = ControllerComponentType.objects.create(name="ESP32")
         self.esp32_a_controller = ControllerComponent.objects.create(
-            id=uuid.uuid4(),
             component_type=self.esp32_type,
             site_entity=SiteEntity.objects.create(name="ESP32 A", site=self.site_a),
         )
@@ -64,7 +63,7 @@ class DataPointTests(TestCase):
         """Test creating data points from a telemetry message"""
 
         data = {
-            "peripheral": str(self.bme280_a.id),
+            "peripheral": str(self.bme280_a.pk),
             "time": datetime.now(tz=timezone.utc),
             "data_points": [
                 {"value": 30, "data_point_type": str(self.air_temperature.id)},
@@ -98,7 +97,7 @@ class DataPointTests(TestCase):
         """Test that telemetry without a timestamp uses the current time"""
 
         data = {
-            "peripheral": str(self.bme280_a.id),
+            "peripheral": str(self.bme280_a.pk),
             "data_points": [
                 {"value": 30, "data_point_type": str(self.air_temperature.id)},
                 {"value": 101000, "data_point_type": str(self.air_pressure.id)},
@@ -130,7 +129,7 @@ class DataPointTests(TestCase):
         """Test that telemetry with a string timestamp works"""
 
         data = {
-            "peripheral": str(self.bme280_a.id),
+            "peripheral": str(self.bme280_a.pk),
             "time": str(datetime.now(tz=timezone.utc)),
             "data_points": [
                 {"value": 30, "data_point_type": str(self.air_temperature.id)},
@@ -183,7 +182,7 @@ class DataPointTests(TestCase):
         """Test that invalid time is also checked by from telemetry"""
 
         data = {
-            "peripheral": str(self.bme280_a.id),
+            "peripheral": str(self.bme280_a.pk),
             "time": datetime.now(),
             "data_points": [
                 {"value": 30, "data_point_type": str(self.air_temperature.id)},

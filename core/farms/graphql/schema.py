@@ -13,7 +13,12 @@ from farms.graphql.nodes import (
     DataPointNode,
 )
 
-from farms.graphql.mutations import StartControllerTask, RestartControllerTask, StopControllerTask
+from farms.graphql.mutations import (
+    StartControllerTask,
+    RestartControllerTask,
+    StopControllerTask,
+    CreatePeripheralComponent,
+)
 
 
 class Query(object):
@@ -57,3 +62,5 @@ class Mutation(object):
     start_controller_task = StartControllerTask.Field()
     restart_controller_task = RestartControllerTask.Field()
     stop_controller_task = StopControllerTask.Field()
+
+    create_peripheral_component = CreatePeripheralComponent.Field()

@@ -1,78 +1,116 @@
+from asgiref.sync import async_to_sync
 from typing import Dict, List, Optional
 import uuid
 
+from channels.layers import get_channel_layer
+from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError, transaction
-from django.core.exceptions import ObjectDoesNotExist
 
 from farms.models.site import SiteEntity
 from farms.models.controller import ControllerComponent
 
 
+class PeripheralDataPointType(models.Model):
+    """Intermediate model linking data point types and peripherals. Contains the prefix
+    needed for setting up peripherals regarding the data point type."""
+
+    data_point_type = models.ForeignKey(
+        "DataPointType",
+        on_delete=models.PROTECT,
+        related_name="peripheral_component_edges",
+    )
+    peripheral = models.ForeignKey(
+        "PeripheralComponent",
+        on_delete=models.CASCADE,
+        related_name="data_point_type_edges",
+    )
+    parameter_prefix = models.CharField(blank=True, max_length=64)
+
+    @property
+    def parameter_name(self) -> str:
+        """Get the name of the data point type parameter"""
+
+        if self.parameter_prefix:
+            key = f"{self.parameter_prefix}_data_point_type"
+        else:
+            key = "data_point_type"
+        return key
+
+    @property
+    def parameter(self) -> Dict[str, uuid.UUID]:
+        """Get data point type parameter in the form of
+        {parameter_name: data_point_type_id}."""
+
+        return {self.parameter_name: self.data_point_type_id}
+
+
 class PeripheralComponentManager(models.Manager):
-    def from_commands(
-        self, peripheral_commands: Dict, controller: ControllerComponent
-    ) -> List["PeripheralComponent"]:
-        """Create peripherals from add commands and get peripherals to be removed.
-        Throws ValueError on missing keys."""
+    def create_with_new_site_enitity_and_send(
+        self,
+        name: str,
+        site_id: uuid.UUID,
+        controller_component_id: uuid.UUID,
+        peripheral_type: str,
+        other_parameters: Dict,
+        data_point_type_edges: Dict[uuid.UUID, str],
+    ) -> "PeripheralComponent":
+        """Create a peripheral component with a new site entity and send a request to the
+        controller to add it."""
 
-        peripherals: List["PeripheralComponent"] = []
-        if peripheral_commands:
-            add_commands = peripheral_commands.get("add")
-            if add_commands:
-                peripherals.extend(self.from_add_commands(add_commands, controller))
-            remove_commands = peripheral_commands.get("remove")
-            if remove_commands:
-                peripherals.extend(self.from_remove_commands(remove_commands))
-        return peripherals
-
-    def from_add_commands(
-        self, add_commands: Dict, controller: ControllerComponent
-    ) -> List["PeripheralComponent"]:
-        """Create peripherals from add commands. Throws ValueError on missing keys."""
-
-        peripherals: List["PeripheralComponent"] = []
-        site = controller.site_entity.site
-        for add_command in add_commands:
-            command = add_command.copy()
-            try:
-                peripheral_id = command.pop("uuid")
-                peripheral_type = command.pop("type")
-                name = command.pop("name")
-            except KeyError as err:
-                if "peripheral_id" in locals():
-                    raise ValueError(f"Missing key {err} for {peripheral_id}") from err
-                raise ValueError(f"Missing key {err}") from err
-            peripherals.append(
-                self.model(
-                    id=peripheral_id,
-                    site_entity=SiteEntity.objects.create(site=site, name=name),
-                    controller_component=controller,
-                    peripheral_type=peripheral_type,
-                    state=self.model.ADDING_STATE,
-                    parameters=command,
-                )
+        with transaction.atomic():
+            site_entity = SiteEntity.objects.create(name=name, site_id=site_id)
+            peripheral_component = PeripheralComponent(
+                site_entity_id=site_entity.pk,
+                controller_component_id=controller_component_id,
+                state=self.model.ADDING_STATE,
+                peripheral_type=peripheral_type,
+                other_parameters=other_parameters,
             )
-        try:
-            return self.bulk_create(peripherals)
-        except IntegrityError as err:
-            raise ValueError(f"Duplicate UUID") from err
+            try:
+                peripheral_component.full_clean()
+            except ValidationError as err:
+                raise ValueError from err
+            peripheral_component.save()
+            peripheral_data_point_types = []
+            for data_point_type_id, parameter_prefix in data_point_type_edges.items():
+                peripheral_data_point_types.append(
+                    PeripheralDataPointType(
+                        data_point_type_id=data_point_type_id,
+                        peripheral_id=peripheral_component.pk,
+                        parameter_prefix=parameter_prefix,
+                    )
+                )
+            PeripheralDataPointType.objects.bulk_create(peripheral_data_point_types)
+            # Refetch model due to added data point type edges
+            peripheral_component = (
+                PeripheralComponent.objects.prefetch_related("data_point_type_set")
+                .select_related("controller_component")
+                .get(pk=peripheral_component.pk)
+            )
+            commands = self.to_commands([peripheral_component])
+            self._send_commands_to_controller(
+                peripheral_component.controller_component.channel_name, commands
+            )
+        return peripheral_component
 
-    def from_remove_commands(
-        self, remove_commands: Dict
-    ) -> List["PeripheralComponent"]:
-        """Get the list of peripherals to be removed. Throws ValueError on missing keys."""
+    def to_commands(self, peripherals: List["PeripheralComponent"]) -> Dict:
+        """Convert a list of peripherals to commands. Ignores peripherals that cannot
+        be converted to commands"""
 
-        try:
-            uuids = [command["uuid"] for command in remove_commands]
-        except KeyError as err:
-            raise ValueError(f"Missing key {err}") from err
-        peripherals = list(
-            self.filter(id__in=uuids).filter(state__in=self.model.REMOVABLE_STATES)
-        )
+        add_peripherals = []
+        remove_peripherals = []
         for peripheral in peripherals:
-            peripheral.state = self.model.REMOVING_STATE
-        self.bulk_update(peripherals, ["state"])
-        return peripherals
+            if peripheral.state == self.model.ADDING_STATE:
+                add_peripherals.append(peripheral.to_add_command())
+            if peripheral.state == self.model.REMOVING_STATE:
+                remove_peripherals.append(peripheral.to_remove_command())
+
+        commands = {}
+        if add_peripherals:
+            commands.update({"add": add_peripherals})
+        if remove_peripherals:
+            commands.update({"remove": remove_peripherals})
+        return commands
 
     def from_results(self, results: Dict) -> List["PeripheralComponent"]:
         """Update states from results commands"""
@@ -80,20 +118,20 @@ class PeripheralComponentManager(models.Manager):
         # Get all peripheral ids to update
         uuids = [result["uuid"] for result in results.get("add", [])]
         uuids.extend([result["uuid"] for result in results.get("remove", [])])
-        peripherals = self.select_for_update().filter(id__in=uuids)
+        peripherals = self.select_for_update().filter(pk__in=uuids)
 
         with transaction.atomic():
             for add_result in results.get("add", []):
                 next(
                     peripheral
                     for peripheral in peripherals
-                    if str(peripheral.id) == add_result["uuid"]
+                    if str(peripheral.pk) == add_result["uuid"]
                 ).apply_add_result(add_result)
             for remove_result in results.get("remove", []):
                 next(
                     peripheral
                     for peripheral in peripherals
-                    if str(peripheral.id) == remove_result["uuid"]
+                    if str(peripheral.pk) == remove_result["uuid"]
                 ).apply_remove_result(remove_result)
             self.bulk_update(peripherals, ["state"])
         return peripherals
@@ -124,6 +162,34 @@ class PeripheralComponentManager(models.Manager):
             return {"add": commands}
         return {}
 
+    @staticmethod
+    def _send_commands_to_controller(
+        channel_name: str, peripheral_commands: List[Dict], request_id: str = None
+    ) -> None:
+        """Send peripheral commands to the controller"""
+
+        if not channel_name:
+            raise ValueError("Controller has not connected to the server")
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.send)(
+            channel_name,
+            {
+                "type": "send.controller.peripheral.commands",
+                "commands": peripheral_commands,
+                "request_id": request_id,
+            },
+        )
+
+
+def validate_other_parameters(value):
+    """Ensure that data point types are not included in other parameters"""
+
+    for key in value.keys():
+        if "data_point_type" in key:
+            raise ValidationError(
+                "Store data point type parameters through data point type edges",
+                params={"value": value},
+            )
 
 class PeripheralComponent(models.Model):
     """The peripheral aspect of a site entity, such as a sensor or actuator."""
@@ -168,13 +234,9 @@ class PeripheralComponent(models.Model):
         (NEO_PIXEL_TYPE, "NeoPixel array"),
     ]
 
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
     site_entity = models.OneToOneField(
         SiteEntity,
+        primary_key=True,
         related_name="peripheral_component",
         on_delete=models.CASCADE,
         help_text="Which site entity the component is a part of.",
@@ -196,11 +258,31 @@ class PeripheralComponent(models.Model):
         max_length=64,
         help_text="The state of the controller task.",
     )
-    parameters = models.JSONField(
+    other_parameters = models.JSONField(
         default=dict,
-        help_text="The setup parameters excl. the peripheral's ID, state,"
-        " type and data point type parameters.",
+        help_text="Setup parameters excl. the data point type parameters.",
+        validators=[validate_other_parameters],
+        blank=True
     )
+
+    data_point_type_set = models.ManyToManyField(
+        "DataPointType",
+        through="PeripheralDataPointType",
+        related_name="peripheral_component_set",
+    )
+
+    @property
+    def parameters(self):
+        """Get all peripheral setup parameters, combining the data point type ones with
+        the others."""
+
+        data_point_types = {
+            parameter_name: str(dpt_id)
+            for edge in self.data_point_type_edges.all()
+            for parameter_name, dpt_id in edge.parameter.items()
+        }
+        return {**data_point_types, **self.other_parameters}
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         help_text="The datetime of creation.",
@@ -209,32 +291,12 @@ class PeripheralComponent(models.Model):
         auto_now=True, help_text="The datetime of the last update."
     )
 
-    @classmethod
-    def to_commands(cls, peripherals: List["PeripheralComponent"]) -> Dict:
-        """Convert a list of peripherals to commands. Ignores peripherals that cannot
-        be converted to commands"""
-
-        add_peripherals = []
-        remove_peripherals = []
-        for peripheral in peripherals:
-            if peripheral.state == cls.ADDING_STATE:
-                add_peripherals.append(peripheral.to_add_command())
-            if peripheral.state == cls.REMOVING_STATE:
-                remove_peripherals.append(peripheral.to_remove_command())
-
-        commands = {}
-        if add_peripherals:
-            commands.update({"add": add_peripherals})
-        if remove_peripherals:
-            commands.update({"remove": remove_peripherals})
-        return commands
-
     def to_add_command(self) -> Optional[Dict]:
         """If in adding state, return a command that adds the peripheral, else None"""
 
         if self.state == self.ADDING_STATE:
             return {
-                "uuid": str(self.id),
+                "uuid": str(self.pk),
                 "type": self.peripheral_type,
                 **self.parameters,
             }
@@ -244,7 +306,7 @@ class PeripheralComponent(models.Model):
         """If in removing state, return a command that removes the peripheral, else None"""
 
         if self.state == self.REMOVING_STATE:
-            return {"uuid": str(self.id)}
+            return {"uuid": str(self.pk)}
         return None
 
     def apply_add_result(self, result):
@@ -257,7 +319,7 @@ class PeripheralComponent(models.Model):
             self.state = self.FAILED_STATE
         else:
             raise self.InvalidTransition(
-                f"Apply add result {status} to {self.state}", id=self.id
+                f"Apply add result {status} to {self.state}", id=self.pk
             )
 
     def apply_remove_result(self, result):
@@ -270,10 +332,10 @@ class PeripheralComponent(models.Model):
             self.state = self.ADDED_STATE
         else:
             raise self.InvalidTransition(
-                f"Apply remove result {status} to {self.state}", id=self.id
+                f"Apply remove result {status} to {self.state}", id=self.pk
             )
 
     def __str__(self):
         if self.site_entity.name:
             return f"Peripheral of {self.site_entity.name}"
-        return f"Peripheral of {self.peripheral_type} - {str(self.id)[:5]}"
+        return f"Peripheral of {self.peripheral_type} - {str(self.pk)[:5]}"

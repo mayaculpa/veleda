@@ -1,18 +1,15 @@
 from django.contrib import admin
 
 from .models import (
-    Controller,
     ControllerAuthToken,
     ControllerComponent,
     ControllerComponentType,
     ControllerMessage,
     ControllerTask,
-    Coordinator,
     DataPoint,
     DataPointType,
-    HydroponicSystem,
-    MqttMessage,
     PeripheralComponent,
+    PeripheralDataPointType,
     Site,
     SiteEntity,
 )
@@ -45,6 +42,11 @@ class PeripheralComponentAdmin(admin.ModelAdmin):
     pass
 
 
+@admin.register(PeripheralDataPointType)
+class PeripheralDataPointTypeAdmin(admin.ModelAdmin):
+    pass
+
+
 @admin.register(ControllerTask)
 class ControllerTaskAdmin(admin.ModelAdmin):
     pass
@@ -60,24 +62,9 @@ class DataPointAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(Coordinator)
-class CoordinatorAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(HydroponicSystem)
-class HydroponicSystemAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(Controller)
-class ControllerAdmin(admin.ModelAdmin):
-    pass
-
-
 @admin.register(ControllerAuthToken)
 class ControllerAuthTokenAdmin(admin.ModelAdmin):
-    def get_form(self, request, obj=None, **kwargs):
+    def get_form(self, request, obj=None, change=False, **kwargs):
         form = super(ControllerAuthTokenAdmin, self).get_form(request, obj, **kwargs)
         form.base_fields["key"].initial = ControllerAuthToken.generate_key()
         return form
@@ -85,9 +72,4 @@ class ControllerAuthTokenAdmin(admin.ModelAdmin):
 
 @admin.register(ControllerMessage)
 class ControllerMessageAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(MqttMessage)
-class MqttMessageAdmin(admin.ModelAdmin):
     pass

@@ -4,7 +4,6 @@ from typing import Dict, List, Optional, Type
 import uuid
 
 from channels.layers import get_channel_layer
-from channels.exceptions import InvalidChannelLayerError
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, models, transaction
 from farms.models.controller import ControllerComponent
@@ -23,16 +22,21 @@ class ControllerTaskManager(models.Manager):
     ) -> "ControllerTask":
         """Create and start a task on the specified controller"""
 
+        controller_task = self.model(
+            controller_component_id=controller_component_id,
+            task_type=task_type,
+            state=self.model.State.STARTING.value,
+            parameters=parameters,
+            run_until=run_until
+        )
+        try:
+            controller_task.full_clean()
+        except ValidationError as err:
+            raise ValueError from err
         with transaction.atomic():
-            controller_task = self.select_related("controller_component").create(
-                controller_component_id=controller_component_id,
-                task_type=task_type,
-                state=self.model.State.STARTING.value,
-                parameters=parameters,
-                run_until=run_until,
-            )
-            task_commands = self.model.to_commands([controller_task])
-            self._send_controller_task_commands(
+            controller_task.save()
+            task_commands = self.to_commands([controller_task])
+            self._send_commands_to_controller(
                 controller_task.controller_component.channel_name, task_commands
             )
         return controller_task
@@ -46,8 +50,8 @@ class ControllerTaskManager(models.Manager):
             )
             controller_task.state = self.model.State.STARTING
             controller_task.save()
-            task_commands = self.model.to_commands([controller_task])
-            self._send_controller_task_commands(
+            task_commands = self.to_commands([controller_task])
+            self._send_commands_to_controller(
                 controller_task.controller_component.channel_name, task_commands
             )
         return controller_task
@@ -61,11 +65,30 @@ class ControllerTaskManager(models.Manager):
             )
             controller_task.state = self.model.State.STOPPING
             controller_task.save()
-            task_commands = self.model.to_commands([controller_task])
-            self._send_controller_task_commands(
+            task_commands = self.to_commands([controller_task])
+            self._send_commands_to_controller(
                 controller_task.controller_component.channel_name, task_commands
             )
         return controller_task
+    
+    def to_commands(cls, tasks: List[Type["ControllerTask"]]) -> Dict:
+        """Convert a list of tasks to commands. Ignores tasks that cannot be converted
+        to commands"""
+
+        start_tasks = []
+        stop_tasks = []
+        for task in tasks:
+            if command := task.to_start_command():
+                start_tasks.append(command)
+            if command := task.to_stop_command():
+                stop_tasks.append(command)
+
+        commands = {}
+        if start_tasks:
+            commands.update({"start": start_tasks})
+        if stop_tasks:
+            commands.update({"stop": stop_tasks})
+        return commands
 
     def from_commands(self, task_commands, controller) -> List[Type["ControllerTask"]]:
         """Parse a command message to start tasks and get those to be stopped"""
@@ -188,9 +211,11 @@ class ControllerTaskManager(models.Manager):
         return {}
 
     @staticmethod
-    def _send_controller_task_commands(
+    def _send_commands_to_controller(
         channel_name: str, task_commands: List[Dict], request_id: str = None
-    ):
+    ) -> None:
+        """Send task commands to the controller"""
+
         if not channel_name:
             raise ValueError("Controller has not connected to the server")
         channel_layer = get_channel_layer()
@@ -275,40 +300,19 @@ class ControllerTask(models.Model):
         auto_now=True, help_text="The datetime of the last update."
     )
 
-    @classmethod
-    def to_commands(cls, tasks: List[Type["ControllerTask"]]) -> Dict:
-        """Convert a list of tasks to commands. Ignores tasks that cannot be converted
-        to commands"""
-
-        start_tasks = []
-        stop_tasks = []
-        for task in tasks:
-            if command := task.to_start_command():
-                start_tasks.append(command)
-            if command := task.to_stop_command():
-                stop_tasks.append(command)
-
-        commands = {}
-        if start_tasks:
-            commands.update({"start": start_tasks})
-        if stop_tasks:
-            commands.update({"stop": stop_tasks})
-        return commands
-
     def to_start_command(self) -> Optional[Dict]:
-        """If in starting state, return a command that starts the task, else None"""
+        """If in starting state, return a command that starts the task, else None."""
 
         if self.state == self.State.STARTING:
             if self.run_until:
+                # Do not check if the run until time is in the past. The controller will
+                # handle this case by immediately returning task stopped
                 now = datetime.now(tz=timezone.utc)
-                if self.run_until > now:
-                    self.state = self.State.STOPPED
-                    self.save()
-                    return None
                 return {
                     "uuid": str(self.id),
                     "type": self.task_type,
-                    "duration_ms": (self.run_until - now).seconds(),
+                    "duration_ms": (self.run_until - now).total_seconds() * 1000,
+                    **self.parameters
                 }
             return {
                 "uuid": str(self.id),

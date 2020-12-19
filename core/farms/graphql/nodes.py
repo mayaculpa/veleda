@@ -10,6 +10,7 @@ from farms.models import (
     ControllerComponentType,
     ControllerTask,
     PeripheralComponent,
+    PeripheralDataPointType,
     DataPointType,
     DataPoint,
 )
@@ -80,9 +81,8 @@ class ControllerComponentNode(DjangoObjectType):
             "modified_at": ["exact", "lt", "gt"],
         }
         fields = (
-            "id",
-            "component_type",
             "site_entity",
+            "component_type",
             "peripheral_component_set",
             "created_at",
             "modified_at",
@@ -161,7 +161,6 @@ class PeripheralComponentNode(DjangoObjectType):
     class Meta:
         model = PeripheralComponent
         filter_fields = {
-            "id": ["exact"],
             "site_entity": ["exact"],
             "site_entity__site": ["exact"],
             "controller_component": ["exact"],
@@ -171,28 +170,37 @@ class PeripheralComponentNode(DjangoObjectType):
             "modified_at": ["exact", "lt", "gt"],
         }
         fields = (
-            "id",
             "site_entity",
             "controller_component",
             "peripheral_type",
             "state",
             "parameters",
+            "other_parameters",
             "data_point_set",
-            # "data_point_types",
-            # "data_point_type_edges",
+            "data_point_type_set",
+            "data_point_type_edges",
             "created_at",
             "modified_at",
         )
         convert_choices_to_enum = False
         interfaces = (relay.Node,)
 
-    data_point_types = graphene.JSONString()
+    parameters = graphene.JSONString(
+        description="Combines other parameters and data point types to create controller commands."
+    )
 
     @staticmethod
-    def resolve_data_point_types(peripheral_component, _):
-        """DataPointTypes is a property and therefore has to manually be set"""
+    def resolve_parameters(peripheral_component, _):
+        """The parameter fields combines all parameters"""
 
-        return peripheral_component.data_point_types
+        return peripheral_component.parameters
+
+
+class PeripheralDataPointTypeNode(DjangoObjectType):
+    class Meta:
+        model = PeripheralDataPointType
+        filter_fields = ["data_point_type", "peripheral", "parameter_prefix"]
+        fields = fields = ("data_point_type", "peripheral", "parameter_prefix")
 
 
 class DataPointTypeNode(DjangoObjectType):
@@ -206,6 +214,8 @@ class DataPointTypeNode(DjangoObjectType):
             "name",
             "unit",
             "data_point_set",
+            "peripheral_component_set",
+            "peripheral_component_edges",
         )
         interfaces = (relay.Node,)
 

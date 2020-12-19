@@ -1,9 +1,9 @@
-import uuid
-
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 
 from farms.models import (
+    DataPointType,
+    PeripheralDataPointType,
     PeripheralComponent,
     ControllerComponent,
     ControllerComponentType,
@@ -28,30 +28,9 @@ class PeripheralModelAddRemoveTests(TestCase):
         )
         self.esp32_type = ControllerComponentType.objects.create(name="ESP32")
         self.esp32_a_controller = ControllerComponent.objects.create(
-            id=uuid.uuid4(),
             component_type=self.esp32_type,
             site_entity=self.esp32_a_entity,
         )
-        self.add_commands = [
-            {
-                "uuid": str(uuid.uuid4()),
-                "type": PeripheralComponent.LED_TYPE,
-                "name": "LED A",
-                "pin": 12,
-                "data_point_type": str(uuid.uuid4()),
-            },
-            {
-                "uuid": str(uuid.uuid4()),
-                "type": PeripheralComponent.I2C_ADAPTER_TYPE,
-                "name": "I2C Adapter A",
-                "scl": 32,
-                "sda": 33,
-            },
-        ]
-        self.remove_commands = [
-            {"uuid": self.add_commands[0]["uuid"]},
-            {"uuid": self.add_commands[1]["uuid"]},
-        ]
 
     def test_creation(self):
         """Test creating peripherals"""
@@ -62,74 +41,92 @@ class PeripheralModelAddRemoveTests(TestCase):
             site_entity=led_a_entity,
             controller_component=self.esp32_a_controller,
             state=PeripheralComponent.ADDING_STATE,
+            other_parameters={"some": "value"},
         )
         self.assertEqual(led_a_peripheral.site_entity, led_a_entity)
         self.assertEqual(led_a_peripheral.controller_component, self.esp32_a_controller)
         self.assertEqual(led_a_peripheral.site_entity.site, self.site_a)
+        self.assertEqual(led_a_peripheral.pk, led_a_entity.pk)
+        self.assertDictEqual(
+            led_a_peripheral.other_parameters, led_a_peripheral.parameters
+        )
+        self.assertEqual(led_a_peripheral.state, PeripheralComponent.ADDING_STATE)
+        self.assertEqual(led_a_peripheral.peripheral_type, PeripheralComponent.LED_TYPE)
 
-    def test_from_add_commands(self):
-        """Test parsing add command message"""
-
-        add_peripherals = PeripheralComponent.objects.from_add_commands(
-            self.add_commands, self.esp32_a_controller
+    def test_peripheral_data_point_type(self):
+        bme280_entity = SiteEntity.objects.create(name="BME280", site=self.site_a)
+        bme280_peripheral = PeripheralComponent.objects.create(
+            peripheral_type=PeripheralComponent.BME280_TYPE,
+            site_entity=bme280_entity,
+            controller_component=self.esp32_a_controller,
+            state=PeripheralComponent.ADDING_STATE,
+            other_parameters={"some": "value"},
+        )
+        temperature_data_point_type = DataPointType.objects.create(
+            name="Temperature", unit="°C"
+        )
+        temperature_link = PeripheralDataPointType.objects.create(
+            data_point_type=temperature_data_point_type,
+            peripheral=bme280_peripheral,
+            parameter_prefix="temperature",
+        )
+        pressure_data_point_type = DataPointType.objects.create(
+            name="Pressure", unit="Pa"
+        )
+        pressure_link = PeripheralDataPointType.objects.create(
+            data_point_type=pressure_data_point_type,
+            peripheral=bme280_peripheral,
+            parameter_prefix="pressure",
+        )
+        humidity_data_point_type = DataPointType.objects.create(
+            name="Pressure", unit="Pa"
+        )
+        PeripheralDataPointType.objects.create(
+            data_point_type=humidity_data_point_type,
+            peripheral=bme280_peripheral,
+            parameter_prefix="",
+        )
+        peripheral = PeripheralComponent.objects.prefetch_related(
+            "data_point_type_set"
+        ).get(pk=bme280_peripheral.pk)
+        self.assertEqual(peripheral.pk, bme280_peripheral.pk)
+        self.assertEqual(peripheral.site_entity.pk, bme280_entity.pk)
+        self.assertEqual(peripheral.pk, bme280_entity.pk)
+        self.assertEqual(peripheral.controller_component.pk, self.esp32_a_controller.pk)
+        self.assertEqual(peripheral.peripheral_type, PeripheralComponent.BME280_TYPE)
+        self.assertEqual(peripheral.state, PeripheralComponent.ADDING_STATE)
+        self.assertDictEqual(
+            peripheral.other_parameters, bme280_peripheral.other_parameters
+        )
+        self.assertDictContainsSubset(
+            peripheral.other_parameters, peripheral.parameters
+        )
+        self.assertEqual(
+            peripheral.parameters[
+                f"{temperature_link.parameter_prefix}_data_point_type"
+            ],
+            str(temperature_data_point_type.pk),
+        )
+        self.assertEqual(
+            peripheral.parameters[f"{pressure_link.parameter_prefix}_data_point_type"],
+            str(pressure_data_point_type.pk),
+        )
+        self.assertEqual(
+            peripheral.parameters["data_point_type"], str(humidity_data_point_type.pk)
         )
 
-        # Check that multiple objects are parsed
-        peripheral_0 = next(
-            i for i in add_peripherals if i.id == self.add_commands[0]["uuid"]
-        )
-        peripheral_1 = next(
-            i for i in add_peripherals if i.id == self.add_commands[1]["uuid"]
-        )
-        self.assertIn(peripheral_0.id, self.add_commands[0]["uuid"])
-        self.assertIn(peripheral_1.id, self.add_commands[1]["uuid"])
+    def test_other_parameter_validation(self):
+        """Test that storing data point type parameters in other parameters fails"""
 
-        # Check correct parsing of other peripheral properties
-        self.assertEqual(peripheral_0.peripheral_type, self.add_commands[0]["type"])
-        self.assertEqual(peripheral_0.site_entity.name, self.add_commands[0]["name"])
-        self.assertEqual(peripheral_0.parameters["pin"], self.add_commands[0]["pin"])
-
-        self.assertEqual(peripheral_1.peripheral_type, self.add_commands[1]["type"])
-        self.assertEqual(peripheral_1.site_entity.name, self.add_commands[1]["name"])
-        self.assertEqual(peripheral_1.parameters["scl"], self.add_commands[1]["scl"])
-
-        # Check that both peripherals were created
-        uuids = [add_command["uuid"] for add_command in self.add_commands]
-        queried_peripherals = list(PeripheralComponent.objects.filter(id__in=uuids))
-        self.assertNotEqual(queried_peripherals[0].id, queried_peripherals[1].id)
-        self.assertIn(str(queried_peripherals[0].id), uuids)
-        self.assertIn(str(queried_peripherals[1].id), uuids)
-
-    def test_from_remove_commands(self):
-        """Test parsing remove command message"""
-
-        # Check that no peripherals are returned if the uuids don't match
-        remove_peripherals = PeripheralComponent.objects.from_remove_commands(
-            self.remove_commands
-        )
-        self.assertFalse(remove_peripherals)
-
-        # Check that the state has to be removable (created peripherals are "adding")
-        add_peripherals = PeripheralComponent.objects.from_add_commands(
-            self.add_commands, self.esp32_a_controller
-        )
-        failed_peripheral = add_peripherals.pop()
-        failed_peripheral.state = PeripheralComponent.FAILED_STATE
-        failed_peripheral.save()
-        self.assertNotIn(
-            PeripheralComponent.FAILED_STATE, PeripheralComponent.REMOVABLE_STATES
-        )
-        self.assertNotIn(
-            PeripheralComponent.REMOVED_STATE, PeripheralComponent.REMOVABLE_STATES
-        )
-        remove_peripherals = PeripheralComponent.objects.from_remove_commands(
-            self.remove_commands
-        )
-        remove_uuids = [
-            remove_peripheral.id for remove_peripheral in remove_peripherals
-        ]
-        self.assertNotEqual(failed_peripheral.id, remove_uuids)
-        self.assertIn(remove_peripherals[0].id, remove_uuids)
+        with self.assertRaises(ValueError):
+            PeripheralComponent.objects.create_with_new_site_enitity_and_send(
+                name="LED 22",
+                site_id=self.site_a.pk,
+                controller_component_id=self.esp32_a_controller.pk,
+                peripheral_type=PeripheralComponent.LED_TYPE,
+                other_parameters={"data_point_type": "value"},
+                data_point_type_edges=[],
+            )
 
 
 class PeripheralModelResultRegisterTests(TestCase):
@@ -147,7 +144,6 @@ class PeripheralModelResultRegisterTests(TestCase):
         )
         self.esp32_type = ControllerComponentType.objects.create(name="ESP32")
         self.esp32_a_controller = ControllerComponent.objects.create(
-            id=uuid.uuid4(),
             component_type=self.esp32_type,
             site_entity=SiteEntity.objects.create(name="ESP32 A", site=self.site_a),
         )
@@ -190,21 +186,21 @@ class PeripheralModelResultRegisterTests(TestCase):
         # Send success results to all peripherals (add and remove respectively)
         data = {
             "add": [
-                {"uuid": str(self.peripheral_a.id), "status": "success"},
-                {"uuid": str(self.peripheral_b.id), "status": "success"},
+                {"uuid": str(self.peripheral_a.pk), "status": "success"},
+                {"uuid": str(self.peripheral_b.pk), "status": "success"},
             ],
             "remove": [
-                {"uuid": str(self.peripheral_c.id), "status": "success"},
-                {"uuid": str(self.peripheral_d.id), "status": "success"},
+                {"uuid": str(self.peripheral_c.pk), "status": "success"},
+                {"uuid": str(self.peripheral_d.pk), "status": "success"},
             ],
         }
         PeripheralComponent.objects.from_results(data)
 
         # Expect all peripherals to have changed state
-        self.peripheral_a = PeripheralComponent.objects.get(id=self.peripheral_a.id)
-        self.peripheral_b = PeripheralComponent.objects.get(id=self.peripheral_b.id)
-        self.peripheral_c = PeripheralComponent.objects.get(id=self.peripheral_c.id)
-        self.peripheral_d = PeripheralComponent.objects.get(id=self.peripheral_d.id)
+        self.peripheral_a = PeripheralComponent.objects.get(pk=self.peripheral_a.pk)
+        self.peripheral_b = PeripheralComponent.objects.get(pk=self.peripheral_b.pk)
+        self.peripheral_c = PeripheralComponent.objects.get(pk=self.peripheral_c.pk)
+        self.peripheral_d = PeripheralComponent.objects.get(pk=self.peripheral_d.pk)
 
         self.assertEqual(self.peripheral_a.state, PeripheralComponent.ADDED_STATE)
         self.assertEqual(self.peripheral_b.state, PeripheralComponent.ADDED_STATE)
@@ -216,21 +212,21 @@ class PeripheralModelResultRegisterTests(TestCase):
 
         data = {
             "add": [
-                {"uuid": str(self.peripheral_a.id), "status": "success"},
-                {"uuid": str(self.peripheral_b.id), "status": "fail", "detail": "ABC"},
+                {"uuid": str(self.peripheral_a.pk), "status": "success"},
+                {"uuid": str(self.peripheral_b.pk), "status": "fail", "detail": "ABC"},
             ],
             "remove": [
-                {"uuid": str(self.peripheral_c.id), "status": "success"},
-                {"uuid": str(self.peripheral_d.id), "status": "fail", "detail": "DEF"},
+                {"uuid": str(self.peripheral_c.pk), "status": "success"},
+                {"uuid": str(self.peripheral_d.pk), "status": "fail", "detail": "DEF"},
             ],
         }
         PeripheralComponent.objects.from_results(data)
 
         # Expect all peripherals to have changed state
-        self.peripheral_a = PeripheralComponent.objects.get(id=self.peripheral_a.id)
-        self.peripheral_b = PeripheralComponent.objects.get(id=self.peripheral_b.id)
-        self.peripheral_c = PeripheralComponent.objects.get(id=self.peripheral_c.id)
-        self.peripheral_d = PeripheralComponent.objects.get(id=self.peripheral_d.id)
+        self.peripheral_a = PeripheralComponent.objects.get(pk=self.peripheral_a.pk)
+        self.peripheral_b = PeripheralComponent.objects.get(pk=self.peripheral_b.pk)
+        self.peripheral_c = PeripheralComponent.objects.get(pk=self.peripheral_c.pk)
+        self.peripheral_d = PeripheralComponent.objects.get(pk=self.peripheral_d.pk)
 
         self.assertEqual(self.peripheral_a.state, PeripheralComponent.ADDED_STATE)
         self.assertEqual(self.peripheral_b.state, PeripheralComponent.FAILED_STATE)
@@ -254,16 +250,16 @@ class PeripheralModelResultRegisterTests(TestCase):
             ],
             ["state"],
         )
-        added_peripherals = [str(self.peripheral_c.id)]
+        added_peripherals = [str(self.peripheral_c.pk)]
 
         # Perform query
         commands = PeripheralComponent.objects.commands_from_register(
-            added_peripherals, self.esp32_a_controller.id
+            added_peripherals, self.esp32_a_controller.pk
         )
 
         # Check the results
         add_uuids = [peripheral["uuid"] for peripheral in commands.get("add", [])]
-        self.assertIn(str(self.peripheral_a.id), add_uuids)
-        self.assertIn(str(self.peripheral_b.id), add_uuids)
-        self.assertNotIn(str(self.peripheral_c.id), add_uuids)
-        self.assertNotIn(str(self.peripheral_d.id), add_uuids)
+        self.assertIn(str(self.peripheral_a.pk), add_uuids)
+        self.assertIn(str(self.peripheral_b.pk), add_uuids)
+        self.assertNotIn(str(self.peripheral_c.pk), add_uuids)
+        self.assertNotIn(str(self.peripheral_d.pk), add_uuids)

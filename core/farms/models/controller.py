@@ -31,17 +31,17 @@ class ControllerComponentType(models.Model):
 
 
 class ControllerComponent(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    site_entity = models.OneToOneField(
+        SiteEntity,
+        primary_key=True,
+        related_name="controller_component",
+        on_delete=models.CASCADE,
+        help_text="Which site entity the component is a part of.",
+    )
     component_type = models.ForeignKey(
         ControllerComponentType,
         on_delete=models.CASCADE,
         help_text="The type of which this component is an instance of.",
-    )
-    site_entity = models.OneToOneField(
-        SiteEntity,
-        related_name="controller_component",
-        on_delete=models.CASCADE,
-        help_text="Which site entity the component is a part of.",
     )
     channel_name = models.CharField(
         null=False,
