@@ -62,8 +62,8 @@ class StopControllerTask(relay.ClientIDMutation):
 
 
 class DataPointTypeEdge(graphene.InputObjectType):
-    data_point_type = graphene.ID()
-    parameter_prefix = graphene.String()
+    data_point_type = graphene.ID(required=True)
+    parameter_prefix = graphene.String(default_value="")
 
 
 class CreatePeripheralComponent(relay.ClientIDMutation):

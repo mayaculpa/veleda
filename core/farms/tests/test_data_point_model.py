@@ -34,7 +34,7 @@ class DataPointTests(TestCase):
         )
         self.bme280_a = PeripheralComponent.objects.create(
             site_entity=SiteEntity.objects.create(name="BME280 A", site=self.site_a),
-            peripheral_type=PeripheralComponent.BME280_TYPE,
+            peripheral_type=PeripheralComponent.PeripheralType.BME280_SENSOR.value,
             controller_component=self.esp32_a_controller,
         )
         self.air_temperature = DataPointType.objects.create(name="Air Temp", unit="°C")

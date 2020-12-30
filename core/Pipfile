@@ -23,7 +23,6 @@ djangorestframework = "*"
 oauth2-provider = "*"
 django-registration = "~=3.0"
 psycopg2 = "~=2.8"
-whitenoise = {extras = ["brotli"],version = "~=4.1"}
 celery = "~=4.3"
 django-address = "~=0.2"
 django-macaddress = "~=1.6"
@@ -44,3 +43,7 @@ python_version = "3.8"
 
 [pipenv]
 allow_prereleases = true
+
+[packages.whitenoise]
+extras = [ "brotli",]
+version = "~=4.1"

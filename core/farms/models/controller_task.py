@@ -230,15 +230,15 @@ class ControllerTaskManager(models.Manager):
 
 
 class ControllerTask(models.Model):
-    """Tasks interacting with peripherals on controllers"""
+    """Tasks interacting with peripherals on controllers."""
 
     objects = ControllerTaskManager()
 
     class InvalidTransition(Exception):
-        """Thrown when an invalid state change is applied"""
+        """Thrown when an invalid state change is applied."""
 
     class State(models.TextChoices):
-        """Possible task states."""
+        """Possible task states"""
 
         STARTING = ("starting", "Starting")
         RUNNING = ("running", "Running")
@@ -252,7 +252,7 @@ class ControllerTask(models.Model):
     RE_START_STATES = [State.STARTING.value, State.RUNNING.value]
 
     class TaskType(models.TextChoices):
-        """Possible task types"""
+        """Possible task types."""
 
         INVALID_TYPE = "InvalidType", "Invalid type"
         ALERT_SENSOR = "AlertSensor", "Alert sensor"
@@ -322,7 +322,7 @@ class ControllerTask(models.Model):
         return None
 
     def to_stop_command(self) -> Optional[Dict]:
-        """If in stopping state, return a command that stops the task, else None"""
+        """If in stopping state, return a command that stops the task, else None."""
 
         if self.state == self.State.STOPPING:
             return {"uuid": str(self.id)}

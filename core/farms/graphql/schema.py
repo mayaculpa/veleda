@@ -9,6 +9,7 @@ from farms.graphql.nodes import (
     ControllerTaskNode,
     ControllerTaskEnumNode,
     PeripheralComponentNode,
+    PeripheralComponentEnumNode,
     DataPointTypeNode,
     DataPointNode,
 )
@@ -44,6 +45,7 @@ class Query(object):
 
     peripheral_component = graphene.relay.Node.Field(PeripheralComponentNode)
     all_peripheral_components = DjangoFilterConnectionField(PeripheralComponentNode)
+    peripheral_component_enums = graphene.Field(PeripheralComponentEnumNode)
 
     data_point_type = graphene.relay.Node.Field(DataPointTypeNode)
     all_data_point_types = DjangoFilterConnectionField(DataPointTypeNode)
@@ -54,6 +56,10 @@ class Query(object):
     @staticmethod
     def resolve_controller_task_enums(parent, args):
         return ControllerTaskEnumNode()
+    
+    @staticmethod
+    def resolve_peripheral_component_enums(parent, args):
+        return PeripheralComponentEnumNode()
 
 
 class Mutation(object):

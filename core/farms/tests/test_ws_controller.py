@@ -322,15 +322,15 @@ class TestControllerMessage(TransactionTestCase):
         )
         peripheral_a = await database_sync_to_async(PeripheralComponent.objects.create)(
             site_entity=peripheral_a_entity,
-            peripheral_type=PeripheralComponent.LED_TYPE,
+            peripheral_type=PeripheralComponent.PeripheralType.LED,
             controller_component=self.controller_entity.controller_component,
-            state=PeripheralComponent.ADDING_STATE,
+            state=PeripheralComponent.State.ADDING,
         )
         peripheral_b = await database_sync_to_async(PeripheralComponent.objects.create)(
             site_entity=peripheral_b_entity,
-            peripheral_type=PeripheralComponent.LED_TYPE,
+            peripheral_type=PeripheralComponent.PeripheralType.LED,
             controller_component=self.controller_entity.controller_component,
-            state=PeripheralComponent.REMOVING_STATE,
+            state=PeripheralComponent.State.REMOVING,
         )
         # Set up tasks
         task_a = await database_sync_to_async(ControllerTask.objects.create)(
@@ -366,12 +366,12 @@ class TestControllerMessage(TransactionTestCase):
         peripheral_a = await database_sync_to_async(PeripheralComponent.objects.get)(
             pk=peripheral_a.pk
         )
-        self.assertEqual(peripheral_a.state, PeripheralComponent.ADDED_STATE)
+        self.assertEqual(peripheral_a.state, PeripheralComponent.State.ADDED)
 
         peripheral_b = await database_sync_to_async(PeripheralComponent.objects.get)(
             pk=peripheral_b.pk
         )
-        self.assertEqual(peripheral_b.state, PeripheralComponent.REMOVED_STATE)
+        self.assertEqual(peripheral_b.state, PeripheralComponent.State.REMOVED)
 
         task_a = await database_sync_to_async(ControllerTask.objects.get)(pk=task_a.pk)
         self.assertEqual(task_a.state, ControllerTask.State.RUNNING)

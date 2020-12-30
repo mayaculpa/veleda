@@ -4,7 +4,7 @@ from functools import reduce
 from graphene_django.utils.testing import GraphQLTestCase
 from django.contrib.auth import get_user_model
 
-from farms.models import ControllerTask
+from farms.models import ControllerTask, PeripheralComponent
 
 
 class QueryTestCase(GraphQLTestCase):
@@ -19,21 +19,48 @@ class QueryTestCase(GraphQLTestCase):
     def test_controller_task_enums(self):
         response = self.query(
             """
-            query {
-                controllerTaskEnums{
-                    stateValues
-                    stateLabels
-                    taskTypeValues
-                    taskTypeLabels
+            {
+                controllerTaskEnums {
+                    states{
+                        value
+                        label
+                    }
+                    taskTypes {
+                        value
+                        label
+                    }
                 }
             }"""
         )
         self.assertResponseNoErrors(response)
         content = json.loads(response.content)
         output = reduce(dict.get, ["data", "controllerTaskEnums"], content)
-        for state in ControllerTask.State:
-            self.assertIn(state.value, output["stateValues"])
-            self.assertIn(state.label, output["stateLabels"])
-        for task_type in ControllerTask.TaskType:
-            self.assertIn(task_type.value, output["taskTypeValues"])
-            self.assertIn(task_type.label, output["taskTypeLabels"])
+        for state in output["states"]:
+            self.assertIn(state["value"], ControllerTask.State)
+        for task_type in output["taskTypes"]:
+            self.assertIn(task_type["value"], ControllerTask.TaskType)
+    
+    def test_controller_task_enums(self):
+        response = self.query(
+            """
+            {
+                peripheralComponentEnums {
+                    states {
+                        value
+                        label
+                    }
+                    peripheralTypes {
+                        value
+                        label
+                    }
+                }
+            }"""
+        )
+        self.assertResponseNoErrors(response)
+        content = json.loads(response.content)
+        output = reduce(dict.get, ["data", "peripheralComponentEnums"], content)
+        for state in output["states"]:
+            self.assertIn(state["value"], PeripheralComponent.State)
+        for peripheral_type in output["peripheralTypes"]:
+            self.assertIn(peripheral_type["value"], PeripheralComponent.PeripheralType)
+

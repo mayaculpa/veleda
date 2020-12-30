@@ -62,7 +62,7 @@ class PeripheralComponentManager(models.Manager):
             peripheral_component = PeripheralComponent(
                 site_entity_id=site_entity.pk,
                 controller_component_id=controller_component_id,
-                state=self.model.ADDING_STATE,
+                state=self.model.State.ADDING,
                 peripheral_type=peripheral_type,
                 other_parameters=other_parameters,
             )
@@ -100,9 +100,9 @@ class PeripheralComponentManager(models.Manager):
         add_peripherals = []
         remove_peripherals = []
         for peripheral in peripherals:
-            if peripheral.state == self.model.ADDING_STATE:
+            if peripheral.state == self.model.State.ADDING:
                 add_peripherals.append(peripheral.to_add_command())
-            if peripheral.state == self.model.REMOVING_STATE:
+            if peripheral.state == self.model.State.REMOVING:
                 remove_peripherals.append(peripheral.to_remove_command())
 
         commands = {}
@@ -152,7 +152,7 @@ class PeripheralComponentManager(models.Manager):
 
         with transaction.atomic():
             for peripheral in peripherals:
-                peripheral.state = PeripheralComponent.ADDING_STATE
+                peripheral.state = PeripheralComponent.State.ADDING
             self.bulk_update(peripherals, ["state"])
 
         commands = []
@@ -191,6 +191,7 @@ def validate_other_parameters(value):
                 params={"value": value},
             )
 
+
 class PeripheralComponent(models.Model):
     """The peripheral aspect of a site entity, such as a sensor or actuator."""
 
@@ -199,40 +200,29 @@ class PeripheralComponent(models.Model):
     class InvalidTransition(Exception):
         """Thrown when an invalid state change is applied"""
 
-    ADDING_STATE = "adding"
-    ADDED_STATE = "added"
-    FAILED_STATE = "failed"
-    REMOVING_STATE = "removing"
-    REMOVED_STATE = "removed"
+    class State(models.TextChoices):
+        """Possible peripheral states."""
+
+        ADDING = ("adding", "Adding")
+        ADDED = ("added", "Added")
+        FAILED = ("failed", "Failed")
+        REMOVING = ("removing", "Removing")
+        REMOVED = ("removed", "Removed")
 
     # States for which remove commands for peripherals can be created
-    REMOVABLE_STATES = [ADDING_STATE, ADDED_STATE, REMOVING_STATE]
+    REMOVABLE_STATES = [State.ADDING.value, State.ADDED.value, State.REMOVING.value]
     # States to add peripherals again (registration after reboot)
-    RE_ADD_STATES = [ADDING_STATE, ADDED_STATE]
+    RE_ADD_STATES = [State.ADDING.value, State.ADDED.value]
 
-    STATE_CHOICES = [
-        (ADDING_STATE, "Adding"),
-        (ADDED_STATE, "Added"),
-        (FAILED_STATE, "Failed"),
-        (REMOVING_STATE, "Removing"),
-        (REMOVED_STATE, "Removed"),
-    ]
+    class PeripheralType(models.TextChoices):
+        """Possible peripheral types."""
 
-    INVALID_TYPE = "InvalidPeripheral"
-    BME280_TYPE = "BME280"
-    CAPACITIVE_SENSOR_TYPE = "CapacitiveSensor"
-    I2C_ADAPTER_TYPE = "I2CAdapter"
-    LED_TYPE = "LED"
-    NEO_PIXEL_TYPE = "NeoPixel"
-
-    TYPE_CHOICES = [
-        (INVALID_TYPE, "Invalid peripheral"),
-        (BME280_TYPE, "BME/BMP 280 sensor"),
-        (CAPACITIVE_SENSOR_TYPE, "Capacitive sensor"),
-        (I2C_ADAPTER_TYPE, "I2C Adapter"),
-        (LED_TYPE, "LED"),
-        (NEO_PIXEL_TYPE, "NeoPixel array"),
-    ]
+        INVALID_TYPE = ("InvalidPeripheral", "Invalid peripheral")
+        BME280_SENSOR = ("BME280", "BME/BMP 280 sensor")
+        CAPACITIVE_SENSOR = ("CapacitiveSensor", "Capacitive sensor")
+        I2C_ADAPTER = ("I2CAdapter", "I2C Adapter")
+        LED = ("LED", "LED")
+        NEO_PIXEL = ("NeoPixel", "NeoPixel array")
 
     site_entity = models.OneToOneField(
         SiteEntity,
@@ -248,13 +238,13 @@ class PeripheralComponent(models.Model):
         help_text="Which controller controls and is connected to this peripheral.",
     )
     peripheral_type = models.CharField(
-        default=INVALID_TYPE,
-        choices=TYPE_CHOICES,
+        default=PeripheralType.INVALID_TYPE.value,
+        choices=PeripheralType.choices,
         max_length=64,
         help_text="The type of this peripheral component.",
     )
     state = models.CharField(
-        choices=STATE_CHOICES,
+        choices=State.choices,
         max_length=64,
         help_text="The state of the controller task.",
     )
@@ -262,7 +252,7 @@ class PeripheralComponent(models.Model):
         default=dict,
         help_text="Setup parameters excl. the data point type parameters.",
         validators=[validate_other_parameters],
-        blank=True
+        blank=True,
     )
 
     data_point_type_set = models.ManyToManyField(
@@ -294,7 +284,7 @@ class PeripheralComponent(models.Model):
     def to_add_command(self) -> Optional[Dict]:
         """If in adding state, return a command that adds the peripheral, else None"""
 
-        if self.state == self.ADDING_STATE:
+        if self.state == self.State.ADDING:
             return {
                 "uuid": str(self.pk),
                 "type": self.peripheral_type,
@@ -305,7 +295,7 @@ class PeripheralComponent(models.Model):
     def to_remove_command(self) -> Optional[Dict]:
         """If in removing state, return a command that removes the peripheral, else None"""
 
-        if self.state == self.REMOVING_STATE:
+        if self.state == self.State.REMOVING:
             return {"uuid": str(self.pk)}
         return None
 
@@ -313,10 +303,10 @@ class PeripheralComponent(models.Model):
         """Modify the state accoring to the result"""
 
         status = result["status"]
-        if self.state == self.ADDING_STATE and status == "success":
-            self.state = self.ADDED_STATE
-        elif self.state == self.ADDING_STATE and status == "fail":
-            self.state = self.FAILED_STATE
+        if self.state == self.State.ADDING and status == "success":
+            self.state = self.State.ADDED
+        elif self.state == self.State.ADDING and status == "fail":
+            self.state = self.State.FAILED
         else:
             raise self.InvalidTransition(
                 f"Apply add result {status} to {self.state}", id=self.pk
@@ -326,10 +316,10 @@ class PeripheralComponent(models.Model):
         """Modify the state with a remove result"""
 
         status = result["status"]
-        if self.state == self.REMOVING_STATE and status == "success":
-            self.state = self.REMOVED_STATE
-        elif self.state == self.REMOVING_STATE and status == "fail":
-            self.state = self.ADDED_STATE
+        if self.state == self.State.REMOVING and status == "success":
+            self.state = self.State.REMOVED
+        elif self.state == self.State.REMOVING and status == "fail":
+            self.state = self.State.ADDED
         else:
             raise self.InvalidTransition(
                 f"Apply remove result {status} to {self.state}", id=self.pk

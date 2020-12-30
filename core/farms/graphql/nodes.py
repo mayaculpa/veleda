@@ -16,6 +16,13 @@ from farms.models import (
 )
 
 
+class TextChoice(ObjectType):
+    """Maps Django's enum choices."""
+
+    value = String()
+    label = String()
+
+
 class SiteNode(DjangoObjectType):
     class Meta:
         model = Site
@@ -135,26 +142,22 @@ class ControllerTaskNode(DjangoObjectType):
 
 
 class ControllerTaskEnumNode(ObjectType):
-    state_values = List(String)
-    state_labels = List(String)
-    task_type_values = List(String)
-    task_type_labels = List(String)
+    states = List(TextChoice)
+    task_types = List(TextChoice)
 
     @staticmethod
-    def resolve_state_values(parent, args):
-        return ControllerTask.State.values
-
+    def resolve_states(parent, args):
+        return [
+            TextChoice(value=state.value, label=state.label)
+            for state in ControllerTask.State
+        ]
+    
     @staticmethod
-    def resolve_state_labels(parent, args):
-        return ControllerTask.State.labels
-
-    @staticmethod
-    def resolve_task_type_values(parent, args):
-        return ControllerTask.TaskType.values
-
-    @staticmethod
-    def resolve_task_type_labels(parent, args):
-        return ControllerTask.TaskType.labels
+    def resolve_task_types(parent, args):
+        return [
+            TextChoice(value=task_type.value, label=task_type.label)
+            for task_type in ControllerTask.TaskType
+        ]
 
 
 class PeripheralComponentNode(DjangoObjectType):
@@ -194,6 +197,25 @@ class PeripheralComponentNode(DjangoObjectType):
         """The parameter fields combines all parameters"""
 
         return peripheral_component.parameters
+
+
+class PeripheralComponentEnumNode(ObjectType):
+    states = List(TextChoice)
+    peripheral_types = List(TextChoice)
+
+    @staticmethod
+    def resolve_states(parent, args):
+        return [
+            TextChoice(value=state.value, label=state.label)
+            for state in PeripheralComponent.State
+        ]
+
+    @staticmethod
+    def resolve_peripheral_types(parent, args):
+        return [
+            TextChoice(value=peripheral_type.value, label=peripheral_type.label)
+            for peripheral_type in PeripheralComponent.PeripheralType
+        ]
 
 
 class PeripheralDataPointTypeNode(DjangoObjectType):

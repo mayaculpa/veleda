@@ -193,6 +193,20 @@ class PeripheralControllerTestCase(GraphQLTestCase):
         self.controller_a_gid = to_global_id(
             ControllerComponentNode._meta.name, self.controller_a.pk
         )
+        self.query_text = """
+            mutation createPeripheralComponent($input: CreatePeripheralComponentInput!) {
+              createPeripheralComponent(input: $input) {
+                peripheralComponent {
+                  id
+                  siteEntity{id, name}
+                  controllerComponent{id}
+                  peripheralType
+                  state
+                  parameters
+                }
+              }
+            }
+            """
         self.data_point_type_a = DataPointType.objects.create(name="DPTA", unit="a")
         self.data_point_type_b = DataPointType.objects.create(name="DPTB", unit="b")
         self.data_point_type_c = DataPointType.objects.create(name="DPTC", unit="c")
@@ -226,25 +240,12 @@ class PeripheralControllerTestCase(GraphQLTestCase):
                 SiteNode._meta.name, self.controller_a.site_entity.site.pk
             ),
             "controllerComponent": self.controller_a_gid,
-            "peripheralType": PeripheralComponent.LED_TYPE,
+            "peripheralType": PeripheralComponent.PeripheralType.LED.value,
             "dataPointTypeEdges": data_point_type_edges,
             "otherParameters": '{"some": "parameter"}',
         }
         response = self.query(
-            """
-            mutation createPeripheralComponent($input: CreatePeripheralComponentInput!) {
-              createPeripheralComponent(input: $input) {
-                peripheralComponent {
-                  id
-                  siteEntity{id, name}
-                  controllerComponent{id}
-                  peripheralType
-                  state
-                  parameters
-                }
-              }
-            }
-            """,
+            self.query_text,
             op_name="createPeripheralComponent",
             input_data=input_data,
         )
@@ -266,7 +267,7 @@ class PeripheralControllerTestCase(GraphQLTestCase):
         self.assertIn("a_data_point_type", output["parameters"])
         self.assertIn("b_data_point_type", output["parameters"])
         self.assertIn("data_point_type", output["parameters"])
-        self.assertEqual(output["state"], PeripheralComponent.ADDING_STATE)
+        self.assertEqual(output["state"], PeripheralComponent.State.ADDING.value)
         self.assertEqual(output["controllerComponent"]["id"], self.controller_a_gid)
 
     def test_adding_peripheral_to_newly_created_controller(self):
@@ -281,25 +282,12 @@ class PeripheralControllerTestCase(GraphQLTestCase):
                 SiteNode._meta.name, self.controller_a.site_entity.site.pk
             ),
             "controllerComponent": self.controller_a_gid,
-            "peripheralType": PeripheralComponent.LED_TYPE,
+            "peripheralType": PeripheralComponent.PeripheralType.LED.value,
             "dataPointTypeEdges": [],
             "otherParameters": "{}",
         }
         response = self.query(
-            """
-            mutation createPeripheralComponent($input: CreatePeripheralComponentInput!) {
-              createPeripheralComponent(input: $input) {
-                peripheralComponent {
-                  id
-                  siteEntity{id, name}
-                  controllerComponent{id}
-                  peripheralType
-                  state
-                  parameters
-                }
-              }
-            }
-            """,
+            self.query_text,
             op_name="createPeripheralComponent",
             input_data=input_data,
         )
