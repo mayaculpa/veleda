@@ -231,6 +231,8 @@ class DataPointTypeNode(DjangoObjectType):
         filter_fields = {
             "name": ["exact", "icontains", "istartswith"],
             "unit": ["exact", "icontains", "istartswith"],
+            "peripheral_component_set": ["exact"],
+            "peripheral_component_set__site_entity": ["exact"],
         }
         fields = (
             "name",
@@ -248,6 +250,7 @@ class DataPointNode(DjangoObjectType):
         filter_fields = {
             "time": ["exact", "lt", "gt"],
             "peripheral_component": ["exact"],
+            "peripheral_component__site_entity": ["exact"],
             "data_point_type": ["exact"],
             "value": ["exact", "lt", "gt"],
         }
