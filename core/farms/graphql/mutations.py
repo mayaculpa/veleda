@@ -86,7 +86,7 @@ class CreatePeripheralComponent(relay.ClientIDMutation):
         other_parameters = kwargs.get("other_parameters", dict)
         data_point_type_edges = {
             uuid.UUID(from_global_id(edge.data_point_type)[1]): edge.parameter_prefix
-            for edge in kwargs["data_point_type_edges"]
+            for edge in kwargs.get("data_point_type_edges", {})
         }
         try:
             peripheral_component = (

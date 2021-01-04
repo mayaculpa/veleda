@@ -141,12 +141,14 @@ class PeripheralComponentManager(models.Manager):
     ) -> Dict:
         """Updates peripherals to be re-added to the adding state and returns commands
         to re-add peripherals to a controller. However, exclude those that the
-        controller reports to have already been added."""
+        controller reports to have already been added. The commands are ordered from
+        oldest to newest to preserve initialization order."""
 
         peripherals = (
             PeripheralComponent.objects.filter(controller_component__pk=controller_id)
             .filter(state__in=PeripheralComponent.RE_ADD_STATES)
             .exclude(pk__in=added_peripherals)
+            .order_by("created_at")
             .select_for_update()
         )
 
@@ -174,7 +176,7 @@ class PeripheralComponentManager(models.Manager):
         async_to_sync(channel_layer.send)(
             channel_name,
             {
-                "type": "send.controller.peripheral.commands",
+                "type": "send.peripheral.commands",
                 "commands": peripheral_commands,
                 "request_id": request_id,
             },
