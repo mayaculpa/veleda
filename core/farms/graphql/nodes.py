@@ -252,6 +252,5 @@ class DataPointNode(DjangoObjectType):
             "peripheral_component": ["exact"],
             "peripheral_component__site_entity": ["exact"],
             "data_point_type": ["exact"],
-            "value": ["exact", "lt", "gt"],
         }
         interfaces = (relay.Node,)

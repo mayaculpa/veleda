@@ -311,7 +311,7 @@ class ControllerTask(models.Model):
                 return {
                     "uuid": str(self.id),
                     "type": self.task_type,
-                    "duration_ms": (self.run_until - now).total_seconds() * 1000,
+                    "duration_ms": int((self.run_until - now).total_seconds() * 1000),
                     **self.parameters
                 }
             return {

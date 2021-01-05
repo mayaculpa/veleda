@@ -79,6 +79,9 @@ class DataPoint(models.Model):
         help_text="The value of the data given by the data point type and peripheral."
     )
 
+    class Meta:
+        ordering = ['-time']
+
     def save(self, *args, **kwargs):  # pylint: disable=signature-differs
         # If it is a 'naive' datetime, no timezone info, raise an error
         self.time = self.to_timezone_datetime(self.time)
