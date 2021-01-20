@@ -1,40 +1,53 @@
 # Core Service
 
+The Django application acts as the backend for the admin site, the WebSockets, the connection between controllers, databases and user applications (frontend, VR/AR applications).
+
 ## Installation
 
-The Django application is responisble for the user authentication.
+After installing *Docker*, run the install script:
 
-Local install requires *Docker* and the following commands:
-
-    sudo apt install python3-pip libpq-dev postgresql-client-12
-    python3 -m pip install --user pipenv
-    pipenv install
-    pipenv shell
+    ./install.sh
 
 Start with:
 
     ./start.sh
 
-This starts a development environment by default. If `DJANGO_DEBUG=False` is set, the production environment will be loaded. This variable is loaded if started via the docker compose command.
+This starts Django in development mode by default. The `DJANGO_DEBUG` variable in `env.core` is only respected when starting from the root Docker Compose file.
 
-### Server Domain
+To [log in](http://localhost:8000), use the default superuser creditials defined in `secrets.core` by the following variables:
 
-In order to create the farm subdomains, the server domain and the subdomain namespace have to be known (e.g., *example.com* and *farms*). The namespace will be slugified (i.e., only alphanumerics, underscores and hyphens). Set both variables in the `dns.core` file.
+    DJANGO_SUPERUSER_EMAIL
+    DJANGO_SUPERUSER_PASSWORD
+
+## Development with the SDG Controller and the Node-RED Demo
+
+To use the core service with an SDG controller (ESP32 firmware) and a Node-RED frontend the authentication and binding of the web server have to be updated.
+
+### Changes to Core Service
+
+Change the `CORE_DOMAIN` to the local network IP address, i.e., the one assigned to the network adapter instead of localhost. Check that a token has been created under *Auth Token* on the [Django admin site](http://localhost:8000/admin/authtoken/tokenproxy/) and under *Farms* in the *Controller auth tokens* section. If not, clear the DB with `./start.sh clean` and run `./start.sh` again or create them yourself.
+
+### Changes to SDG Controller
+
+After setting up the PlatformIO extension in VS Code, clone the [SDG Controller repository](https://github.com/protohaus/sdg-controller) and open it in VS Code. In the `src/configuration.cpp` file, add your WiFi credentials to `access_points`, update `core_domain` to the one set above and set the `ws_token` to the token from the *Controller auth tokens* section. Prefix the token with `token_`. The default should already be set to the one provided by the DB seed for the core service.
+
+### Changes to the Node-RED Demo
+
+Follow the setup instructions provided in the [Node-RED Demo readme](../node-red-demo/README.md).
 
 ## Tests
 
-The tests try to mirror the production environment throught the use of the respective Docker services. The command to run tests:
+The tests try to mirror the production environment throught the use of their respective Docker services. The command to run test all tests:
 
     ./start.sh test
-    ./start.sh test farms.tests.test_ws_api.TestMqttMessages
+
+To just run a single test use, for example:
+
+    ./start.sh test farms.tests.test_ws_controller.TestControllerMessage.test_authentication
 
 The command to create an HTML report of the test coverage:
 
     ./start.sh coverage
-
-### Running Celery Tasks
-
-A Celery task runner and RabbitMQ Docker service are created by default when running `start.sh`.
 
 ## Database Migrations
 
@@ -44,7 +57,7 @@ For a database migration, the web app has to be started outside Docker (the data
 
 The `migrate` command is called by default by the `start.sh` script
 
-# Save and Load Seed Data
+## Save and Load Seed Data
 
 To save the current state of the database to a file:
 
@@ -56,32 +69,26 @@ To load the saved data into a database:
 
 ## Options
 
-To start the web server with a custom port and host binding:
+To start the web server with a custom port and host binding change the following variables in configuration in the `secrets.core` file:
 
-    ./start.sh runserver 0.0.0.0:8001
+    CORE_DOMAIN
+    CORE_DEV_SERVER_PORT
 
-## Running a local Docker instance
+## Using Local DNS Resolution
 
 To enable DNS and subdomains add the following entries to your `/etc/hosts` file
 
-    # Used for development of the SDG server
+    # Useful for development of the SDG server
     127.0.0.1       data.sdg.local
     127.0.0.1       core.sdg.local
     127.0.0.1       sdg.local
     127.0.0.1       www.sdg.local
 
-Then create a `dns.core` file with the entry
+Then update the `secrets.core` file with the entry
 
-    VIRTUAL_HOST=core.sdg.local
+    CORE_DOMAIN=core.sdg.local
 
-Subsequently, from the repository root directory start all Docker containers with
-
-    docker-compose build && docker-compose up -d
-
-To create a super-user in the core docker container run
-
-    docker exec -it core bash
-    ./manage.py createsuperuser
+## Regitering New OAuth2 Applications
 
 To register a new OAuth2 application (such as Grafana)
 1. Go to the OAuth2 Dashboard (https://core.openfarming.ai/o/applications/)
@@ -96,7 +103,11 @@ To register a new OAuth2 application (such as Grafana)
 10. Enable *Skip authorization* at the bottom of the page
 11. Save the changes
 
-To start a NodeRED instance (part of the sdg-coordinator), start the following Docker service:
+### Depreciated
+
+The Node-RED demo is configured to use a simple authentication token. The setup is documented in the [node-red-demo readme](../node-red-demo/README.md). The documentation below is for using OAuth2 with Node-RED.
+
+To start a NodeRED instance, start the following Docker service:
 
     docker run -it --rm --network host -v /path/to/sdg-coordinator/node-red/settings.js:/data/settings.js --name mynodered nodered/node-red
 
