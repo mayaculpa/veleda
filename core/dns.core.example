@@ -1,7 +1,0 @@
-VIRTUAL_HOST=core.example.com
-LETSENCRYPT_HOST=core.example.com
-LETSENCRYPT_EMAIL=admin@example.com
-LETSENCRYPT_TEST=true
-
-SERVER_DOMAIN=example.com
-FARMS_SUBDOMAIN_NAMESPACE=farms

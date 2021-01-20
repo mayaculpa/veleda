@@ -67,6 +67,10 @@ To load the saved data into a database:
 
     ./start.sh loaddata /path/to/db_seed.json
 
+To clear development data, run the following command. The development environment is setup so that the database data is cleared when the Docker services are stopped.
+
+    ./start.sh clean
+
 ## Options
 
 To start the web server with a custom port and host binding change the following variables in configuration in the `secrets.core` file:
@@ -118,3 +122,7 @@ To register a NodeRED application
 4. Copy the client ID and secret into the `Secrets` node on the `SDG Login` tab
 5. Set the client type: *Confidential* and authorization grant type: *Resource owner password-based / password*
 6. Save the new OAuth2 application
+
+## Troubleshooting
+
+See the [troubleshooting doc](./TROUBLESHOOTING.md).
