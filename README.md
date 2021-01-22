@@ -1,9 +1,13 @@
 [![Build Status](https://travis-ci.org/FlowLeaf/flow-leaf-server.svg?branch=master)](https://travis-ci.org/FlowLeaf/flow-leaf-server)
 [![codecov](https://codecov.io/gh/FlowLeaf/flow-leaf-server/branch/master/graph/badge.svg)](https://codecov.io/gh/FlowLeaf/flow-leaf-server)
 
-# SmartDigitalGarden Server
+# SmartDigitalGarden / DeviceStacc Server
 
 A data analytics platform for hydroponic setups. It visualizes and allows analysis of data covering the growth aspects of hydroponics. It creates a system that covers the data collection and automation to data storage and analysis.
+
+## ⚠️⚠️⚠️ Current Development Status ⚠️⚠️⚠️
+
+In the current refactoring state it is recommended to follow the [core service documentation](./core/README.md). For a high-level overview, see the Device Stacc post on Hackernoon.
 
 ## Requirements
 

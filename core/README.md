@@ -2,6 +2,23 @@
 
 The Django application acts as the backend for the admin site, the WebSockets, the connection between controllers, databases and user applications (frontend, VR/AR applications).
 
+![IoT Architecture](./doc/iot_heirarchy.png "IoT Architecture")
+
+- [Core Service](#core-service)
+  - [Installation](#installation)
+  - [Development with the SDG Controller and the Node-RED Demo](#development-with-the-sdg-controller-and-the-node-red-demo)
+    - [Changes to Core Service](#changes-to-core-service)
+    - [Changes to SDG Controller](#changes-to-sdg-controller)
+    - [Changes to the Node-RED Demo](#changes-to-the-node-red-demo)
+  - [Tests](#tests)
+  - [Database Migrations](#database-migrations)
+  - [Save and Load Seed Data](#save-and-load-seed-data)
+  - [Options](#options)
+  - [Using Local DNS Resolution](#using-local-dns-resolution)
+  - [Regitering New OAuth2 Applications](#regitering-new-oauth2-applications)
+    - [Depreciated](#depreciated)
+  - [Troubleshooting](#troubleshooting)
+
 ## Installation
 
 After installing *Docker*, run the install script:
@@ -12,12 +29,12 @@ Start with:
 
     ./start.sh
 
-This starts Django in development mode by default. The `DJANGO_DEBUG` variable in `env.core` is only respected when starting from the root Docker Compose file.
-
-To [log in](http://localhost:8000), use the default superuser creditials defined in `secrets.core` by the following variables:
+This starts Django in development mode at [localhost:8000](http://localhost:8000). To log in, use the default superuser creditials defined in `secrets.core` by the following variables:
 
     DJANGO_SUPERUSER_EMAIL
     DJANGO_SUPERUSER_PASSWORD
+
+The `DJANGO_DEBUG` variable in `env.core` is only respected when starting from the root Docker Compose file.
 
 ## Development with the SDG Controller and the Node-RED Demo
 
