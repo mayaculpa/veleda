@@ -220,10 +220,14 @@ class PeripheralComponent(models.Model):
         """Possible peripheral types."""
 
         INVALID_TYPE = ("InvalidPeripheral", "Invalid peripheral")
+        DIGITAL_IN = ("DigitalIn", "Digital in")
+        DIGITAL_OUT = ("DigitalOut", "Digital out")
+        ANALOG_IN = ("AnalogIn", "Analog in")
+        ANALOG_OUT = ("AnalogOut", "Analog out")
+        PWM = ("PWM", "PWM")
         BME280_SENSOR = ("BME280", "BME/BMP 280 sensor")
         CAPACITIVE_SENSOR = ("CapacitiveSensor", "Capacitive sensor")
         I2C_ADAPTER = ("I2CAdapter", "I2C Adapter")
-        LED = ("LED", "LED")
         NEO_PIXEL = ("NeoPixel", "NeoPixel array")
 
     site_entity = models.OneToOneField(

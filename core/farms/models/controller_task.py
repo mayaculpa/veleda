@@ -258,8 +258,8 @@ class ControllerTask(models.Model):
         ALERT_SENSOR = "AlertSensor", "Alert sensor"
         POLL_SENSOR = "PollSensor", "Poll sensor"
         READ_SENSOR = "ReadSensor", "Read sensor"
-        SET_LIGHT = "SetLight", "Set light"
-        WRITE_ACTUATOR = "WriteActuator", "Write actuator"
+        SET_RGB_LED = "SetRgbLed", "Set RGB LED"
+        SET_VALUE = "SetValue", "Set value"
 
     id = models.UUIDField(
         primary_key=True,

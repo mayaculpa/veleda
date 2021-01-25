@@ -42,11 +42,26 @@ To use the core service with an SDG controller (ESP32 firmware) and a Node-RED f
 
 ### Changes to Core Service
 
-Change the `CORE_DOMAIN` to the local network IP address, i.e., the one assigned to the network adapter instead of localhost. Check that a token has been created under *Auth Token* on the [Django admin site](http://localhost:8000/admin/authtoken/tokenproxy/) and under *Farms* in the *Controller auth tokens* section. If not, clear the DB with `./start.sh clean` and run `./start.sh` again or create them yourself.
+1. Change the `CORE_DOMAIN` variable in `secrets.core` to the local network IP address (the one assigned to the network adapter instead of localhost).
+2. Check that tokens have been created
+   1. under *Auth Token* on the [Django admin site](http://localhost:8000/admin/authtoken/tokenproxy/)
+   2. and under *Farms* in the *Controller auth tokens* section.
+   3. If not, clear the DB with `./start.sh clean` and run `./start.sh` again or create them yourself.
+3. Restart the core server (kill the server with Ctrl + C and run `./start.sh`).
+4. Open a browser at the new address.
 
 ### Changes to SDG Controller
 
-After setting up the PlatformIO extension in VS Code, clone the [SDG Controller repository](https://github.com/protohaus/sdg-controller) and open it in VS Code. In the `src/configuration.cpp` file, add your WiFi credentials to `access_points`, update `core_domain` to the one set above and set the `ws_token` to the token from the *Controller auth tokens* section. Prefix the token with `token_`. The default should already be set to the one provided by the DB seed for the core service.
+1. Set up the [PlatformIO extension](https://platformio.org/platformio-ide) for [VS Code](https://code.visualstudio.com/).
+2. Clone the [SDG Controller repository](https://github.com/protohaus/sdg-controller) and open it in VS Code.
+3. In the `src/configuration.cpp` file
+   1. add your WiFi credentials to `access_points`
+   2. update `core_domain` to the one set above
+   3. and set the `ws_token` to the token from the *Controller auth tokens* section. Prefix the token with `token_`. The default should already be set to the one provided by the DB seed for the core service.
+4. Compile and upload the controller code.
+5. Check the connection by opening the serial monitor.
+
+![PlatformIO buttons](./doc/platformio_buttons.png "PlatformIO buttons")
 
 ### Changes to the Node-RED Demo
 
