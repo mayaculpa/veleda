@@ -53,13 +53,14 @@ To use the core service with an SDG controller (ESP32 firmware) and a Node-RED f
 ### Changes to SDG Controller
 
 1. Set up the [PlatformIO extension](https://platformio.org/platformio-ide) for [VS Code](https://code.visualstudio.com/).
-2. Clone the [SDG Controller repository](https://github.com/protohaus/sdg-controller) and open it in VS Code.
-3. In the `src/configuration.cpp` file
+2. Clone the [SDG Controller repository](https://github.com/protohaus/sdg-controller)
+3. Open it in VS Code with `File` and `Add Folder to Workspace...` or `Open Folder...`
+4. In the `src/configuration.cpp` file
    1. add your WiFi credentials to `access_points`
    2. update `core_domain` to the one set above
    3. and set the `ws_token` to the token from the *Controller auth tokens* section. Prefix the token with `token_`. The default should already be set to the one provided by the DB seed for the core service.
-4. Compile and upload the controller code.
-5. Check the connection by opening the serial monitor.
+5. Compile and upload the controller code.
+6. Check the connection by opening the serial monitor.
 
 ![PlatformIO buttons](./doc/platformio_buttons.png "PlatformIO buttons")
 

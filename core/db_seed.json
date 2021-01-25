@@ -265,7 +265,7 @@
     "fields": {
       "data_point_type": "ee188890-f88e-4066-92db-11abcbda67ee",
       "peripheral": "64542ac2-4359-44b3-89a8-a552db1a8d5a",
-      "parameter_prefix": ""
+      "parameter_prefix": "percent"
     }
   },
   {
@@ -274,7 +274,7 @@
     "fields": {
       "data_point_type": "787d1507-b598-4bb3-b797-49666aeacead",
       "peripheral": "f009d29b-3968-4df8-aef3-f74b638be992",
-      "parameter_prefix": ""
+      "parameter_prefix": "voltage"
     }
   },
   {
