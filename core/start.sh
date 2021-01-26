@@ -2,7 +2,7 @@
 
 function finish {
   # Kills all forked processes (Celery worker)
-  pkill -P $$
+  pkill -P $$ || true
 }
 trap finish EXIT
 
@@ -202,10 +202,10 @@ elif [[ $1 == "test" ]]; then
   pipenv run ./manage.py "${@:1}"
 elif [[ $1 == "coverage" ]]; then
   echo "Starting test coverage analysis"
+  pipenv run coverage run --source='.' manage.py test
   if [ "$CONTINUOUS_INTEGRATION" == true ]; then
-    codecov
+    pipenv run codecov || true
   else
-    pipenv run coverage run --source='.' manage.py test
     pipenv run coverage html
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     echo "Coverage analysis created: file:$DIR/htmlcov/index.html"

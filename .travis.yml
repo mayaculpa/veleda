@@ -1,8 +1,12 @@
-matrix:
+dist: focal
+os: linux
+language: python
+python: '3.8'
+
+jobs:
   include:
   - name: Core
     language: python
-    sudo: required
     dist: focal
     python: '3.8'
     services:
@@ -14,16 +18,15 @@ matrix:
     install:
     - bash core/install.sh
     script:
-    - bash core/start.sh test
     - bash core/start.sh coverage
-  - name: Planner
-    language: node_js
-    dist: xenial
-    node_js: '10'
-    addons:
-      chrome: stable
-    cache: npm
-    install:
-    - bash planner/install.sh
-    script:
-    - bash planner/test.sh
+  # - name: Planner
+  #   language: node_js
+  #   dist: xenial
+  #   node_js: '10'
+  #   addons:
+  #     chrome: stable
+  #   cache: npm
+  #   install:
+  #   - bash planner/install.sh
+  #   script:
+  #   - bash planner/test.sh
