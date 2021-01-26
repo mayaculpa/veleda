@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/FlowLeaf/flow-leaf-server.svg?branch=master)](https://travis-ci.org/FlowLeaf/flow-leaf-server)
-[![codecov](https://codecov.io/gh/FlowLeaf/flow-leaf-server/branch/master/graph/badge.svg)](https://codecov.io/gh/FlowLeaf/flow-leaf-server)
+[![Build Status](https://travis-ci.org/protohaus/sdg-server.svg?branch=main)](https://travis-ci.org/protohaus/sdg-server)
+[![codecov](https://codecov.io/gh/protohaus/sdg-server/branch/master/graph/badge.svg)](https://codecov.io/gh/protohaus/sdg-server)
 
 # SmartDigitalGarden / DeviceStacc Server
 
