@@ -202,10 +202,14 @@ elif [[ $1 == "test" ]]; then
   pipenv run ./manage.py "${@:1}"
 elif [[ $1 == "coverage" ]]; then
   echo "Starting test coverage analysis"
-  pipenv run coverage run --source='.' manage.py test
-  pipenv run coverage html
-  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-  echo "Coverage analysis created: file:$DIR/htmlcov/index.html"
+  if [ "$CONTINUOUS_INTEGRATION" == true ]; then
+    codecov
+  else
+    pipenv run coverage run --source='.' manage.py test
+    pipenv run coverage html
+    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+    echo "Coverage analysis created: file:$DIR/htmlcov/index.html"
+  fi
 elif [[ $1 == "pytest" ]]; then
   pytest
 elif [[ $1 == "dumpdata" ]]; then

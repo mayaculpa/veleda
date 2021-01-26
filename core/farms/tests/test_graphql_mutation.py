@@ -51,7 +51,7 @@ class ControllerTaskTestCase(GraphQLTestCase):
 
         input_data = {
             "controllerComponent": self.controller_a_gid,
-            "taskType": ControllerTask.TaskType.WRITE_ACTUATOR.value,
+            "taskType": ControllerTask.TaskType.SET_VALUE.value,
             "parameters": '{"some": "parameter"}',
             "runUntil": (
                 datetime.now(tz=timezone.utc) + timedelta(minutes=1)
@@ -92,7 +92,7 @@ class ControllerTaskTestCase(GraphQLTestCase):
 
         controller_task = ControllerTask.objects.create(
             controller_component=self.controller_a,
-            task_type=ControllerTask.TaskType.WRITE_ACTUATOR.value,
+            task_type=ControllerTask.TaskType.SET_VALUE.value,
             state=ControllerTask.State.STOPPED.value,
             parameters={"some": "parameter"},
         )
@@ -136,7 +136,7 @@ class ControllerTaskTestCase(GraphQLTestCase):
 
         controller_task = ControllerTask.objects.create(
             controller_component=self.controller_a,
-            task_type=ControllerTask.TaskType.WRITE_ACTUATOR.value,
+            task_type=ControllerTask.TaskType.SET_VALUE.value,
             state=ControllerTask.State.RUNNING.value,
             parameters={"some": "parameter"},
         )
@@ -240,7 +240,7 @@ class PeripheralControllerTestCase(GraphQLTestCase):
                 SiteNode._meta.name, self.controller_a.site_entity.site.pk
             ),
             "controllerComponent": self.controller_a_gid,
-            "peripheralType": PeripheralComponent.PeripheralType.LED.value,
+            "peripheralType": PeripheralComponent.PeripheralType.PWM.value,
             "dataPointTypeEdges": data_point_type_edges,
             "otherParameters": '{"some": "parameter"}',
         }
@@ -282,7 +282,7 @@ class PeripheralControllerTestCase(GraphQLTestCase):
                 SiteNode._meta.name, self.controller_a.site_entity.site.pk
             ),
             "controllerComponent": self.controller_a_gid,
-            "peripheralType": PeripheralComponent.PeripheralType.LED.value,
+            "peripheralType": PeripheralComponent.PeripheralType.PWM.value,
             "dataPointTypeEdges": [],
             "otherParameters": "{}",
         }

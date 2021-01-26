@@ -5,6 +5,8 @@ matrix:
     sudo: required
     dist: focal
     python: '3.8'
+    services:
+    - docker
     cache:
       pip: true
       directories:
@@ -12,7 +14,8 @@ matrix:
     install:
     - bash core/install.sh
     script:
-    - bash core/test.sh
+    - bash core/start.sh test
+    - bash core/start.sh coverage
   - name: Planner
     language: node_js
     dist: xenial

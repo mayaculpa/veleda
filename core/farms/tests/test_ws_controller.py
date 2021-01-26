@@ -322,13 +322,13 @@ class TestControllerMessage(TransactionTestCase):
         )
         peripheral_a = await database_sync_to_async(PeripheralComponent.objects.create)(
             site_entity=peripheral_a_entity,
-            peripheral_type=PeripheralComponent.PeripheralType.LED,
+            peripheral_type=PeripheralComponent.PeripheralType.PWM,
             controller_component=self.controller_entity.controller_component,
             state=PeripheralComponent.State.ADDING,
         )
         peripheral_b = await database_sync_to_async(PeripheralComponent.objects.create)(
             site_entity=peripheral_b_entity,
-            peripheral_type=PeripheralComponent.PeripheralType.LED,
+            peripheral_type=PeripheralComponent.PeripheralType.PWM,
             controller_component=self.controller_entity.controller_component,
             state=PeripheralComponent.State.REMOVING,
         )

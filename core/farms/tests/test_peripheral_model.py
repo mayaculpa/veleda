@@ -37,7 +37,7 @@ class PeripheralModelAddRemoveTests(TestCase):
 
         led_a_entity = SiteEntity.objects.create(name="LED A", site=self.site_a)
         led_a_peripheral = PeripheralComponent.objects.create(
-            peripheral_type=PeripheralComponent.PeripheralType.LED,
+            peripheral_type=PeripheralComponent.PeripheralType.PWM,
             site_entity=led_a_entity,
             controller_component=self.esp32_a_controller,
             state=PeripheralComponent.State.ADDING,
@@ -52,7 +52,7 @@ class PeripheralModelAddRemoveTests(TestCase):
         )
         self.assertEqual(led_a_peripheral.state, PeripheralComponent.State.ADDING)
         self.assertEqual(
-            led_a_peripheral.peripheral_type, PeripheralComponent.PeripheralType.LED
+            led_a_peripheral.peripheral_type, PeripheralComponent.PeripheralType.PWM
         )
 
     def test_peripheral_data_point_type(self):
@@ -127,7 +127,7 @@ class PeripheralModelAddRemoveTests(TestCase):
                 name="LED 22",
                 site_id=self.site_a.pk,
                 controller_component_id=self.esp32_a_controller.pk,
-                peripheral_type=PeripheralComponent.PeripheralType.LED.value,
+                peripheral_type=PeripheralComponent.PeripheralType.PWM.value,
                 other_parameters={"data_point_type": "value"},
                 data_point_type_edges=[],
             )
@@ -155,7 +155,7 @@ class PeripheralModelResultRegisterTests(TestCase):
             site_entity=SiteEntity.objects.create(
                 name="Peripheral A", site=self.site_a
             ),
-            peripheral_type=PeripheralComponent.PeripheralType.LED.value,
+            peripheral_type=PeripheralComponent.PeripheralType.PWM.value,
             controller_component=self.esp32_a_controller,
             state=PeripheralComponent.State.ADDING.value,
         )
@@ -163,7 +163,7 @@ class PeripheralModelResultRegisterTests(TestCase):
             site_entity=SiteEntity.objects.create(
                 name="Peripheral B", site=self.site_a
             ),
-            peripheral_type=PeripheralComponent.PeripheralType.LED.value,
+            peripheral_type=PeripheralComponent.PeripheralType.PWM.value,
             controller_component=self.esp32_a_controller,
             state=PeripheralComponent.State.ADDING.value,
         )
@@ -171,7 +171,7 @@ class PeripheralModelResultRegisterTests(TestCase):
             site_entity=SiteEntity.objects.create(
                 name="Peripheral C", site=self.site_a
             ),
-            peripheral_type=PeripheralComponent.PeripheralType.LED.value,
+            peripheral_type=PeripheralComponent.PeripheralType.PWM.value,
             controller_component=self.esp32_a_controller,
             state=PeripheralComponent.State.REMOVING.value,
         )
@@ -179,7 +179,7 @@ class PeripheralModelResultRegisterTests(TestCase):
             site_entity=SiteEntity.objects.create(
                 name="Peripheral D", site=self.site_a
             ),
-            peripheral_type=PeripheralComponent.PeripheralType.LED.value,
+            peripheral_type=PeripheralComponent.PeripheralType.PWM.value,
             controller_component=self.esp32_a_controller,
             state=PeripheralComponent.State.REMOVING.value,
         )

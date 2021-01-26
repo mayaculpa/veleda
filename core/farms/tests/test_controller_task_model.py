@@ -37,7 +37,7 @@ class ControllerTaskTests(TestCase):
             controller_component=self.controller_a,
         )
         task_d = ControllerTask.objects.create(
-            task_type=ControllerTask.TaskType.WRITE_ACTUATOR,
+            task_type=ControllerTask.TaskType.SET_VALUE,
             controller_component=self.controller_a,
         )
 
@@ -50,7 +50,7 @@ class ControllerTaskTests(TestCase):
                 },
                 {
                     "uuid": str(uuid.uuid4()),
-                    "type": ControllerTask.TaskType.SET_LIGHT,
+                    "type": ControllerTask.TaskType.SET_RGB_LED,
                     "hi": "there",
                 },
             ],
