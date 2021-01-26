@@ -9,5 +9,8 @@ exclude_lines =
     if __name__ == .__main__.:
 ignore_errors = True
 omit =
-    tests/*
+    */tests/*
+    */migrations/*
     oauth2_test.py
+    core/wsgi.py
+    core/asgi.py

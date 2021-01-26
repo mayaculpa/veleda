@@ -5,4 +5,4 @@ class AccountsConfig(AppConfig):
     name = "accounts"
 
     def ready(self):
-        import accounts.signals
+        import accounts.signals  # pylint: disable=unused-import, import-outside-toplevel

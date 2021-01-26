@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve -- --proxy-config ./src/proxy.conf.js",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
@@ -26,6 +26,7 @@
     "@ngrx/schematics": "^7.4.0",
     "@ngrx/store": "^7.4.0",
     "@types/uuid": "^3.4.6",
+    "angular-oauth2-oidc": "^10.0.3",
     "core-js": "^2.6.10",
     "rxjs": "^6.5.3",
     "tslib": "^1.10.0",

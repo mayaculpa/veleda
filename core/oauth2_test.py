@@ -5,9 +5,9 @@ import requests
 import requests.auth
 import urllib
 
-CLIENT_ID = "fOnhARgm9Kn22PNFSQlNhrlpw6goofqIPYNKmPDl"
-CLIENT_SECRET = "L7l7sNvBVA4aes1TNee8efzaLEUjPE1BDbN7s6MFm2w0NlxEz5gizAF0tlgb9z17Y8oM6Yh5lwh3UArbCdpQSRaSYOpwlijyqVLM6zlY9fkgLvqlpFP7kzEooWUDPQxR"
-REDIRECT_URI = "http://127.0.0.1:3000/reddit_callback"
+CLIENT_ID = "..."
+CLIENT_SECRET = "..."
+REDIRECT_URI = "http://127.0.0.1:3000/oauth2_callback"
 
 
 def base_headers():
@@ -19,7 +19,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def homepage():
-    text = '<a href="%s">Authenticate with reddit</a>'
+    text = '<a href="%s">Authenticate with OAuth2</a>'
     return text % make_authorization_url()
 
 
@@ -36,7 +36,7 @@ def make_authorization_url():
         "duration": 360000,
         "scope": "userinfo-v1",
     }
-    url = "http://127.0.0.1:8000/o/authorize/?" + urllib.parse.urlencode(params)
+    url = "https://core.example.com/o/authorize/?" + urllib.parse.urlencode(params)
     return url
 
 
@@ -50,8 +50,8 @@ def is_valid_state(state):
     return True
 
 
-@app.route("/reddit_callback")
-def reddit_callback():
+@app.route("/oauth2_callback")
+def oauth2_callback():
     error = request.args.get("error", "")
     if error:
         return "Error: " + error
@@ -63,7 +63,7 @@ def reddit_callback():
     access_token = get_token(code)
     # Note: In most cases, you'll want to store the access token, in, say,
     # a session for use in other parts of your web app.
-    return "Your reddit username is: %s" % get_username(access_token)
+    return "Your username is: %s" % get_username(access_token)
 
 
 def get_token(code):
@@ -75,7 +75,7 @@ def get_token(code):
     }
     headers = base_headers()
     response = requests.post(
-        "http://127.0.0.1:8000/o/token/",
+        "https://core.example.com/o/token/",
         auth=client_auth,
         headers=headers,
         data=post_data,
@@ -87,7 +87,7 @@ def get_token(code):
 def get_username(access_token):
     headers = base_headers()
     headers.update({"Authorization": "Bearer " + access_token})
-    response = requests.get("http://127.0.0.1:8000/api/v1/userinfo/", headers=headers)
+    response = requests.get("https://core.example.com/api/v1/userinfo/", headers=headers)
     me_json = response.json()
     return me_json["name"]
 

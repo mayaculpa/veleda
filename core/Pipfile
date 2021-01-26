@@ -10,26 +10,40 @@ ipdb = "*"
 pylint = "*"
 pylint-django = "*"
 codecov = "*"
+rope = "*"
+pytest = "*"
+pytest-django = "*"
+pytest-asyncio = "~=0.14.0"
 
 [packages]
-django = "~=3.0.0"
+django = "~=3.1.0"
 django-oauth-toolkit = "*"
 django-semanticui-forms = "*"
 djangorestframework = "*"
 oauth2-provider = "*"
-gunicorn = "~=20.0"
 django-registration = "~=3.0"
 psycopg2 = "~=2.8"
-whitenoise = {extras = ["brotli"],version = "~=4.1"}
 celery = "~=4.3"
 django-address = "~=0.2"
 django-macaddress = "~=1.6"
 django-ipware = "~=2.1"
 django-celery-results = "~=1.1"
 cloudflare = "~=2.3"
+channels = "*"
+channels-redis = "~=3.2"
+django-csp = "*"
+django-cors-headers = "*"
+daphne = "*"
+graphene-django = "~=2.13.0"
+django-filter = "~=2.4.0"
+django-log-request-id = "~=1.6.0"
 
 [requires]
 python_version = "3.8"
 
 [pipenv]
 allow_prereleases = true
+
+[packages.whitenoise]
+extras = [ "brotli",]
+version = "~=4.1"

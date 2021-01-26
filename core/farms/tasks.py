@@ -28,8 +28,8 @@
 
 #     logger.info("Creating subdomain: %s" % site.subdomain)
 #     cf = CloudFlare.CloudFlare(token=settings.CLOUDFLARE_API_KEY)
-#     # Get zones, to get the SERVER_DOMAIN's zone ID to create a subdomain DNS records
-#     zone = cf.zones.get(params={"name": settings.SERVER_DOMAIN})[0]
+#     # Get zones, to get the CORE_DOMAIN's zone ID to create a subdomain DNS records
+#     zone = cf.zones.get(params={"name": settings.CORE_DOMAIN})[0]
 
 #     # To split the subdomain correctly, the server domain has to be the first part
 #     # I.e., some.sites.example.com --> 'some.sites' and 'example.com'

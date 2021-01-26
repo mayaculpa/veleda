@@ -20,6 +20,7 @@ from django.contrib import admin
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from rest_framework.authtoken.views import obtain_auth_token
+
 from . import views as root_views
 from . import oauth2_views
 
@@ -30,10 +31,9 @@ urlpatterns = [
     path("api/", include("accounts.urls_api")),
     path("accounts/", include("django_registration.backends.activation.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
-    # Farm URLs
-    path("farms/", include("farms.urls", namespace="farms")),
-    path("api/", include("farms.urls_api")),
     # API Endpoints
+    path("graphiql/", root_views.SessionGraphQLView.as_view(graphiql=True), name="graphiql"),
+    path("graphql/", root_views.TokenGraphQLView.as_view(graphiql=False), name="graphql"),
     path("api-token-auth/", obtain_auth_token, name="api_token_auth"),
     # OAuth2 Endpoints
     path(

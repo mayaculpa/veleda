@@ -1,0 +1,598 @@
+[
+  {
+    "model": "oauth2_provider.application",
+    "pk": 1,
+    "fields": {
+      "client_id": "LHigbQpccy8nCme8pVf4fY0og94YhYprmm3pQz0m",
+      "user": "28969cee-d338-44ce-a7a1-57e6333e4bb6",
+      "redirect_uris": "https://oauth.pstmn.io/v1/callback",
+      "client_type": "confidential",
+      "authorization_grant_type": "authorization-code",
+      "client_secret": "amS6mWivasssNpwBZZncviexJHRWhWpZx4em0eLri54ilB28zFEjhoi3duQVPRrb6oV5GjgI36RRktRY0uMYOsPMLqf5XMjpzCQkUB8lKSRGizZsJi0ZA1uINbW0UdfS",
+      "name": "Postman Client",
+      "skip_authorization": false,
+      "created": "2020-10-23T18:02:57.251Z",
+      "updated": "2020-10-23T18:02:57.251Z"
+    }
+  },
+  {
+    "model": "authtoken.token",
+    "pk": "543504d764fe2b729fac541f534f10a23fca4e6f",
+    "fields": {
+      "user": "28969cee-d338-44ce-a7a1-57e6333e4bb6",
+      "created": "2020-11-23T14:36:36.415Z"
+    }
+  },
+  {
+    "model": "address.address",
+    "pk": 1,
+    "fields": {
+      "street_number": "",
+      "route": "",
+      "locality": null,
+      "raw": "Rebenring 31, Braunschweig",
+      "formatted": "Rebenring 31, Braunschweig",
+      "latitude": null,
+      "longitude": null
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": "28969cee-d338-44ce-a7a1-57e6333e4bb6",
+    "fields": {
+      "password": "pbkdf2_sha256$216000$MNOAcHtg1dOA$v8COZY2V/TrpgULuX75hLCksbDAtH8JsTJG16U1LDhY=",
+      "last_login": "2021-01-24T21:40:20.144Z",
+      "is_superuser": true,
+      "email": "admin@example.com",
+      "is_staff": true,
+      "is_active": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "accounts.profile",
+    "pk": "28969cee-d338-44ce-a7a1-57e6333e4bb6",
+    "fields": {
+      "short_name": "",
+      "full_name": "",
+      "date_joined": "2020-10-04T22:17:28.178Z"
+    }
+  },
+  {
+    "model": "farms.site",
+    "pk": "7bf7fa66-555e-47d3-8b79-b040eaa05ac5",
+    "fields": {
+      "name": "Protohaus Makerspace",
+      "owner": "28969cee-d338-44ce-a7a1-57e6333e4bb6",
+      "address": 1,
+      "created_at": "2020-10-04T23:02:05.310Z",
+      "modified_at": "2020-10-04T23:02:05.310Z"
+    }
+  },
+  {
+    "model": "farms.site",
+    "pk": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
+    "fields": {
+      "name": "Protohaus Gewächshaus",
+      "owner": "28969cee-d338-44ce-a7a1-57e6333e4bb6",
+      "address": 1,
+      "created_at": "2020-10-04T23:01:48.487Z",
+      "modified_at": "2020-10-04T23:01:48.487Z"
+    }
+  },
+  {
+    "model": "farms.siteentity",
+    "pk": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+    "fields": {
+      "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
+      "name": "Demo BME280 - A",
+      "created_at": "2020-10-04T23:06:56.090Z",
+      "modified_at": "2020-10-04T23:06:56.090Z"
+    }
+  },
+  {
+    "model": "farms.siteentity",
+    "pk": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+    "fields": {
+      "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
+      "name": "Central ESP32",
+      "created_at": "2020-10-04T23:05:23.334Z",
+      "modified_at": "2020-10-04T23:05:23.334Z"
+    }
+  },
+  {
+    "model": "farms.siteentity",
+    "pk": "5f2c84f9-fa83-4441-9fbc-7dea75f84dd5",
+    "fields": {
+      "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
+      "name": "Main pump",
+      "created_at": "2021-01-24T12:41:10.433Z",
+      "modified_at": "2021-01-24T12:41:10.433Z"
+    }
+  },
+  {
+    "model": "farms.siteentity",
+    "pk": "6097c817-450a-42b3-bed4-a3585002fa82",
+    "fields": {
+      "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
+      "name": "Entrance door",
+      "created_at": "2021-01-24T12:02:40.190Z",
+      "modified_at": "2021-01-24T12:02:40.190Z"
+    }
+  },
+  {
+    "model": "farms.siteentity",
+    "pk": "64542ac2-4359-44b3-89a8-a552db1a8d5a",
+    "fields": {
+      "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
+      "name": "Volume knob",
+      "created_at": "2021-01-24T15:21:05.723Z",
+      "modified_at": "2021-01-24T15:26:48.680Z"
+    }
+  },
+  {
+    "model": "farms.siteentity",
+    "pk": "894b4df3-ec52-4358-b8fa-d2bbece6e8ff",
+    "fields": {
+      "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
+      "name": "Red LED",
+      "created_at": "2020-12-19T13:05:58.546Z",
+      "modified_at": "2020-12-19T13:05:58.546Z"
+    }
+  },
+  {
+    "model": "farms.siteentity",
+    "pk": "b319b263-0526-4a26-b71a-39553869b2a0",
+    "fields": {
+      "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
+      "name": "On-board LED",
+      "created_at": "2021-01-24T21:35:27.220Z",
+      "modified_at": "2021-01-24T21:35:27.220Z"
+    }
+  },
+  {
+    "model": "farms.siteentity",
+    "pk": "f009d29b-3968-4df8-aef3-f74b638be992",
+    "fields": {
+      "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
+      "name": "Ceiling Light",
+      "created_at": "2021-01-24T15:26:19.470Z",
+      "modified_at": "2021-01-24T15:26:19.470Z"
+    }
+  },
+  {
+    "model": "farms.controllercomponenttype",
+    "pk": "e81a35c7-99d8-4abb-baaa-684af6a39ba8",
+    "fields": {
+      "name": "ESP32",
+      "created_at": "2020-10-04T23:04:07.700Z",
+      "modified_at": "2020-10-04T23:04:07.700Z"
+    }
+  },
+  {
+    "model": "farms.controllercomponent",
+    "pk": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+    "fields": {
+      "component_type": "e81a35c7-99d8-4abb-baaa-684af6a39ba8",
+      "channel_name": "specific.5e9e9446948b4a2d90edda7e033692ce!f7342361594d4d199aece50694f48f03",
+      "created_at": "2020-10-04T23:05:26.139Z",
+      "modified_at": "2020-10-23T18:01:49.333Z"
+    }
+  },
+  {
+    "model": "farms.controllerauthtoken",
+    "pk": "0b8eb0f583b264bbe9dda31d003140b79e740577",
+    "fields": {
+      "controller": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+      "created_at": "2020-10-11T21:56:48.831Z"
+    }
+  },
+  {
+    "model": "farms.controllertask",
+    "pk": "043326eb-9fa5-4853-ad97-d861df911682",
+    "fields": {
+      "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+      "task_type": "SetValue",
+      "state": "starting",
+      "parameters": {
+        "value": 1,
+        "peripheral": "b319b263-0526-4a26-b71a-39553869b2a0",
+        "data_point_type": "02aeba32-8c1a-4295-a89e-22661e4a6e01"
+      },
+      "run_until": null,
+      "created_at": "2021-01-25T00:08:18.494Z",
+      "modified_at": "2021-01-25T00:08:18.494Z"
+    }
+  },
+  {
+    "model": "farms.peripheraldatapointtype",
+    "pk": 4,
+    "fields": {
+      "data_point_type": "4200cdd9-2871-4d98-93aa-00bde062c400",
+      "peripheral": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "parameter_prefix": "humidity"
+    }
+  },
+  {
+    "model": "farms.peripheraldatapointtype",
+    "pk": 5,
+    "fields": {
+      "data_point_type": "6e32d1a9-6dc3-46d9-b618-24fd43144f7b",
+      "peripheral": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "parameter_prefix": "temperature"
+    }
+  },
+  {
+    "model": "farms.peripheraldatapointtype",
+    "pk": 6,
+    "fields": {
+      "data_point_type": "96dde4ea-cb9d-4fc5-8be8-0fcc7fdf4883",
+      "peripheral": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "parameter_prefix": "pressure"
+    }
+  },
+  {
+    "model": "farms.peripheraldatapointtype",
+    "pk": 7,
+    "fields": {
+      "data_point_type": "02aeba32-8c1a-4295-a89e-22661e4a6e01",
+      "peripheral": "894b4df3-ec52-4358-b8fa-d2bbece6e8ff",
+      "parameter_prefix": ""
+    }
+  },
+  {
+    "model": "farms.peripheraldatapointtype",
+    "pk": 8,
+    "fields": {
+      "data_point_type": "1d31e4b4-b920-4806-bb0d-274560b18c4c",
+      "peripheral": "6097c817-450a-42b3-bed4-a3585002fa82",
+      "parameter_prefix": ""
+    }
+  },
+  {
+    "model": "farms.peripheraldatapointtype",
+    "pk": 10,
+    "fields": {
+      "data_point_type": "c62a75b3-1a74-4df0-a24f-4e32c7476ff1",
+      "peripheral": "5f2c84f9-fa83-4441-9fbc-7dea75f84dd5",
+      "parameter_prefix": ""
+    }
+  },
+  {
+    "model": "farms.peripheraldatapointtype",
+    "pk": 11,
+    "fields": {
+      "data_point_type": "ee188890-f88e-4066-92db-11abcbda67ee",
+      "peripheral": "64542ac2-4359-44b3-89a8-a552db1a8d5a",
+      "parameter_prefix": "percent"
+    }
+  },
+  {
+    "model": "farms.peripheraldatapointtype",
+    "pk": 12,
+    "fields": {
+      "data_point_type": "787d1507-b598-4bb3-b797-49666aeacead",
+      "peripheral": "f009d29b-3968-4df8-aef3-f74b638be992",
+      "parameter_prefix": "voltage"
+    }
+  },
+  {
+    "model": "farms.peripheraldatapointtype",
+    "pk": 13,
+    "fields": {
+      "data_point_type": "02aeba32-8c1a-4295-a89e-22661e4a6e01",
+      "peripheral": "b319b263-0526-4a26-b71a-39553869b2a0",
+      "parameter_prefix": ""
+    }
+  },
+  {
+    "model": "farms.peripheralcomponent",
+    "pk": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+    "fields": {
+      "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+      "peripheral_type": "BME280",
+      "state": "failed",
+      "other_parameters": { "some": "data" },
+      "created_at": "2020-10-04T23:07:17.761Z",
+      "modified_at": "2020-10-04T23:07:17.761Z"
+    }
+  },
+  {
+    "model": "farms.peripheralcomponent",
+    "pk": "5f2c84f9-fa83-4441-9fbc-7dea75f84dd5",
+    "fields": {
+      "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+      "peripheral_type": "DigitalOut",
+      "state": "adding",
+      "other_parameters": { "pin": 14 },
+      "created_at": "2021-01-24T12:41:10.446Z",
+      "modified_at": "2021-01-24T12:41:10.446Z"
+    }
+  },
+  {
+    "model": "farms.peripheralcomponent",
+    "pk": "6097c817-450a-42b3-bed4-a3585002fa82",
+    "fields": {
+      "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+      "peripheral_type": "DigitalIn",
+      "state": "adding",
+      "other_parameters": { "pin": 26, "input_type": "pullup" },
+      "created_at": "2021-01-24T12:02:40.205Z",
+      "modified_at": "2021-01-24T12:02:40.205Z"
+    }
+  },
+  {
+    "model": "farms.peripheralcomponent",
+    "pk": "64542ac2-4359-44b3-89a8-a552db1a8d5a",
+    "fields": {
+      "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+      "peripheral_type": "AnalogIn",
+      "state": "adding",
+      "other_parameters": { "pin": 39 },
+      "created_at": "2021-01-24T15:21:05.737Z",
+      "modified_at": "2021-01-24T15:21:05.737Z"
+    }
+  },
+  {
+    "model": "farms.peripheralcomponent",
+    "pk": "894b4df3-ec52-4358-b8fa-d2bbece6e8ff",
+    "fields": {
+      "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+      "peripheral_type": "PWM",
+      "state": "adding",
+      "other_parameters": { "pin": 12 },
+      "created_at": "2020-12-19T13:06:35.986Z",
+      "modified_at": "2021-01-24T15:28:14.812Z"
+    }
+  },
+  {
+    "model": "farms.peripheralcomponent",
+    "pk": "b319b263-0526-4a26-b71a-39553869b2a0",
+    "fields": {
+      "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+      "peripheral_type": "PWM",
+      "state": "adding",
+      "other_parameters": { "pin": 2 },
+      "created_at": "2021-01-24T21:35:27.230Z",
+      "modified_at": "2021-01-24T21:35:27.230Z"
+    }
+  },
+  {
+    "model": "farms.peripheralcomponent",
+    "pk": "f009d29b-3968-4df8-aef3-f74b638be992",
+    "fields": {
+      "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
+      "peripheral_type": "AnalogOut",
+      "state": "adding",
+      "other_parameters": { "pin": 25 },
+      "created_at": "2021-01-24T15:26:19.482Z",
+      "modified_at": "2021-01-24T15:26:19.482Z"
+    }
+  },
+  {
+    "model": "farms.datapointtype",
+    "pk": "02aeba32-8c1a-4295-a89e-22661e4a6e01",
+    "fields": { "name": "LED Brightness", "unit": "%" }
+  },
+  {
+    "model": "farms.datapointtype",
+    "pk": "1d31e4b4-b920-4806-bb0d-274560b18c4c",
+    "fields": { "name": "Door open", "unit": "boolean" }
+  },
+  {
+    "model": "farms.datapointtype",
+    "pk": "4200cdd9-2871-4d98-93aa-00bde062c400",
+    "fields": { "name": "Humidity", "unit": "%RH" }
+  },
+  {
+    "model": "farms.datapointtype",
+    "pk": "6e32d1a9-6dc3-46d9-b618-24fd43144f7b",
+    "fields": { "name": "Air temperature", "unit": "°C" }
+  },
+  {
+    "model": "farms.datapointtype",
+    "pk": "787d1507-b598-4bb3-b797-49666aeacead",
+    "fields": { "name": "Power", "unit": "V" }
+  },
+  {
+    "model": "farms.datapointtype",
+    "pk": "96dde4ea-cb9d-4fc5-8be8-0fcc7fdf4883",
+    "fields": { "name": "Air pressure", "unit": "Pa" }
+  },
+  {
+    "model": "farms.datapointtype",
+    "pk": "c62a75b3-1a74-4df0-a24f-4e32c7476ff1",
+    "fields": { "name": "Pump", "unit": "boolean" }
+  },
+  {
+    "model": "farms.datapointtype",
+    "pk": "e49baf9c-dfc3-4a34-a6e5-e33f4ac62186",
+    "fields": { "name": "Window open", "unit": "boolean" }
+  },
+  {
+    "model": "farms.datapointtype",
+    "pk": "ee188890-f88e-4066-92db-11abcbda67ee",
+    "fields": { "name": "Power", "unit": "%" }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:10:38Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "96dde4ea-cb9d-4fc5-8be8-0fcc7fdf4883",
+      "value": 101000.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:10:38.001Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "6e32d1a9-6dc3-46d9-b618-24fd43144f7b",
+      "value": 30.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:10:38.002Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "4200cdd9-2871-4d98-93aa-00bde062c400",
+      "value": 30.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:10:59Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "96dde4ea-cb9d-4fc5-8be8-0fcc7fdf4883",
+      "value": 102000.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:10:59.001Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "6e32d1a9-6dc3-46d9-b618-24fd43144f7b",
+      "value": 31.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:10:59.002Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "4200cdd9-2871-4d98-93aa-00bde062c400",
+      "value": 29.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:07Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "96dde4ea-cb9d-4fc5-8be8-0fcc7fdf4883",
+      "value": 100000.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:07.001Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "6e32d1a9-6dc3-46d9-b618-24fd43144f7b",
+      "value": 25.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:07.002Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "4200cdd9-2871-4d98-93aa-00bde062c400",
+      "value": 31.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:17Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "96dde4ea-cb9d-4fc5-8be8-0fcc7fdf4883",
+      "value": 99000.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:17.001Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "6e32d1a9-6dc3-46d9-b618-24fd43144f7b",
+      "value": 24.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:17.002Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "4200cdd9-2871-4d98-93aa-00bde062c400",
+      "value": 30.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:27Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "4200cdd9-2871-4d98-93aa-00bde062c400",
+      "value": 30.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:37Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "96dde4ea-cb9d-4fc5-8be8-0fcc7fdf4883",
+      "value": 96000.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:37.001Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "6e32d1a9-6dc3-46d9-b618-24fd43144f7b",
+      "value": 23.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:37.002Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "4200cdd9-2871-4d98-93aa-00bde062c400",
+      "value": 53.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:45Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "4200cdd9-2871-4d98-93aa-00bde062c400",
+      "value": 56.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:55Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "96dde4ea-cb9d-4fc5-8be8-0fcc7fdf4883",
+      "value": 95000.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:55.001Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "6e32d1a9-6dc3-46d9-b618-24fd43144f7b",
+      "value": 22.0
+    }
+  },
+  {
+    "model": "farms.datapoint",
+    "pk": "2020-10-04T23:11:55.002Z",
+    "fields": {
+      "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
+      "data_point_type": "4200cdd9-2871-4d98-93aa-00bde062c400",
+      "value": 55.0
+    }
+  }
+]

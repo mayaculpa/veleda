@@ -1,23 +1,30 @@
-import { Routes } from '@angular/router';
-import { CanvasAspectsComponent } from './containers/canvas-aspects/canvas-aspects.component';
+import { Routes } from "@angular/router";
+import { CanvasAspectsComponent } from "./containers/canvas-aspects/canvas-aspects.component";
+import { InjectionToken } from "@angular/core";
+import { HomeComponent } from "./containers/home/home.component";
+import { ShouldLoginComponent } from './containers/should-login/should-login.component';
 
-export const routes: Routes = [
+export const APP_ROUTES: Routes = [
   {
-    path: 'build',
-    component: CanvasAspectsComponent
+    path: "",
+    redirectTo: "home",
+    pathMatch: "full",
   },
   {
-    path: 'about',
-    component: CanvasAspectsComponent
+    path: "home",
+    component: HomeComponent,
   },
   {
-    path: '',
-    redirectTo: '/build',
-    pathMatch: 'full'
+    path: "build",
+    component: CanvasAspectsComponent,
   },
   {
-    path: '**',
-    redirectTo: '/build',
-    pathMatch: 'full'
-  }
+    path: "should-login", component: ShouldLoginComponent
+  },
+  {
+    path: "**",
+    redirectTo: "home",
+  },
 ];
+
+export const BASE_URL = new InjectionToken<string>("BASE_URL");

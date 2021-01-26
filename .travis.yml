@@ -1,14 +1,16 @@
-before_install:
-- openssl aes-256-cbc -K $encrypted_22a80512e0f7_key -iv $encrypted_22a80512e0f7_iv
-  -in sdg-staging-deploy-key.enc -out ~/.ssh/sdg-staging-deploy-key -d
+dist: focal
+os: linux
+language: python
+python: '3.8'
 
-matrix:
+jobs:
   include:
   - name: Core
     language: python
-    sudo: required
-    dist: bionic
-    python: '3.7'
+    dist: focal
+    python: '3.8'
+    services:
+    - docker
     cache:
       pip: true
       directories:
@@ -16,20 +18,15 @@ matrix:
     install:
     - bash core/install.sh
     script:
-    - bash core/test.sh
-  - name: Planner
-    language: node_js
-    dist: xenial
-    node_js: '10'
-    addons:
-      chrome: stable
-    cache: npm
-    install:
-    - bash planner/install.sh
-    script:
-    - bash planner/test.sh
-deploy:
-  provider: script
-  script: ".scripts/deploy.sh"
-  on:
-    branch: master
+    - bash core/start.sh coverage
+  # - name: Planner
+  #   language: node_js
+  #   dist: xenial
+  #   node_js: '10'
+  #   addons:
+  #     chrome: stable
+  #   cache: npm
+  #   install:
+  #   - bash planner/install.sh
+  #   script:
+  #   - bash planner/test.sh

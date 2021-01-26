@@ -1,0 +1,142 @@
+version: "3"
+
+services:
+## App Frontend
+  core:
+    build: ./core
+    restart: always
+    logging:
+      options:
+        max-size: '2m'
+        max-file: '10'
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - 'core/env.core'
+      - 'core/secrets.core'
+      - 'core/env.rabbitmq'
+      - 'core/secrets.rabbitmq'
+      - 'grafana/env.grafana'
+      - 'grafana/secrets.grafana'
+      - 'influxdb/secrets.influxdb'
+      - 'redis/env.redis'
+      - 'redis/secrets.redis'
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      - influxdb
+      - grafana
+      - postgres
+
+  grafana:
+    image: grafana/grafana:5.4.3
+    container_name: grafana
+    restart: always
+    logging:
+      options:
+        max-size: '2m'
+        max-file: '10'
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - 'grafana/env.grafana'
+      - 'grafana/secrets.grafana'
+    networks:
+      - backend
+      - frontend
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - grafana-config:/etc/grafana/
+    depends_on:
+      - influxdb
+
+  planner:
+    build: ./planner
+    container_name: planner
+    restart: always
+    logging:
+      options:
+        max-size: '2m'
+        max-file: '10'
+    ports:
+      - "127.0.0.1:4200:4200"
+    networks:
+      - frontend
+    depends_on:
+      - core
+
+## App Backend
+  postgres:
+    build: ./postgres
+    container_name: postgres
+    restart: always
+    logging:
+      options:
+        max-size: '2m'
+        max-file: '10'
+    env_file:
+      - 'postgres/secrets.postgres'
+    networks:
+      - backend
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  influxdb:
+    image: influxdb:1.5
+    container_name: influxdb
+    restart: always
+    logging:
+      options:
+        max-size: '2m'
+        max-file: '10'
+    env_file:
+      - 'influxdb/env.influxdb'
+      - 'influxdb/secrets.influxdb'
+    networks:
+      - backend
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+
+  redis:
+    image: redis:6.0.8-alpine
+    container_name: redis
+    restart: always
+    command: |
+      sh -c "\
+        if [ -z $${REDIS_PASSWORD:-} ]; then
+          redis-server
+        else
+          redis-server --requirepass $$REDIS_PASSWORD
+        fi"
+    env_file:
+      - 'redis/secrets.redis'
+    networks:
+      - backend
+    
+  rabbitmq:
+    image: rabbitmq:3
+    container_name: rabbitmq
+    restart: always
+    logging:
+      options:
+        max-size: '2m'
+        max-file: '10'
+    env_file:
+      - 'core/env.rabbitmq'
+      - 'core/secrets.rabbitmq'
+    networks:
+      - backend
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+networks:
+  backend:
+  frontend:
+
+volumes:
+  influxdb-data:
+  grafana-data:
+  grafana-config:
+  postgres-data:
+  rabbitmq-data:

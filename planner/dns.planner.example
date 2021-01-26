@@ -1,4 +1,0 @@
-VIRTUAL_HOST=planner.example.com
-LETSENCRYPT_HOST=planner.example.com
-LETSENCRYPT_EMAIL=admin@example.com
-LETSENCRYPT_TEST=true
