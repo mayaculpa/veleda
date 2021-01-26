@@ -26,5 +26,5 @@ for secretFile in ${secretFiles[@]}; do
 done
 
 # Collect static files
-echo "Collecting static files"
-pipenv run ./manage.py collectstatic
+echo "Collecting static files. "
+pipenv run ./manage.py collectstatic --noinput

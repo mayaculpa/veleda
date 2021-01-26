@@ -1,14 +1,10 @@
-before_install:
-- openssl aes-256-cbc -K $encrypted_22a80512e0f7_key -iv $encrypted_22a80512e0f7_iv
-  -in sdg-staging-deploy-key.enc -out ~/.ssh/sdg-staging-deploy-key -d
-
 matrix:
   include:
   - name: Core
     language: python
     sudo: required
-    dist: bionic
-    python: '3.7'
+    dist: focal
+    python: '3.8'
     cache:
       pip: true
       directories:
@@ -28,8 +24,3 @@ matrix:
     - bash planner/install.sh
     script:
     - bash planner/test.sh
-deploy:
-  provider: script
-  script: ".scripts/deploy.sh"
-  on:
-    branch: master
