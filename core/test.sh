@@ -2,9 +2,8 @@
 
 # Exit with nonzero exit code if anything fails
 set -e
-
-# Move the working directory to get the correct Pipenv environment 
-cd "$(dirname "$0")"
+# Ensure the script is running in this directory
+cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 # Run the tests
 pipenv run ./manage.py test

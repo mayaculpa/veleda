@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# exit with nonzero exit code if anything fails
+# Exit with nonzero exit code if anything fails
 set -e
+# Ensure the script is running in this directory
+cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 # Install package requirements
 requiredAptPackages="python3-pip libpq-dev postgresql-client-12"
@@ -10,7 +12,11 @@ sudo apt install python3-pip libpq-dev postgresql-client-12
 
 # Install Pipenv and Python packages
 echo "Installing Python packages"
-python3 -m pip install --user pipenv
+if [ "$CI" == true ]; then
+  python3 -m pip install pipenv
+else
+  python3 -m pip install --user pipenv
+fi
 pipenv install
 
 # Copy default secret files

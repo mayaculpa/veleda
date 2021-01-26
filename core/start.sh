@@ -8,6 +8,8 @@ trap finish EXIT
 
 # Exit with nonzero exit code if anything fails
 set -e
+# Ensure the script is running in this directory
+cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 DATABASE_HOST="postgres"
 RABBITMQ_HOST="rabbitmq"
