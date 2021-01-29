@@ -1,11 +1,13 @@
-from django.urls import path
 from channels.routing import ProtocolTypeRouter, URLRouter
+from django.core.asgi import get_asgi_application
+from django.urls import path
 
 from farms.consumers import ControllerConsumer
 from farms.utils import TokenAuthMiddleware
 
 application = ProtocolTypeRouter(
     {
+        "http": get_asgi_application(),
         "websocket": TokenAuthMiddleware(
             URLRouter(
                 [
