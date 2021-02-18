@@ -12,6 +12,8 @@ from farms.graphql.nodes import (
     PeripheralComponentEnumNode,
     DataPointTypeNode,
     DataPointNode,
+    DataPointByDayNode,
+    DataPointByHourNode,
 )
 
 from farms.graphql.mutations import (
@@ -53,13 +55,24 @@ class Query(object):
     data_point = graphene.relay.Node.Field(DataPointTypeNode)
     all_data_points = DjangoFilterConnectionField(DataPointNode)
 
+    data_points_by_day = DataPointByDayNode.as_list_field()
+    data_points_by_hour = DataPointByHourNode.as_list_field()
+
     @staticmethod
     def resolve_controller_task_enums(parent, args):
         return ControllerTaskEnumNode()
-    
+
     @staticmethod
     def resolve_peripheral_component_enums(parent, args):
         return PeripheralComponentEnumNode()
+
+    @staticmethod
+    def resolve_data_points_by_day(parent, info, **kwargs):
+        return DataPointByDayNode.resolve(parent, info, **kwargs)
+    
+    @staticmethod
+    def resolve_data_points_by_hour(parent, info, **kwargs):
+        return DataPointByHourNode.resolve(parent, info, **kwargs)
 
 
 class Mutation(object):

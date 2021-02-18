@@ -256,6 +256,7 @@ class ControllerTask(models.Model):
 
         INVALID_TYPE = "InvalidType", "Invalid type"
         ALERT_SENSOR = "AlertSensor", "Alert sensor"
+        CALIBRATE = "Calibrate", "Calibrate peripheral"
         POLL_SENSOR = "PollSensor", "Poll sensor"
         READ_SENSOR = "ReadSensor", "Read sensor"
         SET_RGB_LED = "SetRgbLed", "Set RGB LED"
