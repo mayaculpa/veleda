@@ -1,7 +1,9 @@
 import graphene
-from graphene import relay, ObjectType, List, String
+from graphene import relay, ObjectType, List, String, Date, Float
+from graphene.types.datetime import DateTime
 from graphene_django import DjangoObjectType
 from django_filters import FilterSet, BooleanFilter
+from graphql_relay.node.node import from_global_id
 
 from farms.models import (
     Site,
@@ -151,7 +153,7 @@ class ControllerTaskEnumNode(ObjectType):
             TextChoice(value=state.value, label=state.label)
             for state in ControllerTask.State
         ]
-    
+
     @staticmethod
     def resolve_task_types(parent, args):
         return [
@@ -254,3 +256,63 @@ class DataPointNode(DjangoObjectType):
             "data_point_type": ["exact"],
         }
         interfaces = (relay.Node,)
+
+
+class DataPointByDayNode(ObjectType):
+    """Aggregates data points by day for a given peripheral and data point type."""
+
+    day = Date()
+    avg = Float()
+    min = Float()
+    max = Float()
+
+    @classmethod
+    def resolve(cls, parent, info, **kwargs):
+        peripheral_component_id = from_global_id(kwargs["peripheral_component"])[1]
+        data_point_type_id = from_global_id(kwargs["data_point_type"])[1]
+        return DataPoint.objects.by_day(
+            peripheral_component_id,
+            data_point_type_id,
+            kwargs.get("from_date"),
+            kwargs.get("before_date"),
+        )
+
+    @classmethod
+    def as_list_field(cls) -> "graphene.List":
+        return graphene.List(
+            cls,
+            peripheral_component=graphene.ID(required=True),
+            data_point_type=graphene.ID(required=True),
+            from_date=graphene.Date(),
+            before_date=graphene.Date(),
+        )
+
+
+class DataPointByHourNode(ObjectType):
+    """Aggregates data points by the hour for a given peripheral and data point type."""
+
+    time_hour = DateTime()
+    avg = Float()
+    min = Float()
+    max = Float()
+
+    @classmethod
+    def resolve(cls, parent, info, **kwargs):
+        peripheral_component_id = from_global_id(kwargs["peripheral_component"])[1]
+        data_point_type_id = from_global_id(kwargs["data_point_type"])[1]
+        return DataPoint.objects.by_hour(
+            peripheral_component_id,
+            data_point_type_id,
+            kwargs.get("from_time"),
+            kwargs.get("before_time"),
+        )
+
+    @classmethod
+    def as_list_field(cls) -> "graphene.List":
+        return graphene.List(
+            cls,
+            peripheral_component=graphene.ID(required=True),
+            data_point_type=graphene.ID(required=True),
+            from_time=graphene.DateTime(),
+            before_time=graphene.DateTime(),
+        )

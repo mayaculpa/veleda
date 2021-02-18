@@ -226,6 +226,7 @@ class PeripheralComponent(models.Model):
         ANALOG_OUT = ("AnalogOut", "Analog out")
         PWM = ("PWM", "PWM")
         BME280_SENSOR = ("BME280", "BME/BMP 280 sensor")
+        AS_EC_METER_I2C = ("AsEcMeterI2C", "Atlas Scientific EC Meter (I2C)")
         CAPACITIVE_SENSOR = ("CapacitiveSensor", "Capacitive sensor")
         I2C_ADAPTER = ("I2CAdapter", "I2C Adapter")
         NEO_PIXEL = ("NeoPixel", "NeoPixel array")
