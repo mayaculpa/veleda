@@ -1,28 +1,14 @@
-"""core URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/2.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-from django.urls import path, include
-from django.views.generic.base import RedirectView
-
+import debug_toolbar
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.urls import include, path
+from django.views.generic.base import RedirectView
 from rest_framework.authtoken.views import obtain_auth_token
 
-from . import views as root_views
 from . import oauth2_views
+from . import views as root_views
 
 urlpatterns = [
     path("", root_views.index, name="index"),
@@ -32,8 +18,16 @@ urlpatterns = [
     path("accounts/", include("django_registration.backends.activation.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     # API Endpoints
-    path("graphiql/", root_views.SessionGraphQLView.as_view(graphiql=True), name="graphiql"),
-    path("graphql/", root_views.TokenGraphQLView.as_view(graphiql=False), name="graphql"),
+    path(
+        "graphiql/",
+        root_views.SessionGraphQLView.as_view(graphiql=True),
+        name="graphiql",
+    ),
+    path(
+        "graphql/",
+        root_views.TokenGraphQLView.as_view(graphiql=False),
+        name="graphql",
+    ),
     path("api-token-auth/", obtain_auth_token, name="api_token_auth"),
     # OAuth2 Endpoints
     path(
@@ -49,6 +43,8 @@ urlpatterns = [
         RedirectView.as_view(url=staticfiles_storage.url("img/favicon.ico")),
         name="favicon",
     ),
+    # Debug Toolbar
+    path("__debug__/", include(debug_toolbar.urls)),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

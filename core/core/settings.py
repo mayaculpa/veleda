@@ -24,31 +24,27 @@ TESTING = sys.argv[1:2] == ["test"] or "pytest" in sys.argv[0]
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "filters": {
-        "request_id": {
-            "()": "log_request_id.filters.RequestIDFilter"
-        }
-    },
-    'formatters': {
-        'standard': {
-            'format': '%(levelname)-8s [%(asctime)s] [%(request_id)s] %(name)s: %(message)s'
+    "filters": {"request_id": {"()": "log_request_id.filters.RequestIDFilter"}},
+    "formatters": {
+        "standard": {
+            "format": "%(levelname)-8s [%(asctime)s] [%(request_id)s] %(name)s: %(message)s"
         },
     },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'filters': ['request_id'],
-            'formatter': 'standard',
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "filters": ["request_id"],
+            "formatter": "standard",
         },
     },
-    'loggers': {
-        'myapp': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
+    "loggers": {
+        "myapp": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
         },
-    }
+    },
 }
 LOG_REQUEST_ID_HEADER = "X-Request-ID"
 GENERATE_REQUEST_ID_IF_NOT_IN_HEADER = True
@@ -101,11 +97,13 @@ INSTALLED_APPS = [
     "macaddress",
     "django_celery_results",
     "graphene_django",
+    "debug_toolbar",
     #
     # Local Apps
     #
     "accounts.apps.AccountsConfig",
-    "farms.apps.FarmsConfig",
+    "iot.apps.IotConfig",
+    "greenhouse.apps.GreenhouseConfig",
 ]
 
 MIDDLEWARE = [
@@ -114,6 +112,7 @@ MIDDLEWARE = [
     "csp.middleware.CSPMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -252,7 +251,7 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = 587
 
-#DEFAULT_FROM_EMAIL = "notification@" + os.environ.get("CORE_DOMAIN", "localhost")
+# DEFAULT_FROM_EMAIL = "notification@" + os.environ.get("CORE_DOMAIN", "localhost")
 
 
 if DEBUG:
@@ -263,7 +262,12 @@ else:
 # Graphene-Django
 # https://docs.graphene-python.org/projects/django/en/latest/
 
-GRAPHENE = {"SCHEMA": "core.schema.schema"}
+GRAPHENE = {
+    "SCHEMA": "core.schema.schema",
+    "MIDDLEWARE": [
+        "graphene_django.debug.DjangoDebugMiddleware",
+    ],
+}
 
 # REDIS & Channels
 
@@ -280,7 +284,9 @@ else:
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [REDIS_URL],},
+        "CONFIG": {
+            "hosts": [REDIS_URL],
+        },
     },
 }
 
@@ -320,3 +326,10 @@ if DEBUG:
     CSP_FRAME_ANCESTORS = ["'self'", "http://localhost:4200", "http://127.0.0.1:4200"]
 else:
     CSP_FRAME_ANCESTORS = ["'self'"]
+
+# Django Debug Toolbar
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+if DEBUG:
+    INTERNAL_IPS.append(CORE_DOMAIN)
