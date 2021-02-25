@@ -1,9 +1,10 @@
-version: "3"
+version: "3.4"
 services:
 
 ## App Frontend
   core:
     build: ./core
+    container_name: "sdg-server-${DEPLOY_TYPE}-core"
     restart: always
     logging:
       options:
@@ -14,9 +15,6 @@ services:
       - 'core/secrets.core'
       - 'core/env.rabbitmq'
       - 'core/secrets.rabbitmq'
-      # - 'grafana/env.grafana'
-      # - 'grafana/secrets.grafana'
-      # - 'influxdb/secrets.influxdb'
       - 'postgres/secrets.postgres'
       - 'redis/env.redis'
       - 'redis/secrets.redis'
@@ -24,64 +22,26 @@ services:
       - backend
       - frontend
     depends_on:
-      # - influxdb
-      # - grafana
       - postgres
     labels:
     - "traefik.enable=true"
-    - "traefik.http.routers.production-ofai-core.rule=Host(`core.openfarming.ai`)"
-    - "traefik.http.routers.production-ofai-core.entrypoints=web"
-    - "traefik.http.routers.production-ofai-core.service=noop@internal"
-    - "traefik.http.routers.production-ofai-core.middlewares=production-ofai-core-https-redirect"
-    - "traefik.http.middlewares.production-ofai-core-https-redirect.redirectscheme.scheme=https"
+    - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-core.rule=Host(`${CORE_DOMAIN}`)"
+    - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-core.entrypoints=web"
+    - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-core.service=noop@internal"
+    - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-core.middlewares=sdg-server-${DEPLOY_TYPE}-core-https-redirect"
+    - "traefik.http.middlewares.sdg-server-${DEPLOY_TYPE}-core-https-redirect.redirectscheme.scheme=https"
 
-    - "traefik.http.routers.production-ofai-core-secure.rule=Host(`core.openfarming.ai`)"
-    - "traefik.http.routers.production-ofai-core-secure.entrypoints=websecure"
-    - "traefik.http.routers.production-ofai-core-secure.service=production-ofai-core-service"
-    - "traefik.http.routers.production-ofai-core-secure.tls.certresolver=myresolver"
-    - "traefik.http.services.production-ofai-core-service.loadbalancer.server.port=8000"
+    - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-core-secure.rule=Host(`${CORE_DOMAIN}`)"
+    - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-core-secure.entrypoints=websecure"
+    - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-core-secure.service=sdg-server-${DEPLOY_TYPE}-core-service"
+    - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-core-secure.tls.certresolver=myresolver"
+    - "traefik.http.services.sdg-server-${DEPLOY_TYPE}-core-service.loadbalancer.server.port=8000"
     - "traefik.docker.network=gateway"
-
-  # grafana:
-  #   image: grafana/grafana:5.4.3
-  #   container_name: grafana
-  #   restart: always
-      # logging:
-      #   options:
-      #     max-size: '2m'
-      #     max-file: '10'
-  #   env_file:
-  #     - 'grafana/dns.grafana'
-  #     - 'grafana/env.grafana'
-  #     - 'grafana/secrets.grafana'
-  #   networks:
-  #     - backend
-  #     - frontend
-  #   volumes:
-  #     - grafana-data:/var/lib/grafana
-  #     - grafana-config:/etc/grafana/
-  #   depends_on:
-  #     - influxdb
-
-  # planner:
-  #   build: ./planner
-  #   container_name: planner
-  #   restart: always
-  #   logging:
-  #     options:
-  #       max-size: '2m'
-  #       max-file: '10'
-  #   env_file:
-  #     - 'planner/dns.planner'
-  #   networks:
-  #     - frontend
-  #   depends_on:
-  #     - core
 
 ## App Backend
   postgres:
     image: timescale/timescaledb:latest-pg12
-    # container_name: postgres
+    container_name: "sdg-server-${DEPLOY_TYPE}-postgres"
     restart: always
     logging:
       options:
@@ -94,25 +54,9 @@ services:
     volumes:
       - postgres-data-12:/var/lib/postgresql/data
 
-  # influxdb:
-  #   image: influxdb:1.5
-  #   container_name: influxdb
-  #   restart: always
-  #   logging:
-  #     options:
-  #       max-size: '2m'
-  #       max-file: '10'
-  #   env_file:
-  #     - 'influxdb/env.influxdb'
-  #     - 'influxdb/secrets.influxdb'
-  #   networks:
-  #     - backend
-  #   volumes:
-  #     - influxdb-data:/var/lib/influxdb
-
   redis:
     image: redis:6.0.8-alpine
-    # container_name: redis
+    container_name: "sdg-server-${DEPLOY_TYPE}-redis"
     restart: always
     command: |
       sh -c "\
@@ -128,7 +72,7 @@ services:
     
   rabbitmq:
     image: rabbitmq:3
-    # container_name: rabbitmq
+    container_name: "sdg-server-${DEPLOY_TYPE}-rabbitmq"
     restart: always
     logging:
       options:
@@ -149,8 +93,7 @@ networks:
       name: gateway
 
 volumes:
-  # influxdb-data:
-  # grafana-data:
-  # grafana-config:
   postgres-data-12:
+    name: "sdg-server-${DEPLOY_TYPE}-postgres-data-12"
   rabbitmq-data:
+    name: "sdg-server-${DEPLOY_TYPE}-rabbitmq-data"
