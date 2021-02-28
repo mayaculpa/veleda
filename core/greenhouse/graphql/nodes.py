@@ -1,4 +1,6 @@
-from graphene import relay
+from django_filters import BooleanFilter, FilterSet
+import graphene
+from graphene.types.objecttype import ObjectType
 from graphene_django import DjangoObjectType
 from greenhouse.models import (
     HydroponicSystemComponent,
@@ -7,14 +9,36 @@ from greenhouse.models import (
     PlantGenus,
     PlantSpecies,
     TrackingImage,
+    WaterCycle,
+    WaterCycleLog,
     WaterCycleComponent,
 )
+from greenhouse.models.water_cycle import (
+    WaterCycle,
+    WaterCycleFlowsTo,
+    WaterPump,
+    WaterPipe,
+    WaterReservoir,
+    WaterSensor, WaterValve,
+)
+from iot.graphql.nodes import TextChoice
+
+
+class HydroponicSystemComponentEnumNode(ObjectType):
+    hydroponic_system_type = graphene.List(TextChoice)
+
+    @staticmethod
+    def resolve_hydroponic_system_type(parent, args):
+        return [
+            TextChoice(value=hs_type.value, label=hs_type.label)
+            for hs_type in HydroponicSystemComponent.hydroponic_system_type
+        ]
 
 
 class HydroponicSystemComponentNode(DjangoObjectType):
     class Meta:
         model = HydroponicSystemComponent
-        interfaces = (relay.Node,)
+        interfaces = (graphene.relay.Node,)
         filter_fields = {
             "site_entity": ["exact"],
             "site_entity__name": ["exact", "icontains", "istartswith"],
@@ -24,20 +48,24 @@ class HydroponicSystemComponentNode(DjangoObjectType):
         }
         fields = (
             "site_entity",
+            "hydroponic_system_type",
             "peripheral_component_set",
             "created_at",
             "modified_at",
         )
+        convert_choices_to_enum = False
 
 
 class PlantComponentNode(DjangoObjectType):
     class Meta:
         model = PlantComponent
-        interfaces = (relay.Node,)
+        interfaces = (graphene.relay.Node,)
         filter_fields = {
             "site_entity": ["exact"],
             "site_entity__name": ["exact", "icontains", "istartswith"],
             "site_entity__site": ["exact"],
+            "hydroponic_system": ["exact"],
+            "spot_number": ["exact", "lt", "lte", "gt", "gte"],
             "species": ["exact"],
             "species__common_name": ["exact", "icontains"],
             "species__binomial_name": ["exact", "icontains"],
@@ -61,7 +89,7 @@ class PlantComponentNode(DjangoObjectType):
 class PlantFamilyNode(DjangoObjectType):
     class Meta:
         model = PlantFamily
-        interfaces = (relay.Node,)
+        interfaces = (graphene.relay.Node,)
         filter_fields = {"name": ["exact", "icontains"]}
         fields = ("name",)
 
@@ -69,7 +97,7 @@ class PlantFamilyNode(DjangoObjectType):
 class PlantGenusNode(DjangoObjectType):
     class Meta:
         model = PlantGenus
-        interfaces = (relay.Node,)
+        interfaces = (graphene.relay.Node,)
         filter_fields = {
             "name": ["exact", "icontains"],
             "family": ["exact"],
@@ -84,7 +112,7 @@ class PlantGenusNode(DjangoObjectType):
 class PlantSpeciesNode(DjangoObjectType):
     class Meta:
         model = PlantSpecies
-        interfaces = (relay.Node,)
+        interfaces = (graphene.relay.Node,)
         filter_fields = {
             "common_name": ["exact", "icontains"],
             "binomial_name": ["exact", "icontains"],
@@ -102,7 +130,7 @@ class PlantSpeciesNode(DjangoObjectType):
 class TrackingImageNode(DjangoObjectType):
     class Meta:
         model = TrackingImage
-        interfaces = (relay.Node,)
+        interfaces = (graphene.relay.Node,)
         filter_fields = {
             "image_id": ["exact", "icontains", "istartswith"],
             "hydroponic_system": ["exact"],
@@ -112,19 +140,115 @@ class TrackingImageNode(DjangoObjectType):
         fields = ("image_id", "hydroponic_system", "created_at", "modified_at")
 
 
-class WaterCycleComponentNode(DjangoObjectType):
+class WaterCycleNode(DjangoObjectType):
+    class Meta:
+        model = WaterCycle
+        interfaces = (graphene.relay.Node,)
+        filter_fields = {"name": ["exact", "icontains", "istartswith"]}
+
+
+class WaterCycleComponentFilter(FilterSet):
+    """Filter for WaterCycleComponentNode that includes type filters"""
+
+    is_hydroponic_system = BooleanFilter(
+        "site_entity__hydroponic_system_component", lookup_expr="isnull", exclude=True
+    )
+    is_water_reservoir = BooleanFilter(
+        "water_reservoir", lookup_expr="isnull", exclude=True
+    )
+    is_water_pipe = BooleanFilter("water_pipe", lookup_expr="isnull", exclude=True)
+    is_water_pump = BooleanFilter("water_pump", lookup_expr="isnull", exclude=True)
+    is_water_sensor = BooleanFilter("water_sensor", lookup_expr="isnull", exclude=True)
+    is_water_valve = BooleanFilter("water_valve", lookup_expr="isnull", exclude=True)
+
     class Meta:
         model = WaterCycleComponent
-        interfaces = (relay.Node,)
-        filter_fields = {
+        fields = {
             "site_entity": ["exact"],
             "site_entity__name": ["exact", "icontains", "istartswith"],
         }
+
+
+class WaterCycleLogNode(DjangoObjectType):
+    class Meta:
+        model = WaterCycleLog
+        filter_fields = ["water_cycle_component", "water_cycle", "since", "until"]
+        fields = ("water_cycle_component", "water_cycle", "since", "until")
+
+
+class WaterCycleFlowsToNode(DjangoObjectType):
+    class Meta:
+        model = WaterCycleFlowsTo
+        filter_fields = ["flows_from", "flows_to"]
+        fields = ("flows_from", "flows_to")
+
+
+class WaterCycleComponentNode(DjangoObjectType):
+    types = graphene.List(graphene.String)
+
+    class Meta:
+        model = WaterCycleComponent
+        filterset_class = WaterCycleComponentFilter
+        interfaces = (graphene.relay.Node,)
         fields = (
             "site_entity",
-            "peripheral_component_set",
-            "reservoir_capacity",
-            "reservoir_height",
+            "water_cycle",
+            "water_cycle_log_set",
+            "water_cycle_log_edges",
+            "flows_to_set",
+            "flows_to_edges",
+            "flows_from_set",
+            "flows_from_edges",
+            "water_reservoir",
+            "water_pump",
+            "water_pipe",
+            "water_sensor",
+            "water_valve",
             "created_at",
             "modified_at",
         )
+
+    @staticmethod
+    def resolve_types(water_cycle_component, args):
+        return water_cycle_component.get_type_values()
+
+
+class WaterComponentEnumNode(ObjectType):
+    sensor_type = graphene.List(TextChoice)
+
+    @staticmethod
+    def resolve_sensor_type(parent, args):
+        return [
+            TextChoice(value=sensor_type.value, label=sensor_type.label)
+            for sensor_type in WaterSensor.sensor_type
+        ]
+
+
+class WaterReservoirNode(DjangoObjectType):
+    class Meta:
+        model = WaterReservoir
+        fields = ("max_capacity", "max_water_level")
+
+
+class WaterPumpNode(DjangoObjectType):
+    class Meta:
+        model = WaterPump
+        fields = ("water_cycle_component",)
+
+
+class WaterPipeNode(DjangoObjectType):
+    class Meta:
+        model = WaterPipe
+        fields = ("length",)
+
+
+class WaterSensorNode(DjangoObjectType):
+    class Meta:
+        model = WaterSensor
+        fields = ("sensor_type",)
+        convert_choices_to_enum = False
+
+class WaterValveNode(DjangoObjectType):
+    class Meta:
+        model = WaterValve
+        fields = ("water_cycle_component",)

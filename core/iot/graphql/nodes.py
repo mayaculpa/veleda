@@ -1,3 +1,4 @@
+from django.conf import settings
 import graphene
 from graphene import relay, ObjectType, List, String, Date, Float
 from graphene.types.datetime import DateTime
@@ -47,12 +48,12 @@ class SiteNode(DjangoObjectType):
 class SiteEntityFilter(FilterSet):
     """Filter for SiteEntityNode that includes component filters"""
 
-    is_controller = BooleanFilter(
-        field_name="controller_component", lookup_expr="isnull", exclude=True
-    )
-    is_peripheral = BooleanFilter(
-        field_name="peripheral_component", lookup_expr="isnull", exclude=True
-    )
+    for component in settings.SITE_ENTITY_COMPONENTS:
+        # water_cycle_component --> is_water_cycle
+        attribute_name = f"is_{component.split('_component')[0]}"
+        locals()[attribute_name] = BooleanFilter(
+            field_name=component, lookup_expr="isnull", exclude=True
+        )
 
     class Meta:
         model = SiteEntity
@@ -67,15 +68,13 @@ class SiteEntityNode(DjangoObjectType):
     class Meta:
         model = SiteEntity
         filterset_class = SiteEntityFilter
-        fields = (
+        fields = [
             "id",
             "site",
             "name",
-            "controller_component",
-            "peripheral_component",
             "created_at",
             "modified_at",
-        )
+        ].extend(settings.SITE_ENTITY_COMPONENTS)
         interfaces = (relay.Node,)
 
 
@@ -225,7 +224,7 @@ class PeripheralDataPointTypeNode(DjangoObjectType):
     class Meta:
         model = PeripheralDataPointType
         filter_fields = ["data_point_type", "peripheral", "parameter_prefix"]
-        fields = fields = ("data_point_type", "peripheral", "parameter_prefix")
+        fields = ("data_point_type", "peripheral", "parameter_prefix")
 
 
 class DataPointTypeNode(DjangoObjectType):

@@ -132,7 +132,7 @@ SiteEntityAdmin.list_select_related.append("hydroponic_system_component")
 @mark_safe
 def has_water_cycle(self, obj):
     try:
-        types = ", ".join(obj.water_cycle_component.get_types())
+        types = ", ".join(obj.water_cycle_component.get_type_values())
         if not types:
             types = "yes"
         return '<a href="%s">%s</a>' % (

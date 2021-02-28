@@ -333,3 +333,12 @@ INTERNAL_IPS = [
 ]
 if DEBUG:
     INTERNAL_IPS.append(CORE_DOMAIN)
+
+
+# IoT Dependency Injection
+SITE_ENTITY_COMPONENTS = [
+    "controller_component",
+    "peripheral_component", 
+    "hydroponic_system_component",
+    "water_cycle_component",
+]

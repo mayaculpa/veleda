@@ -1,5 +1,5 @@
 from greenhouse.models.hydroponic_system import HydroponicSystemComponent
-from typing import List
+from typing import List, Tuple
 import uuid
 from datetime import datetime, timedelta
 
@@ -24,12 +24,12 @@ class WaterCycleLog(models.Model):
     water_cycle_component = models.ForeignKey(
         "WaterCycleComponent",
         on_delete=models.CASCADE,
-        related_name="water_cycle_edges",
+        related_name="water_cycle_log_edges",
     )
     water_cycle = models.ForeignKey(
         WaterCycle,
         on_delete=models.CASCADE,
-        related_name="water_cycle_component_edges",
+        related_name="water_cycle_component_log_edges",
     )
     since = models.DateTimeField(
         default=datetime.now,
@@ -84,6 +84,17 @@ def is_type(func):
             return False
 
     return wrapper
+
+
+class WaterCycleComponentType(models.TextChoices):
+    """Possible water sensor types."""
+
+    HYDROPONIC_SYSTEM = ("HydroponicSystem", "Hydroponic system")
+    WATER_RESERVOIR = ("WaterReservoir", "Water reservoir")
+    WATER_PIPE = ("WaterPipe", "Water pipe")
+    WATER_PUMP = ("WaterPump", "Water pump")
+    WATER_SENSOR = ("WaterSensor", "Water sensor")
+    WATER_VALVE = ("WaterValve", "Water valve")
 
 
 class WaterCycleComponent(models.Model):
@@ -157,22 +168,28 @@ class WaterCycleComponent(models.Model):
         """Checks if this is a water valve."""
         return bool(self.water_valve)
 
-    def get_types(self) -> List[str]:
+    def get_types(self) -> List[Tuple]:
         """Returns the aspects of the water cycle component."""
         types = []
         if self.is_hydroponic_system():
-            types.append("Hydroponic system")
+            types.append(WaterCycleComponentType.HYDROPONIC_SYSTEM)
         if self.is_water_reservoir():
-            types.append("Water reservoir")
+            types.append(WaterCycleComponentType.WATER_RESERVOIR)
         if self.is_water_pipe():
-            types.append("Water pipe")
+            types.append(WaterCycleComponentType.WATER_PIPE)
         if self.is_water_pump():
-            types.append("Water pump")
+            types.append(WaterCycleComponentType.WATER_PUMP)
         if self.is_water_sensor():
-            types.append("Water sensor")
+            types.append(WaterCycleComponentType.WATER_SENSOR)
         if self.is_water_valve():
-            types.append("Water valve")
+            types.append(WaterCycleComponentType.WATER_VALVE)
         return types
+
+    def get_type_values(self) -> List[str]:
+        return [wcc_type.value for wcc_type in self.get_types()]
+
+    def get_type_labels(self) -> List[str]:
+        return [wcc_type.label for wcc_type in self.get_types()]
 
     def __str__(self):
         return f"Water cycle: {self.site_entity.name}"
