@@ -37,6 +37,7 @@ daphne = "*"
 graphene-django = "~=2.13.0"
 django-filter = "~=2.4.0"
 django-log-request-id = "~=1.6.0"
+django-debug-toolbar = "~=3.2"
 
 [requires]
 python_version = "3.8"

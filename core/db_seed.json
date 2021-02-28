@@ -60,7 +60,7 @@
     }
   },
   {
-    "model": "farms.site",
+    "model": "iot.site",
     "pk": "7bf7fa66-555e-47d3-8b79-b040eaa05ac5",
     "fields": {
       "name": "Protohaus Makerspace",
@@ -71,7 +71,7 @@
     }
   },
   {
-    "model": "farms.site",
+    "model": "iot.site",
     "pk": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
     "fields": {
       "name": "Protohaus Gewächshaus",
@@ -82,7 +82,7 @@
     }
   },
   {
-    "model": "farms.siteentity",
+    "model": "iot.siteentity",
     "pk": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
     "fields": {
       "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
@@ -92,7 +92,7 @@
     }
   },
   {
-    "model": "farms.siteentity",
+    "model": "iot.siteentity",
     "pk": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
     "fields": {
       "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
@@ -102,7 +102,7 @@
     }
   },
   {
-    "model": "farms.siteentity",
+    "model": "iot.siteentity",
     "pk": "5f2c84f9-fa83-4441-9fbc-7dea75f84dd5",
     "fields": {
       "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
@@ -112,7 +112,7 @@
     }
   },
   {
-    "model": "farms.siteentity",
+    "model": "iot.siteentity",
     "pk": "6097c817-450a-42b3-bed4-a3585002fa82",
     "fields": {
       "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
@@ -122,7 +122,7 @@
     }
   },
   {
-    "model": "farms.siteentity",
+    "model": "iot.siteentity",
     "pk": "64542ac2-4359-44b3-89a8-a552db1a8d5a",
     "fields": {
       "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
@@ -132,7 +132,7 @@
     }
   },
   {
-    "model": "farms.siteentity",
+    "model": "iot.siteentity",
     "pk": "894b4df3-ec52-4358-b8fa-d2bbece6e8ff",
     "fields": {
       "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
@@ -142,7 +142,7 @@
     }
   },
   {
-    "model": "farms.siteentity",
+    "model": "iot.siteentity",
     "pk": "b319b263-0526-4a26-b71a-39553869b2a0",
     "fields": {
       "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
@@ -152,7 +152,7 @@
     }
   },
   {
-    "model": "farms.siteentity",
+    "model": "iot.siteentity",
     "pk": "f009d29b-3968-4df8-aef3-f74b638be992",
     "fields": {
       "site": "fa63511d-9a30-410d-8a2a-5f72e56a2072",
@@ -162,7 +162,7 @@
     }
   },
   {
-    "model": "farms.controllercomponenttype",
+    "model": "iot.controllercomponenttype",
     "pk": "e81a35c7-99d8-4abb-baaa-684af6a39ba8",
     "fields": {
       "name": "ESP32",
@@ -171,7 +171,7 @@
     }
   },
   {
-    "model": "farms.controllercomponent",
+    "model": "iot.controllercomponent",
     "pk": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
     "fields": {
       "component_type": "e81a35c7-99d8-4abb-baaa-684af6a39ba8",
@@ -181,7 +181,7 @@
     }
   },
   {
-    "model": "farms.controllerauthtoken",
+    "model": "iot.controllerauthtoken",
     "pk": "0b8eb0f583b264bbe9dda31d003140b79e740577",
     "fields": {
       "controller": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
@@ -189,7 +189,7 @@
     }
   },
   {
-    "model": "farms.controllertask",
+    "model": "iot.controllertask",
     "pk": "043326eb-9fa5-4853-ad97-d861df911682",
     "fields": {
       "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
@@ -206,7 +206,7 @@
     }
   },
   {
-    "model": "farms.peripheraldatapointtype",
+    "model": "iot.peripheraldatapointtype",
     "pk": 4,
     "fields": {
       "data_point_type": "4200cdd9-2871-4d98-93aa-00bde062c400",
@@ -215,7 +215,7 @@
     }
   },
   {
-    "model": "farms.peripheraldatapointtype",
+    "model": "iot.peripheraldatapointtype",
     "pk": 5,
     "fields": {
       "data_point_type": "6e32d1a9-6dc3-46d9-b618-24fd43144f7b",
@@ -224,7 +224,7 @@
     }
   },
   {
-    "model": "farms.peripheraldatapointtype",
+    "model": "iot.peripheraldatapointtype",
     "pk": 6,
     "fields": {
       "data_point_type": "96dde4ea-cb9d-4fc5-8be8-0fcc7fdf4883",
@@ -233,7 +233,7 @@
     }
   },
   {
-    "model": "farms.peripheraldatapointtype",
+    "model": "iot.peripheraldatapointtype",
     "pk": 7,
     "fields": {
       "data_point_type": "02aeba32-8c1a-4295-a89e-22661e4a6e01",
@@ -242,7 +242,7 @@
     }
   },
   {
-    "model": "farms.peripheraldatapointtype",
+    "model": "iot.peripheraldatapointtype",
     "pk": 8,
     "fields": {
       "data_point_type": "1d31e4b4-b920-4806-bb0d-274560b18c4c",
@@ -251,7 +251,7 @@
     }
   },
   {
-    "model": "farms.peripheraldatapointtype",
+    "model": "iot.peripheraldatapointtype",
     "pk": 10,
     "fields": {
       "data_point_type": "c62a75b3-1a74-4df0-a24f-4e32c7476ff1",
@@ -260,7 +260,7 @@
     }
   },
   {
-    "model": "farms.peripheraldatapointtype",
+    "model": "iot.peripheraldatapointtype",
     "pk": 11,
     "fields": {
       "data_point_type": "ee188890-f88e-4066-92db-11abcbda67ee",
@@ -269,7 +269,7 @@
     }
   },
   {
-    "model": "farms.peripheraldatapointtype",
+    "model": "iot.peripheraldatapointtype",
     "pk": 12,
     "fields": {
       "data_point_type": "787d1507-b598-4bb3-b797-49666aeacead",
@@ -278,7 +278,7 @@
     }
   },
   {
-    "model": "farms.peripheraldatapointtype",
+    "model": "iot.peripheraldatapointtype",
     "pk": 13,
     "fields": {
       "data_point_type": "02aeba32-8c1a-4295-a89e-22661e4a6e01",
@@ -287,7 +287,7 @@
     }
   },
   {
-    "model": "farms.peripheralcomponent",
+    "model": "iot.peripheralcomponent",
     "pk": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
     "fields": {
       "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
@@ -299,7 +299,7 @@
     }
   },
   {
-    "model": "farms.peripheralcomponent",
+    "model": "iot.peripheralcomponent",
     "pk": "5f2c84f9-fa83-4441-9fbc-7dea75f84dd5",
     "fields": {
       "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
@@ -311,7 +311,7 @@
     }
   },
   {
-    "model": "farms.peripheralcomponent",
+    "model": "iot.peripheralcomponent",
     "pk": "6097c817-450a-42b3-bed4-a3585002fa82",
     "fields": {
       "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
@@ -323,7 +323,7 @@
     }
   },
   {
-    "model": "farms.peripheralcomponent",
+    "model": "iot.peripheralcomponent",
     "pk": "64542ac2-4359-44b3-89a8-a552db1a8d5a",
     "fields": {
       "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
@@ -335,7 +335,7 @@
     }
   },
   {
-    "model": "farms.peripheralcomponent",
+    "model": "iot.peripheralcomponent",
     "pk": "894b4df3-ec52-4358-b8fa-d2bbece6e8ff",
     "fields": {
       "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
@@ -347,7 +347,7 @@
     }
   },
   {
-    "model": "farms.peripheralcomponent",
+    "model": "iot.peripheralcomponent",
     "pk": "b319b263-0526-4a26-b71a-39553869b2a0",
     "fields": {
       "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
@@ -359,7 +359,7 @@
     }
   },
   {
-    "model": "farms.peripheralcomponent",
+    "model": "iot.peripheralcomponent",
     "pk": "f009d29b-3968-4df8-aef3-f74b638be992",
     "fields": {
       "controller_component": "52dd4eea-e184-4f94-85de-bdd8490d5f9d",
@@ -371,52 +371,52 @@
     }
   },
   {
-    "model": "farms.datapointtype",
+    "model": "iot.datapointtype",
     "pk": "02aeba32-8c1a-4295-a89e-22661e4a6e01",
     "fields": { "name": "LED Brightness", "unit": "%" }
   },
   {
-    "model": "farms.datapointtype",
+    "model": "iot.datapointtype",
     "pk": "1d31e4b4-b920-4806-bb0d-274560b18c4c",
     "fields": { "name": "Door open", "unit": "boolean" }
   },
   {
-    "model": "farms.datapointtype",
+    "model": "iot.datapointtype",
     "pk": "4200cdd9-2871-4d98-93aa-00bde062c400",
     "fields": { "name": "Humidity", "unit": "%RH" }
   },
   {
-    "model": "farms.datapointtype",
+    "model": "iot.datapointtype",
     "pk": "6e32d1a9-6dc3-46d9-b618-24fd43144f7b",
     "fields": { "name": "Air temperature", "unit": "°C" }
   },
   {
-    "model": "farms.datapointtype",
+    "model": "iot.datapointtype",
     "pk": "787d1507-b598-4bb3-b797-49666aeacead",
     "fields": { "name": "Power", "unit": "V" }
   },
   {
-    "model": "farms.datapointtype",
+    "model": "iot.datapointtype",
     "pk": "96dde4ea-cb9d-4fc5-8be8-0fcc7fdf4883",
     "fields": { "name": "Air pressure", "unit": "Pa" }
   },
   {
-    "model": "farms.datapointtype",
+    "model": "iot.datapointtype",
     "pk": "c62a75b3-1a74-4df0-a24f-4e32c7476ff1",
     "fields": { "name": "Pump", "unit": "boolean" }
   },
   {
-    "model": "farms.datapointtype",
+    "model": "iot.datapointtype",
     "pk": "e49baf9c-dfc3-4a34-a6e5-e33f4ac62186",
     "fields": { "name": "Window open", "unit": "boolean" }
   },
   {
-    "model": "farms.datapointtype",
+    "model": "iot.datapointtype",
     "pk": "ee188890-f88e-4066-92db-11abcbda67ee",
     "fields": { "name": "Power", "unit": "%" }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:10:38Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -425,7 +425,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:10:38.001Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -434,7 +434,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:10:38.002Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -443,7 +443,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:10:59Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -452,7 +452,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:10:59.001Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -461,7 +461,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:10:59.002Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -470,7 +470,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:07Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -479,7 +479,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:07.001Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -488,7 +488,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:07.002Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -497,7 +497,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:17Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -506,7 +506,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:17.001Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -515,7 +515,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:17.002Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -524,7 +524,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:27Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -533,7 +533,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:37Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -542,7 +542,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:37.001Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -551,7 +551,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:37.002Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -560,7 +560,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:45Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -569,7 +569,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:55Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -578,7 +578,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:55.001Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
@@ -587,7 +587,7 @@
     }
   },
   {
-    "model": "farms.datapoint",
+    "model": "iot.datapoint",
     "pk": "2020-10-04T23:11:55.002Z",
     "fields": {
       "peripheral_component": "3e1d7e72-fd99-4c6d-87f3-31a22cfa2e9d",
