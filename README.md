@@ -3,11 +3,15 @@
 
 # SmartDigitalGarden / DeviceStacc Server
 
-A data analytics platform for hydroponic setups. It visualizes and allows analysis of data covering the growth aspects of hydroponics. It creates a system that covers the data collection and automation to data storage and analysis.
+A data analytics and control platform for IoT systems. It integrates with the [sdg-controller firmware][1] to dynamically add peripherals and then measure and control them. In the second version, currently under development, InfluxDB was replaced with TimescaleDB, the REST API with GraphQL and the MQTT broker with WebSockets. The application is structured to separate the IoT aspect from the domain aspect (hydroponic greenhouses) to allow it to subsequently be broken out in a standalone service.
+
+For the current roadmap, it will be used to visualize and allow the analysis of data covering the growth aspects of hydroponically grown plants. It is being developed as part of the [OpenFarmingAI research project](https://www.photonikforschung.de/projekte/open-innovation/projekt/openfarmingai.html) and will be receiving a project website in the coming weeks.
+
+Aspects that are under development include an AR application to stream realtime data, a VR application to act as a learning platform for hydroponics and an AI to segment leaves and analyze a plants current health.
 
 ## ⚠️⚠️⚠️ Current Development Status ⚠️⚠️⚠️
 
-In the current refactoring state it is recommended to follow the [core service documentation](./core/README.md). For a high-level overview, see the Device Stacc post on Hackernoon.
+In the current refactoring state it is recommended to follow the [core service documentation](./core/README.md). For a high-level overview, see the [Device Stacc post](https://hackernoon.com/device-stacc-a-reconfigurable-iot-platform-6j4e322p) on Hackernoon.
 
 ## Requirements
 
@@ -55,6 +59,7 @@ The data is stored in volumes. List all active volumes with `docker volume ls`. 
 Use `ctrl + C` to end the main server. The databases will remain as stopping them will clear their data. To stop them run `./start.sh clean`.
 
 
+[1]: https://github.com/protohaus/sdg-controller
 [2]: https://docs.docker.com/install/linux/docker-ce/ubuntu/
 [3]: https://docs.docker.com/docker-for-mac/install/
 [4]: https://docs.docker.com/docker-for-windows/install/
