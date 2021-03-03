@@ -1,11 +1,10 @@
-from greenhouse.models.hydroponic_system import HydroponicSystemComponent
-from typing import List, Tuple
 import uuid
 from datetime import datetime, timedelta
+from typing import List, Tuple
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from iot.models.site import SiteEntity
+from iot.models import ControllerTask, SiteEntity
 
 
 class WaterCycle(models.Model):
@@ -112,7 +111,7 @@ class WaterCycleComponent(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="water_cycle_component",
+        related_name="water_cycle_component_set",
         help_text="To which water cycle this site entity belongs to.",
     )
     water_cycle_log_set = models.ManyToManyField(
@@ -222,15 +221,27 @@ class WaterPump(models.Model):
 
     def turn_on(self):
         """Uses controller tasks to turn the associated peripheral on."""
-        raise NotImplementedError
+
+        self.set_power(1)
 
     def turn_off(self):
         """Uses controller tasks to turn the associated peripheral off."""
-        raise NotImplementedError
+
+        self.set_power(0)
 
     def set_power(self, percentage):
         """Sets the pump to the percentage (0-1) via the associated peripheral"""
-        raise NotImplementedError
+
+        peripheral = self.water_cycle_component.site_entity.peripheral_component
+        controller_component_id = peripheral.controller_component.pk
+        task_type = ControllerTask.TaskType.SET_VALUE
+        parameters = {
+            "peripheral": str(peripheral.pk),
+            "data_point_type": str(peripheral.data_point_type_set.first().pk),
+            "value": percentage,
+        }
+
+        ControllerTask.objects.start(controller_component_id, task_type, parameters)
 
 
 class WaterPipe(models.Model):
@@ -258,6 +269,7 @@ class WaterSensor(models.Model):
         EC_METER = ("EcMeter", "EC meter")
         TDS_METER = ("TdsMeter", "TDS meter")
         TURBIDITY_METER = ("TurbidityMeter", "Turbidity meter")
+        WATER_LEVEL = ("WaterLevel", "Water level")
 
     water_cycle_component = models.OneToOneField(
         WaterCycleComponent,
@@ -298,8 +310,24 @@ class WaterValve(models.Model):
 
     def open_valve(self):
         """Uses controller tasks to open a valve."""
-        raise NotImplementedError
+
+        self.set_valve_state(True)
 
     def close_valve(self):
         """Uses controller tasks to close a valve."""
-        raise NotImplementedError
+
+        self.set_valve_state(False)
+
+    def set_valve_state(self, state: bool):
+        """Set the state of the valve, False is closed, True is open"""
+
+        peripheral = self.water_cycle_component.site_entity.peripheral_component
+        controller_component_id = peripheral.controller_component.pk
+        task_type = ControllerTask.TaskType.SET_VALUE
+        parameters = {
+            "peripheral": str(peripheral.pk),
+            "data_point_type": str(peripheral.data_point_type_set.first().pk),
+            "value": int(bool(state)),
+        }
+
+        ControllerTask.objects.start(controller_component_id, task_type, parameters)

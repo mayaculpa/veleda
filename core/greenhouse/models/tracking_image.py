@@ -1,3 +1,4 @@
+from iot.models.site import Site
 import uuid
 
 from django.db import models
@@ -14,7 +15,16 @@ class TrackingImage(models.Model):
     hydroponic_system = models.ForeignKey(
         HydroponicSystemComponent,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         help_text="The hydroponic system to which it is attached to.",
+    )
+    site = models.ForeignKey(
+        Site,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="If not attached to a hydroponic system, to which site it belongs.",
     )
     created_at = models.DateTimeField(
         auto_now_add=True, help_text="The datetime of creation."

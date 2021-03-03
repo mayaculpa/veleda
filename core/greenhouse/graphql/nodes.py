@@ -1,5 +1,5 @@
-from django_filters import BooleanFilter, FilterSet
 import graphene
+from django_filters import BooleanFilter, FilterSet
 from graphene.types.objecttype import ObjectType
 from graphene_django import DjangoObjectType
 from greenhouse.models import (
@@ -10,16 +10,14 @@ from greenhouse.models import (
     PlantSpecies,
     TrackingImage,
     WaterCycle,
-    WaterCycleLog,
     WaterCycleComponent,
-)
-from greenhouse.models.water_cycle import (
-    WaterCycle,
     WaterCycleFlowsTo,
-    WaterPump,
+    WaterCycleLog,
     WaterPipe,
+    WaterPump,
     WaterReservoir,
-    WaterSensor, WaterValve,
+    WaterSensor,
+    WaterValve,
 )
 from iot.graphql.nodes import TextChoice
 
@@ -166,6 +164,7 @@ class WaterCycleComponentFilter(FilterSet):
         fields = {
             "site_entity": ["exact"],
             "site_entity__name": ["exact", "icontains", "istartswith"],
+            "site_entity__site": ["exact"],
         }
 
 
@@ -247,6 +246,7 @@ class WaterSensorNode(DjangoObjectType):
         model = WaterSensor
         fields = ("sensor_type",)
         convert_choices_to_enum = False
+
 
 class WaterValveNode(DjangoObjectType):
     class Meta:

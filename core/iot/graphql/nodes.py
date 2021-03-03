@@ -59,6 +59,7 @@ class SiteEntityFilter(FilterSet):
         model = SiteEntity
         fields = {
             "site": ["exact"],
+            "site__name": ["exact", "icontains", "istartswith"],
             "name": ["exact", "icontains", "istartswith"],
             "modified_at": ["exact", "gt", "lt"],
         }
@@ -83,6 +84,7 @@ class ControllerComponentNode(DjangoObjectType):
         model = ControllerComponent
         filter_fields = {
             "site_entity": ["exact"],
+            "site_entity__name": ["exact", "icontains", "istartswith"],
             "site_entity__site": ["exact"],
             "component_type": ["exact"],
             "created_at": ["exact", "lt", "gt"],
