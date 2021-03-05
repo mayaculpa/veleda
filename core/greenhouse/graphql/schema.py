@@ -1,5 +1,10 @@
 import graphene
 from graphene_django.filter import DjangoFilterConnectionField
+from greenhouse.graphql.mutations import (
+    SetWaterPumpPower,
+    TurnOffWaterPump,
+    TurnOnWaterPump,
+)
 from greenhouse.graphql.nodes import (
     HydroponicSystemComponentEnumNode,
     HydroponicSystemComponentNode,
@@ -11,9 +16,9 @@ from greenhouse.graphql.nodes import (
     WaterComponentEnumNode,
     WaterCycleComponentNode,
     WaterCycleNode,
-    WaterReservoirNode,
-    WaterPumpNode,
     WaterPipeNode,
+    WaterPumpNode,
+    WaterReservoirNode,
     WaterSensorNode,
     WaterValveNode,
 )
@@ -57,3 +62,11 @@ class Query(object):
     water_pipe = graphene.relay.Node.Field(WaterPipeNode)
     water_sensor = graphene.relay.Node.Field(WaterSensorNode)
     water_valve = graphene.relay.Node.Field(WaterValveNode)
+
+
+class Mutation:
+    """Mutation commands for the greenhouse GraphQL schema"""
+
+    turn_on_water_pump = TurnOnWaterPump.Field()
+    turn_off_water_pump = TurnOffWaterPump.Field()
+    set_water_pump_power = SetWaterPumpPower.Field()

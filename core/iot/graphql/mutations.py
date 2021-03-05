@@ -12,6 +12,9 @@ from iot.graphql.nodes import (
     PeripheralComponentNode,
 )
 
+class Error(graphene.Interface):
+    message = graphene.String(required=True)
+
 
 class StartControllerTask(relay.ClientIDMutation):
     class Input:

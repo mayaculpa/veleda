@@ -76,7 +76,6 @@ class PlantComponentNode(DjangoObjectType):
         }
         fields = (
             "site_entity",
-            "peripheral_component_set",
             "spot_number",
             "species",
             "created_at",
@@ -232,7 +231,12 @@ class WaterReservoirNode(DjangoObjectType):
 class WaterPumpNode(DjangoObjectType):
     class Meta:
         model = WaterPump
-        fields = ("water_cycle_component",)
+
+    power = graphene.Float(description="The power in percent from 0 to 1")
+
+    @staticmethod
+    def resolve_power(water_pump, args):
+        return water_pump.power
 
 
 class WaterPipeNode(DjangoObjectType):

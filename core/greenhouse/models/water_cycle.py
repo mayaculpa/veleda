@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from iot.models import ControllerTask, SiteEntity
+from iot.models import ControllerTask, DataPoint, SiteEntity
 
 
 class WaterCycle(models.Model):
@@ -219,6 +219,17 @@ class WaterPump(models.Model):
         help_text="To which water cycle component it belongs.",
     )
 
+    @property
+    def power(self) -> Optional[float]:
+        last_value = (
+            DataPoint.objects.filter(peripheral_component=self.pk)
+            .values("value")
+            .last()
+        )
+        if not last_value:
+            return None
+        return last_value["value"]
+
     def turn_on(self):
         """Uses controller tasks to turn the associated peripheral on."""
 
@@ -229,7 +240,7 @@ class WaterPump(models.Model):
 
         self.set_power(0)
 
-    def set_power(self, percentage):
+    def set_power(self, percentage: float):
         """Sets the pump to the percentage (0-1) via the associated peripheral"""
 
         peripheral = self.water_cycle_component.site_entity.peripheral_component
