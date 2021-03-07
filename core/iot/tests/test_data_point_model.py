@@ -283,21 +283,16 @@ class DataPointAggregationTests(TestCase):
             before_date=self.now.date() + timedelta(days=3),
         )
         day_one = self.now.replace(hour=0, minute=0, second=0, microsecond=0)
-        day_one_dps = next(
-            (data_point for data_point in data_points if data_point["day"] == day_one),
-            None,
-        )
+
+        # Ensure descending order of data points (newest to oldest)
+        day_one_dps = data_points[2]
+        self.assertEqual(day_one_dps["day"], day_one)
         self.assertEqual(day_one_dps["avg"], 24.5)
         self.assertEqual(day_one_dps["min"], 0.0)
         self.assertEqual(day_one_dps["max"], 49.0)
-        day_three_dps = next(
-            (
-                data_point
-                for data_point in data_points
-                if data_point["day"] == day_one + timedelta(days=2)
-            ),
-            None,
-        )
+
+        day_three_dps = data_points[0]
+        self.assertEqual(day_three_dps["day"], day_one + timedelta(days=2))
         self.assertEqual(day_three_dps["avg"], 75.5)
         self.assertEqual(day_three_dps["min"], 2.0)
         self.assertEqual(day_three_dps["max"], 149.0)
@@ -309,17 +304,11 @@ class DataPointAggregationTests(TestCase):
             from_date=self.now.date(),
             before_date=self.now.date() + timedelta(days=3),
         )
-        day_one_dps = next(
-            (
-                data_point
-                for data_point in data_points
-                if data_point["day"] == day_one + timedelta(days=2)
-            ),
-            None,
-        )
-        self.assertEqual(day_one_dps["avg"], 151.0)
-        self.assertEqual(day_one_dps["min"], 4.0)
-        self.assertEqual(day_one_dps["max"], 298.0)
+        day_three_dps = data_points[0]
+        self.assertEqual(day_three_dps["day"], day_one + timedelta(days=2))
+        self.assertEqual(day_three_dps["avg"], 151.0)
+        self.assertEqual(day_three_dps["min"], 4.0)
+        self.assertEqual(day_three_dps["max"], 298.0)
 
     def test_data_point_aggregation_hour(self):
         """Test data point aggregation by hour method."""
@@ -333,22 +322,14 @@ class DataPointAggregationTests(TestCase):
             from_time=hour_one,
             before_time=hour_one + timedelta(hours=10),
         )
-        hour_one_dps = next(
-            (
-                data_point
-                for data_point in data_points
-                if data_point["time_hour"] == hour_one
-            ),
-            None,
-        )
+        # Ensure that the data is returned from newest to oldest
+        hour_one_dps = data_points[-1]
+        self.assertEqual(hour_one_dps["time_hour"], hour_one)
         self.assertEqual(hour_one_dps["avg"], 1.0)
         self.assertEqual(hour_one_dps["min"], 0.0)
         self.assertEqual(hour_one_dps["max"], 2.0)
-        hour_ten_dps = next(
-            data_point
-            for data_point in data_points
-            if data_point["time_hour"] == hour_ten
-        )
+        hour_ten_dps = data_points[0]
+        self.assertEqual(hour_ten_dps["time_hour"], hour_ten)
         self.assertEqual(hour_ten_dps["avg"], 28.0)
         self.assertEqual(hour_ten_dps["min"], 27.0)
         self.assertEqual(hour_ten_dps["max"], 29.0)
@@ -360,19 +341,13 @@ class DataPointAggregationTests(TestCase):
             from_time=hour_one,
             before_time=hour_one + timedelta(hours=10),
         )
-        hour_one_dps = next(
-            data_point
-            for data_point in data_points
-            if data_point["time_hour"] == hour_one
-        )
+        hour_one_dps = data_points[-1]
+        self.assertEqual(hour_one_dps["time_hour"], hour_one)
         self.assertEqual(hour_one_dps["avg"], 2.0)
         self.assertEqual(hour_one_dps["min"], 0.0)
         self.assertEqual(hour_one_dps["max"], 4.0)
-        hour_ten_dps = next(
-            data_point
-            for data_point in data_points
-            if data_point["time_hour"] == hour_ten
-        )
+        hour_ten_dps = data_points[0]
+        self.assertEqual(hour_ten_dps["time_hour"], hour_ten)
         self.assertEqual(hour_ten_dps["avg"], 56.0)
         self.assertEqual(hour_ten_dps["min"], 54.0)
         self.assertEqual(hour_ten_dps["max"], 58.0)

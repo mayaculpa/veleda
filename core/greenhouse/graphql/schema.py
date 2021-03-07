@@ -1,6 +1,8 @@
 import graphene
 from graphene_django.filter import DjangoFilterConnectionField
 from greenhouse.graphql.mutations import (
+    CloseWaterValve,
+    OpenWaterValve,
     SetWaterPumpPower,
     TurnOffWaterPump,
     TurnOnWaterPump,
@@ -70,3 +72,6 @@ class Mutation:
     turn_on_water_pump = TurnOnWaterPump.Field()
     turn_off_water_pump = TurnOffWaterPump.Field()
     set_water_pump_power = SetWaterPumpPower.Field()
+
+    open_water_valve = OpenWaterValve.Field()
+    close_water_valve = CloseWaterValve.Field()

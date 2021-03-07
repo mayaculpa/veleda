@@ -117,7 +117,7 @@ class WaterCycleComponentTests(TestCase):
             },
         )
 
-    def test_water_valve_open(self, magic_controller_task_manager):
+    def test_open_water_valve(self, magic_controller_task_manager):
         """Test opening a water valve"""
 
         self.create_water_valve()
@@ -132,8 +132,8 @@ class WaterCycleComponentTests(TestCase):
             },
         )
 
-    def test_water_valve_close(self, magic_controller_task_manager):
-        """Test opening a water valve"""
+    def test_close_water_valve(self, magic_controller_task_manager):
+        """Test closing a water valve"""
 
         self.create_water_valve()
         self.site_entity.water_cycle_component.water_valve.close_valve()
