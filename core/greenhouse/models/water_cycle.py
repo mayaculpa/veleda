@@ -7,6 +7,10 @@ from django.db import models
 from iot.models import ControllerTask, DataPoint, SiteEntity
 
 
+class WaterCycleComponentException(Exception):
+    """Thrown for errors regarding the water cycle components."""
+
+
 class WaterCycle(models.Model):
     """A closed loop of water, isolated from other loops."""
 
@@ -224,7 +228,7 @@ class WaterPump(models.Model):
         last_value = (
             DataPoint.objects.filter(peripheral_component=self.pk)
             .values("value")
-            .last()
+            .first()
         )
         if not last_value:
             return None
@@ -246,12 +250,17 @@ class WaterPump(models.Model):
         peripheral = self.water_cycle_component.site_entity.peripheral_component
         controller_component_id = peripheral.controller_component.pk
         task_type = ControllerTask.TaskType.SET_VALUE
+        data_point_types = peripheral.data_point_type_set.all()
+        if count := len(data_point_types) != 1:
+            raise WaterCycleComponentException(
+                f"Ambiguous number of data point types ({count})"
+            )
+
         parameters = {
             "peripheral": str(peripheral.pk),
-            "data_point_type": str(peripheral.data_point_type_set.first().pk),
+            "data_point_type": str(data_point_types[0].pk),
             "value": percentage,
         }
-
         ControllerTask.objects.start(controller_component_id, task_type, parameters)
 
 
@@ -296,16 +305,33 @@ class WaterSensor(models.Model):
     )
 
     def request_reading(self):
-        """Start a controller task to get a single reading."""
-        raise NotImplementedError
+        """Start a controller task to get a single reading for each data point type of a peripheral."""
 
-    def start_polling_for(self, interval: timedelta, duration: timedelta):
-        """Poll a sensor every interval (excl. setup time) for a period of time."""
-        raise NotImplementedError
+        peripheral = self.water_cycle_component.site_entity.peripheral_component
+        controller_component_id = peripheral.controller_component.pk
+        task_type = ControllerTask.TaskType.READ_SENSOR
+        for data_point_type in peripheral.data_point_type_set.all():
+            parameters = {
+                "peripheral": str(peripheral.pk),
+                "data_point_type": str(data_point_type.pk),
+            }
+            ControllerTask.objects.start(controller_component_id, task_type, parameters)
 
-    def start_polling_until(self, interval: timedelta, until: datetime):
+    def start_polling_until(self, interval: timedelta, run_until: datetime):
         """Poll a sensor every interval (excl. setup time) until a point in time."""
-        raise NotImplementedError
+
+        peripheral = self.water_cycle_component.site_entity.peripheral_component
+        controller_component_id = peripheral.controller_component.pk
+        task_type = ControllerTask.TaskType.POLL_SENSOR
+        for data_point_type in peripheral.data_point_type_set.all():
+            parameters = {
+                "peripheral": str(peripheral.pk),
+                "data_point_type": str(data_point_type.pk),
+                "interval_ms": int(interval.total_seconds() * 1000),
+            }
+            ControllerTask.objects.start(
+                controller_component_id, task_type, parameters, run_until
+            )
 
 
 class WaterValve(models.Model):
@@ -335,10 +361,15 @@ class WaterValve(models.Model):
         peripheral = self.water_cycle_component.site_entity.peripheral_component
         controller_component_id = peripheral.controller_component.pk
         task_type = ControllerTask.TaskType.SET_VALUE
+        data_point_types = peripheral.data_point_type_set.all()
+        if count := len(data_point_types) != 1:
+            raise WaterCycleComponentException(
+                f"Ambiguous number of data point types ({count})"
+            )
+
         parameters = {
             "peripheral": str(peripheral.pk),
-            "data_point_type": str(peripheral.data_point_type_set.first().pk),
+            "data_point_type": str(data_point_types[0].pk),
             "value": int(bool(state)),
         }
-
         ControllerTask.objects.start(controller_component_id, task_type, parameters)

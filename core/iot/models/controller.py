@@ -82,7 +82,7 @@ class ControllerAuthToken(models.Model):
         return binascii.hexlify(os.urandom(settings.CONTROLLER_TOKEN_BYTES)).decode()
 
     def __str__(self):
-        return self.key
+        return f"Auth token for {str(self.controller.site_entity.name)}"
 
 
 class ControllerMessage(models.Model):
@@ -210,7 +210,7 @@ class ControllerMessage(models.Model):
         cls,
         peripheral_commands: Optional[Dict] = None,
         task_commands: Optional[Dict] = None,
-        request_id="",
+        request_id: Optional[str] = "",
     ) -> Dict:
         message = {"type": cls.COMMAND_TYPE}
         if peripheral_commands:
