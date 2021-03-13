@@ -10,7 +10,9 @@ from rest_framework.authtoken.models import Token
 
 
 def index(request):
-    context = {"token": Token.objects.filter(user=request.user).first()}
+    context = {}
+    if request.user.is_authenticated:
+        context["token"] = Token.objects.filter(user=request.user).first()
     return render(request, "homepage.html", context)
 
 
