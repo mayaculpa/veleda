@@ -1,11 +1,14 @@
-from greenhouse.models.hydroponic_system import HydroponicSystemComponent
-from typing import List, Tuple
 import uuid
 from datetime import datetime, timedelta
+from typing import List, Tuple, Optional
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from iot.models.site import SiteEntity
+from iot.models import ControllerTask, DataPoint, SiteEntity
+
+
+class WaterCycleComponentException(Exception):
+    """Thrown for errors regarding the water cycle components."""
 
 
 class WaterCycle(models.Model):
@@ -112,7 +115,7 @@ class WaterCycleComponent(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="water_cycle_component",
+        related_name="water_cycle_component_set",
         help_text="To which water cycle this site entity belongs to.",
     )
     water_cycle_log_set = models.ManyToManyField(
@@ -220,17 +223,45 @@ class WaterPump(models.Model):
         help_text="To which water cycle component it belongs.",
     )
 
+    @property
+    def power(self) -> Optional[float]:
+        last_value = (
+            DataPoint.objects.filter(peripheral_component=self.pk)
+            .values("value")
+            .first()
+        )
+        if not last_value:
+            return None
+        return last_value["value"]
+
     def turn_on(self):
         """Uses controller tasks to turn the associated peripheral on."""
-        raise NotImplementedError
+
+        self.set_power(1)
 
     def turn_off(self):
         """Uses controller tasks to turn the associated peripheral off."""
-        raise NotImplementedError
 
-    def set_power(self, percentage):
+        self.set_power(0)
+
+    def set_power(self, percentage: float):
         """Sets the pump to the percentage (0-1) via the associated peripheral"""
-        raise NotImplementedError
+
+        peripheral = self.water_cycle_component.site_entity.peripheral_component
+        controller_component_id = peripheral.controller_component.pk
+        task_type = ControllerTask.TaskType.SET_VALUE
+        data_point_types = peripheral.data_point_type_set.all()
+        if count := len(data_point_types) != 1:
+            raise WaterCycleComponentException(
+                f"Ambiguous number of data point types ({count})"
+            )
+
+        parameters = {
+            "peripheral": str(peripheral.pk),
+            "data_point_type": str(data_point_types[0].pk),
+            "value": percentage,
+        }
+        ControllerTask.objects.start(controller_component_id, task_type, parameters)
 
 
 class WaterPipe(models.Model):
@@ -258,6 +289,7 @@ class WaterSensor(models.Model):
         EC_METER = ("EcMeter", "EC meter")
         TDS_METER = ("TdsMeter", "TDS meter")
         TURBIDITY_METER = ("TurbidityMeter", "Turbidity meter")
+        WATER_LEVEL = ("WaterLevel", "Water level")
 
     water_cycle_component = models.OneToOneField(
         WaterCycleComponent,
@@ -273,16 +305,33 @@ class WaterSensor(models.Model):
     )
 
     def request_reading(self):
-        """Start a controller task to get a single reading."""
-        raise NotImplementedError
+        """Start a controller task to get a single reading for each data point type of a peripheral."""
 
-    def start_polling_for(self, interval: timedelta, duration: timedelta):
-        """Poll a sensor every interval (excl. setup time) for a period of time."""
-        raise NotImplementedError
+        peripheral = self.water_cycle_component.site_entity.peripheral_component
+        controller_component_id = peripheral.controller_component.pk
+        task_type = ControllerTask.TaskType.READ_SENSOR
+        for data_point_type in peripheral.data_point_type_set.all():
+            parameters = {
+                "peripheral": str(peripheral.pk),
+                "data_point_type": str(data_point_type.pk),
+            }
+            ControllerTask.objects.start(controller_component_id, task_type, parameters)
 
-    def start_polling_until(self, interval: timedelta, until: datetime):
+    def start_polling_until(self, interval: timedelta, run_until: datetime):
         """Poll a sensor every interval (excl. setup time) until a point in time."""
-        raise NotImplementedError
+
+        peripheral = self.water_cycle_component.site_entity.peripheral_component
+        controller_component_id = peripheral.controller_component.pk
+        task_type = ControllerTask.TaskType.POLL_SENSOR
+        for data_point_type in peripheral.data_point_type_set.all():
+            parameters = {
+                "peripheral": str(peripheral.pk),
+                "data_point_type": str(data_point_type.pk),
+                "interval_ms": int(interval.total_seconds() * 1000),
+            }
+            ControllerTask.objects.start(
+                controller_component_id, task_type, parameters, run_until
+            )
 
 
 class WaterValve(models.Model):
@@ -298,8 +347,29 @@ class WaterValve(models.Model):
 
     def open_valve(self):
         """Uses controller tasks to open a valve."""
-        raise NotImplementedError
+
+        self.set_valve_state(True)
 
     def close_valve(self):
         """Uses controller tasks to close a valve."""
-        raise NotImplementedError
+
+        self.set_valve_state(False)
+
+    def set_valve_state(self, state: bool):
+        """Set the state of the valve, False is closed, True is open"""
+
+        peripheral = self.water_cycle_component.site_entity.peripheral_component
+        controller_component_id = peripheral.controller_component.pk
+        task_type = ControllerTask.TaskType.SET_VALUE
+        data_point_types = peripheral.data_point_type_set.all()
+        if count := len(data_point_types) != 1:
+            raise WaterCycleComponentException(
+                f"Ambiguous number of data point types ({count})"
+            )
+
+        parameters = {
+            "peripheral": str(peripheral.pk),
+            "data_point_type": str(data_point_types[0].pk),
+            "value": int(bool(state)),
+        }
+        ControllerTask.objects.start(controller_component_id, task_type, parameters)

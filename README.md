@@ -5,6 +5,8 @@
 
 ![Device Stacc](./core/doc/cover_new.png)
 
+Test drive on core.openfarming.ai.
+
 A data analytics and control platform for IoT systems. It integrates with the [sdg-controller firmware][1] to dynamically add peripherals and then measure and control them. In the second version, currently under development, InfluxDB was replaced with TimescaleDB, the REST API with GraphQL and the MQTT broker with WebSockets. The application is structured to separate the IoT aspect from the domain aspect (hydroponic greenhouses) to allow it to subsequently be broken out into a **standalone service**. This will allow domain specific IoT solutions to be written.
 
 For the current roadmap, it will be used to visualize and allow the analysis of data covering the growth aspects of hydroponically grown plants. It is being developed as part of the [OpenFarmingAI research project][7] and will be receiving a project website in the coming weeks.
@@ -21,16 +23,16 @@ In the current refactoring state it is recommended to follow the [core service d
 
 The roadmap is split between releases that focus on the core IoT domain and the greenhouse domain. The IoT domain is useful all users, while the greenhouse (GH) domain focuses on the requirements of the [OpenFarming.AI][7] research project at the [Protohaus gGmbH][9]. Contributions and feedback are welcome regarding any aspect. Initial work began at the end of 2017 and includes several rewrites since then.
 
-### 🔀 Alpha 1 (IoT): MVP Without Using the Admin Interface
+### ✅ Alpha 1 (IoT): MVP Without Using the Admin Interface
 
 Create a minimal stack that allows the platform to be useful. Allow reading and controlling an ESP32 as well as managing sites and controllers without the admin interface.
 
 | ![usr](./doc/images/usr.png) | ![uc](./doc/images/uc.png) | ![WS](./doc/images/ws.png) | ![GQL](./doc/images/gql.png) | ![NR](./doc/images/nr.png) | ![ui](./doc/images/ui.png) |
 | ---------------------------- | -------------------------- | -------------------------- | ---------------------------- | -------------------------- | -------------------------- |
 | Authentication               | Controller FW              | WebSocket API              | GraphQL API                  | Node-RED Demo              | Setup UI                   |
-| Done: 05.02.19               | Done: 25.01.21             | Done: 15.11.20             | Done: 09.12.20               | Done: 25.01.21             | TBD                        |
+| Done: 05.02.19               | Done: 25.01.21             | Done: 15.11.20             | Done: 09.12.20               | Done: 25.01.21             | Done: 13.03.21             |
 
-### Alpha 2 (GH): Add Image Handling
+### 🔀 Alpha 2 (GH): Add Image Handling
 
 Allow images to be uploaded and queried.
 

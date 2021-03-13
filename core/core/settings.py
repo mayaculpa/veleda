@@ -167,17 +167,21 @@ if TESTING:
     PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # Celery and RabbitMQ
-if DEBUG:
-    CELERY_BROKER_URL = "amqp://localhost"
+if os.environ.get("RABBITMQ_HOST"):
+    if os.environ.get("RABBITMQ_DEFAULT_USER"):
+        CELERY_BROKER_URL = (
+            "amqp://"
+            + os.environ.get("RABBITMQ_DEFAULT_USER")
+            + ":"
+            + os.environ.get("RABBITMQ_DEFAULT_PASS")
+            + "@"
+            + os.environ.get("RABBITMQ_HOST")
+        )
+    else:
+        CELERY_BROKER_URL = f"amqp://{os.environ.get('RABBITMQ_HOST')}"
 else:
-    CELERY_BROKER_URL = (
-        "amqp://"
-        + os.environ.get("RABBITMQ_DEFAULT_USER")
-        + ":"
-        + os.environ.get("RABBITMQ_DEFAULT_PASS")
-        + "@"
-        + os.environ.get("RABBITMQ_HOSTNAME")
-    )
+    CELERY_BROKER_URL = "amqp://localhost"
+
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -294,6 +298,9 @@ CHANNEL_LAYERS = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:4200",  # Angular dev server
+    "https://fonts.gstatic.com",
+    "https://cdn.jsdelivr.net",
+    "https://code.jquery.com",
 ]
 
 # Content Security Policy
@@ -338,7 +345,7 @@ if DEBUG:
 # IoT Dependency Injection
 SITE_ENTITY_COMPONENTS = [
     "controller_component",
-    "peripheral_component", 
+    "peripheral_component",
     "hydroponic_system_component",
     "water_cycle_component",
 ]

@@ -1,0 +1,58 @@
+{% extends "base.html" %} {% load semanticui %} {% block title %}
+<title>Sites</title>
+{% endblock %} {% block content %}
+<h1 class="ui header">Create Controller</h1>
+
+{% if form.errors %} {% for error in form.non_field_errors %}
+<div class="alert alert-danger">
+  <strong>{{ error|escape }}</strong>
+</div>
+{% endfor %} {% endif %}
+
+<form action="" method="post" class="ui form">
+  {% csrf_token %}
+  <div class="two fields">
+    <div class="field">
+      <label>Controller Name</label>
+      <input type="text" name="name" />
+    </div>
+    <div style="visibility: hidden; padding: 30px 30px 0 30px">OR</div>
+    <div class="field">
+      <label>Assigned Site</label>
+      <div class="ui fluid selection dropdown">
+        <input type="hidden" name="site" />
+        <i class="dropdown icon"></i>
+        <div class="default text">Select site</div>
+        <div class="menu">
+          {% for site in sites %}
+          <div class="item" data-value="{{ site.id }}">{{ site.name }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="two fields">
+    <div class="field">
+      <label>Select controller type</label>
+      <div class="ui fluid selection dropdown">
+        <input type="hidden" name="controller_component_type" />
+        <i class="dropdown icon"></i>
+        <div class="default text">Select site</div>
+        <div class="menu">
+          {% for type in controller_component_types %}
+          <div class="item" data-value="{{ type.pk }}">{{ type.name }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div style="padding: 30px 30px 0 30px">OR</div>
+    <div class="field">
+      <label>Create new controller type</label>
+      <input type="text" name="new_type_name" />
+    </div>
+  </div>
+
+  <input class="ui button" type="submit" value="Create controller" />
+</form>
+
+{% endblock %}

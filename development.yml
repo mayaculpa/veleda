@@ -1,38 +1,38 @@
-version: "3"
+version: "3.4"
 
 services:
 ## App Frontend
   core:
     build: ./core
-    restart: always
+    container_name: "sdg-server-${DEPLOY_TYPE}-core"
+    restart: unless-stopped
     logging:
       options:
         max-size: '2m'
         max-file: '10'
     ports:
       - "127.0.0.1:8000:8000"
+    environment:
+      - DJANGO_ENV_LOADED=True
+      - DJANGO_DEBUG=True
     env_file:
       - 'core/env.core'
       - 'core/secrets.core'
       - 'core/env.rabbitmq'
       - 'core/secrets.rabbitmq'
-      - 'grafana/env.grafana'
-      - 'grafana/secrets.grafana'
-      - 'influxdb/secrets.influxdb'
+      - 'postgres/secrets.postgres'
       - 'redis/env.redis'
       - 'redis/secrets.redis'
     networks:
       - backend
       - frontend
     depends_on:
-      - influxdb
-      - grafana
       - postgres
 
   grafana:
     image: grafana/grafana:5.4.3
     container_name: grafana
-    restart: always
+    restart: unless-stopped
     logging:
       options:
         max-size: '2m'
@@ -49,12 +49,12 @@ services:
       - grafana-data:/var/lib/grafana
       - grafana-config:/etc/grafana/
     depends_on:
-      - influxdb
+      - postgres
 
   planner:
     build: ./planner
     container_name: planner
-    restart: always
+    restart: unless-stopped
     logging:
       options:
         max-size: '2m'
@@ -68,9 +68,9 @@ services:
 
 ## App Backend
   postgres:
-    build: ./postgres
-    container_name: postgres
-    restart: always
+    image: timescale/timescaledb:latest-pg12
+    container_name: "sdg-server-${DEPLOY_TYPE}-postgres"
+    restart: unless-stopped
     logging:
       options:
         max-size: '2m'
@@ -80,28 +80,12 @@ services:
     networks:
       - backend
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-
-  influxdb:
-    image: influxdb:1.5
-    container_name: influxdb
-    restart: always
-    logging:
-      options:
-        max-size: '2m'
-        max-file: '10'
-    env_file:
-      - 'influxdb/env.influxdb'
-      - 'influxdb/secrets.influxdb'
-    networks:
-      - backend
-    volumes:
-      - influxdb-data:/var/lib/influxdb
+      - postgres-data-12:/var/lib/postgresql/data
 
   redis:
     image: redis:6.0.8-alpine
     container_name: redis
-    restart: always
+    restart: unless-stopped
     command: |
       sh -c "\
         if [ -z $${REDIS_PASSWORD:-} ]; then
@@ -117,7 +101,7 @@ services:
   rabbitmq:
     image: rabbitmq:3
     container_name: rabbitmq
-    restart: always
+    restart: unless-stopped
     logging:
       options:
         max-size: '2m'
@@ -135,8 +119,11 @@ networks:
   frontend:
 
 volumes:
-  influxdb-data:
   grafana-data:
+    name: "sdg-server-${DEPLOY_TYPE}-grafana-data"
   grafana-config:
-  postgres-data:
+    name: "sdg-server-${DEPLOY_TYPE}-grafana-config"
+  postgres-data-12:
+    name: "sdg-server-${DEPLOY_TYPE}-postgres-data-12"
   rabbitmq-data:
+    name: "sdg-server-${DEPLOY_TYPE}-rabbitmq-data"

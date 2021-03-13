@@ -1,0 +1,64 @@
+{% extends "base.html" %} {% load semanticui %} {% block title %}
+<title>Sites</title>
+{% endblock %} {% block content %}
+<h1 class="ui header">Sites</h1>
+
+{% if sites %}
+<table style="width: 100%">
+  <tr style="text-align: left">
+    <th>Name</th>
+    <th>Entities</th>
+    <th>Controllers</th>
+    <th>Address</th>
+    <th>Actions</th>
+  </tr>
+  {% for site in sites %}
+  <tr>
+    <td>{{ site.name }}</td>
+    <td>{{ site.num_entities }}</td>
+    <td>{{ site.num_controllers }}</td>
+    <td>{{ site.address }}</td>
+    <td>
+      <form action="{% url 'iot:delete-site' site.pk %}" method="POST">
+        {% csrf_token %}
+        <button class="ui icon button">
+          <i type="submit" class="trash icon"></i>
+        </button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No sites found.</p>
+{% endif %}
+
+<h2>Create New</h2>
+{% if not sites %}
+<a href="{% url 'iot:create-site' %}">
+  <button class="ui labeled icon button primary">
+    <i class="map pin icon"></i>
+    Site
+  </button>
+</a>
+{% else %}
+<a href="{% url 'iot:create-site' %}">
+  <button class="ui labeled icon button">
+    <i class="map pin icon"></i>
+    Site
+  </button>
+</a>
+<a href="{% url 'iot:create-controller' %}">
+  <button class="ui labeled icon button">
+    <i class="microchip icon"></i>
+    Controller
+  </button>
+</a>
+<h2>Go To</h2>
+<a href="{% url 'iot:controller-list' %}">
+  <button class="ui labeled icon button positive">
+    <i class="microchip icon"></i>
+    Controllers
+  </button>
+</a>
+{% endif %} {% endblock %}

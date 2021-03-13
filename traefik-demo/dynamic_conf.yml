@@ -1,0 +1,27 @@
+http:
+  routers:
+    traefik-web:
+      entryPoints:
+      - web
+      rule: Host(`traefik.devicesta.cc`)
+      service: noop@internal
+      middlewares:
+      - https-redirect
+    traefik-websecure:
+      entryPoints:
+      - websecure
+      rule: Host(`traefik.devicesta.cc`)
+      service: api@internal
+      middlewares:
+      - traefik-auth
+      tls: 
+        certResolver: myresolver
+  middlewares:
+    traefik-auth:
+      basicAuth:
+        users:
+        - moritz:[use htpasswd in cmd line]
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
