@@ -15,5 +15,7 @@ body {
 .ui.footer.segment {
   margin: 5em 0em 0em;
   padding: 5em 0em;
-  margin-top: auto;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
 }

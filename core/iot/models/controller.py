@@ -1,9 +1,11 @@
+from accounts.models import User
 import binascii
 import os
 import uuid
 from typing import Dict, List, Optional
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
 
 from iot.models.site import SiteEntity
@@ -17,6 +19,13 @@ class ControllerComponentType(models.Model):
     )
     name = models.CharField(
         max_length=255, help_text="The name of this type, e.g., ESP32 or RasberryPi4"
+    )
+    created_by = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        blank=False,
+        null=True,
+        help_text="The user that created the type. Global types have no owner.",
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -61,25 +70,21 @@ class ControllerComponent(models.Model):
         return f"Controller of {self.site_entity.name}"
 
 
+def _generate_auth_token():
+    """Generates a random token based with a length of CONTROLLER_TOKEN_BYTES """
+    return binascii.hexlify(os.urandom(settings.CONTROLLER_TOKEN_BYTES)).decode()
+
+
 class ControllerAuthToken(models.Model):
     """Token for controller models."""
 
-    key = models.CharField(max_length=128, primary_key=True)
+    key = models.CharField(
+        max_length=128, primary_key=True, default=_generate_auth_token
+    )
     controller = models.OneToOneField(
         ControllerComponent, related_name="auth_token", on_delete=models.CASCADE
     )
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):  # pylint: disable=arguments-differ
-        """Saves the controller token and generates a key if it has not been set"""
-        if not self.key:
-            self.key = self.generate_key()
-        return super().save(*args, **kwargs)
-
-    @staticmethod
-    def generate_key():
-        """Generates a random token based with a length of CONTROLLER_TOKEN_BYTES """
-        return binascii.hexlify(os.urandom(settings.CONTROLLER_TOKEN_BYTES)).decode()
 
     def __str__(self):
         return f"Auth token for {str(self.controller.site_entity.name)}"
@@ -150,7 +155,7 @@ class ControllerMessage(models.Model):
         if self.message.get("type", "") == self.ERROR_TYPE:
             return self.message
         return {}
-    
+
     def to_peripheral_commands(self) -> Dict:
         """Try to extract the peripheral commands"""
 
@@ -164,7 +169,7 @@ class ControllerMessage(models.Model):
         if self.message.get("type", "") == self.COMMAND_TYPE:
             return self.message.get("task", {})
         return {}
-    
+
     def to_peripheral_results(self) -> Dict:
         """Try to extract the peripheral results"""
 

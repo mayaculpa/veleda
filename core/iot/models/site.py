@@ -39,6 +39,7 @@ class SiteEntity(models.Model):
     site = models.ForeignKey(
         Site,
         on_delete=models.CASCADE,
+        related_name="site_entity",
         help_text="The site to which the site entity belongs.",
     )
     name = models.CharField(

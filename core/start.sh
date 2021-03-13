@@ -51,6 +51,8 @@ source_debug_env_variables() {
   echo "Updating the service hostnames to localhost"
   export DATABASE_HOST="127.0.0.1"
   export RABBITMQ_HOST="127.0.0.1"
+  unset RABBITMQ_DEFAULT_USER
+  unset RABBITMQ_DEFAULT_PASS
   export DAPHNE_HOST="$CORE_DOMAIN"
   export REDIS_HOST="127.0.0.1"
   
@@ -123,14 +125,18 @@ if [[ $1 == "help" ]]; then
 fi
 
 if [[ $DJANGO_DEBUG != "False" ]]; then
-  if [[ $1 == "clean" ]]; then
-    stop_docker_services
-    set +e
-    exit 0
+  if [[ $DJANGO_ENV_LOADED != True ]]; then
+    if [[ $1 == "clean" ]]; then
+      stop_docker_services
+      set +e
+      exit 0
+    else
+      echo "Starting in debug mode"
+      source_debug_env_variables
+      start_docker_services
+    fi
   else
-    echo "Starting in debug mode"
-    source_debug_env_variables
-    start_docker_services
+    echo "Starting in docker debug mode"
   fi
 else
   echo "Starting in production mode"

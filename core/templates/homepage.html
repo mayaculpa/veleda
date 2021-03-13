@@ -1,23 +1,77 @@
-{% extends "base.html" %}
-
-{% block title %}<title>SmartDigitalGarden</title>{% endblock %}
-
-{% block content%}
-<h1 class="ui header">Hello there {% if user.is_authenticated %}{{ user.email }}{% endif %}</h1>
+{% extends "base.html" %} {% block title %}
+<title>SmartDigitalGarden</title>
+{% endblock %} {% block content%}
+<h2 class="ui header">
+  Hello there {% if user.is_authenticated %}{{ user.email }}{% endif %}
+</h2>
 {% if user.is_authenticated %}
-<a href="{%url 'logout' %}?next={{request.path}}">Logout</a>
+<a href="{%url 'logout' %}?next={{request.path}}">
+  <button class="ui labeled icon button">
+    <i class="user icon"></i>
+    Logout
+  </button>
+</a>
 {% else %}
-<a href="{%url 'login' %}?next={{request.path}}">Login</a>
-{% endif %}
-
-<div class="ui list">
-  {% if user.is_authenticated %}
-  <a class="item" href="{% url 'graphiql' %}">GraphiQL</a>
-  {% endif %}
-  {% if user.is_staff %}
-  <a class="item" href="{% url 'admin:index' %}">Admin Dashboard</a>
-  <a class="item" href="{% url 'oauth2_provider:list' %}">OAuth2 Dashboard</a>
-  {% endif %}
-</div>
-
-{% endblock %}
+<a href="{%url 'login' %}?next={{request.path}}">
+  <button class="ui labeled icon button">
+    <i class="user icon"></i>
+    Login
+  </button>
+</a>
+{% endif %} {% if user.is_authenticated %}
+<a class="item" href="{% url 'graphiql' %}">
+  <button class="ui labeled icon button">
+    <i class="database icon"></i>
+    GraphiQL
+  </button>
+</a>
+<a class="item" href="{% url 'iot:site-list' %}">
+  <button class="ui labeled icon button positive">
+    <i class="map pin icon"></i>
+    Sites
+  </button>
+</a>
+<h2>User Auth Tokens (Node-RED / GraphQL)</h2>
+<p>
+  To access the GraphQL API, not the <a href="/graphiql">GraphiQL web page</a>,
+  use a user auth token. These are different from the controller tokens that are
+  used by the controllers to connect to the WebSocket API. In your client (<a
+    href="https://flows.nodered.org/node/node-red-contrib-graphql"
+    >Node-RED</a
+  >, <a href="https://stackoverflow.com/a/32982949/6783666">cURL</a>) use the
+  following key in the "Authorization" HTTP header.
+</p>
+{% if token %}
+<p>
+  <code>Authorization: Token {{ token }}</code>
+</p>
+<form action="{% url 'iot:delete-user-token' token.pk %}" method="POST">
+  {% csrf_token %}
+  <button class="ui labeled icon button">
+    <i type="submit" class="trash icon"></i>
+    Delete token
+  </button>
+</form>
+{% else %}
+<form action="{% url 'iot:create-user-token' %}" method="POST">
+  {% csrf_token %}
+  <button class="ui labeled icon primary button">
+    <i type="submit" class="key icon"></i>
+    Create token
+  </button>
+</form>
+{% endif %} {% endif %} {% if user.is_staff %}
+<h2>Staff Section</h2>
+<a class="item" href="{% url 'admin:index' %}">
+  <button class="ui labeled icon button">
+    <i class="life ring icon"></i>
+    Admin
+  </button>
+</a>
+<a class="item" href="{% url 'oauth2_provider:list' %}">
+  <button class="ui labeled icon button">
+    <i class="key icon"></i>
+    OAuth2
+  </button>
+</a>
+{% endif %} {% endblock %}

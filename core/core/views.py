@@ -1,4 +1,4 @@
-from django.contrib.auth.mixins import LoginRequiredMixin, AccessMixin
+from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
@@ -6,10 +6,12 @@ from django.views.decorators.csrf import csrf_exempt
 from graphene_django.views import GraphQLView
 from oauth2_provider.views.generic import ScopedProtectedResourceView
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
 
 
 def index(request):
-    return render(request, "homepage.html")
+    context = {"token": Token.objects.filter(user=request.user).first()}
+    return render(request, "homepage.html", context)
 
 
 class UserInfo(ScopedProtectedResourceView):

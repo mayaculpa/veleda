@@ -1,0 +1,23 @@
+[accessLog]
+
+[api]
+  dashboard = true
+
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+  [entryPoints.websecure]
+    address = ":443"
+
+[providers.docker]
+  exposedByDefault = false
+
+[providers]
+  [providers.file]
+    filename = "/etc/traefik/dynamic_conf.yml"
+
+[certificatesResolvers.myresolver.acme]
+  email = "hello@example.com"
+  storage = "/letsencrypt/acme.json"
+  caserver = "https://acme-v02.api.letsencrypt.org/directory"
+  [certificatesResolvers.myresolver.acme.tlsChallenge]
