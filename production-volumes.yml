@@ -1,0 +1,13 @@
+version: "3.4"
+
+volumes:
+  postgres-data-12:
+    name: "sdg-server-${DEPLOY_TYPE}-postgres-data-12"
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "${PG_VOLUME_PATH}"
+  rabbitmq-data:
+    name: "sdg-server-${DEPLOY_TYPE}-rabbitmq-data"
+

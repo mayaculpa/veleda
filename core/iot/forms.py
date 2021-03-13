@@ -13,7 +13,7 @@ class CreateControllerForm(forms.Form):
     name = forms.CharField(max_length=255)
     site = forms.ModelChoiceField(Site.objects.none())
     controller_component_type = forms.ModelChoiceField(
-        ControllerComponentType.objects.none()
+        ControllerComponentType.objects.none(), required=False
     )
     new_type_name = forms.CharField(max_length=255, required=False)
 

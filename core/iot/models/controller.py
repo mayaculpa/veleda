@@ -23,7 +23,7 @@ class ControllerComponentType(models.Model):
     created_by = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
-        blank=False,
+        blank=True,
         null=True,
         help_text="The user that created the type. Global types have no owner.",
     )

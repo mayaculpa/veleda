@@ -1,0 +1,8 @@
+version: "3.4"
+
+volumes:
+  postgres-data-12:
+    name: "sdg-server-${DEPLOY_TYPE}-postgres-data-12"
+  rabbitmq-data:
+    name: "sdg-server-${DEPLOY_TYPE}-rabbitmq-data"
+

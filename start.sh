@@ -8,10 +8,14 @@ normal=$(tput sgr0)
 
 # Use the first parameter to check which environment to use
 if [[ $1 == "production" ]]; then
-  DOCKER_COMPOSE_FILE="production.yml"
+  DOCKER_COMPOSE_FILE=("-f" "production.yml" "-f" "production-volumes.yml")
   export DEPLOY_TYPE="production"
+  if [[ -z PG_VOLUME_PATH ]]; then
+    echo "Please set PG_VOLUME_PATH"
+    exit 1
+  fi
 elif [[ $1 == "staging" ]]; then
-  DOCKER_COMPOSE_FILE="production.yml"
+  DOCKER_COMPOSE_FILE=("-f" "production.yml" "-f" "staging-volumes.yml")
   export DEPLOY_TYPE="staging"
 elif [[ $1 == "development" ]]; then
   DOCKER_COMPOSE_FILE="development.yml"
@@ -33,12 +37,12 @@ export CORE_DOMAIN="$CORE_DOMAIN"
 echo "Using with ${bold}$1${normal} configuration"
 if [[ -z ${2+x} ]]; then
   echo "sdg-server: Building stack"
-  docker-compose -f "$DOCKER_COMPOSE_FILE" build
+  docker-compose ${DOCKER_COMPOSE_FILE[@]} build
 
   echo "sdg-server: Starting stack"
-  docker-compose -f "$DOCKER_COMPOSE_FILE" up -d
+  docker-compose ${DOCKER_COMPOSE_FILE[@]} up -d
 else
   shift
-  docker-compose -f "$DOCKER_COMPOSE_FILE" "$@"
+  docker-compose ${DOCKER_COMPOSE_FILE[@]} "$@"
 fi
 
