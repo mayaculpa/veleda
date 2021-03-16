@@ -41,7 +41,16 @@ Allow images to be uploaded and queried.
 | GraphQL                      | Backend                    |
 | TBD                          | TBD                        |
 
-### Alpha 3 (IoT): Add Calibration Workflow
+### Alpha 3 (IoT): GraphQL Subscriptions
+
+Allow GraphQL subscriptions to be created on data points.
+
+| ![dj](./doc/images/dj.png) | ![gql](./doc/images/gql.png) |
+| -------------------------- | ---------------------------- |
+| Backend                    | GraphQL                      |
+| TBD                        | TBD                          |
+
+### Alpha 4 (IoT): Add Calibration Workflow
 
 Allow calibrations to be performed. Add further drivers for controller peripherals.
 
@@ -50,7 +59,7 @@ Allow calibrations to be performed. Add further drivers for controller periphera
 | FW Drivers                 | NodeRED UI                 |
 | TBD                        | TBD                        |
 
-### Alpha 4 (GH): Add AI Inference API
+### Alpha 5 (GH): Add AI Inference API
 
 Allow images to be passed to an AI to infer plant state. To be implemented as an external Docker service.
 
@@ -59,7 +68,7 @@ Allow images to be passed to an AI to infer plant state. To be implemented as an
 | FastAPI Service            | TensorFlow Model           |
 | TBD                        | TBD                        |
 
-### Alpha 5 (IoT/GH): Add RPi and Azure Kinect Edge Node
+### Alpha 6 (IoT/GH): Add RPi and Azure Kinect Edge Node
 
 Allow Raspberry Pis and cameras to be integrated.
 
@@ -68,7 +77,7 @@ Allow Raspberry Pis and cameras to be integrated.
 | RPi Controller               | WebSocket API              | Backend                    |
 | TBD                          | TBD                        | TBD                        |
 
-### Alpha 6 (IoT): Visualization and Data Performance
+### Alpha 7 (IoT): Visualization and Data Performance
 
 Add Grafana integration to visualize data points. Rework TimescaleDB as an unmanaged model to improve compression and use its API.
 
