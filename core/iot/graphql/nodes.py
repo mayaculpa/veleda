@@ -1,21 +1,21 @@
-from django.conf import settings
 import graphene
-from graphene import relay, ObjectType, List, String, Date, Float
+from django.conf import settings
+from django.db.models import Q
+from django_filters import BooleanFilter, FilterSet
+from graphene import Date, Float, List, ObjectType, String, relay
 from graphene.types.datetime import DateTime
 from graphene_django import DjangoObjectType
-from django_filters import FilterSet, BooleanFilter
 from graphql_relay.node.node import from_global_id
-
 from iot.models import (
-    Site,
-    SiteEntity,
     ControllerComponent,
     ControllerComponentType,
     ControllerTask,
+    DataPoint,
+    DataPointType,
     PeripheralComponent,
     PeripheralDataPointType,
-    DataPointType,
-    DataPoint,
+    Site,
+    SiteEntity,
 )
 
 
@@ -37,17 +37,20 @@ class SiteNode(DjangoObjectType):
         fields = (
             "id",
             "name",
-            "owner",
-            "address",
             "created_at",
             "modified_at",
         )
         interfaces = (relay.Node,)
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(owner=info.context.user)
+
 
 class SiteEntityFilter(FilterSet):
     """Filter for SiteEntityNode that includes component filters"""
 
+    # Add a filter for each registered component type
     for component in settings.SITE_ENTITY_COMPONENTS:
         # water_cycle_component --> is_water_cycle
         attribute_name = f"is_{component.split('_component')[0]}"
@@ -78,6 +81,10 @@ class SiteEntityNode(DjangoObjectType):
         ].extend(settings.SITE_ENTITY_COMPONENTS)
         interfaces = (relay.Node,)
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(site__owner=info.context.user)
+
 
 class ControllerComponentNode(DjangoObjectType):
     class Meta:
@@ -99,6 +106,10 @@ class ControllerComponentNode(DjangoObjectType):
         )
         interfaces = (relay.Node,)
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(site_entity__site__owner=info.context.user)
+
 
 class ControllerComponentTypeNode(DjangoObjectType):
     class Meta:
@@ -116,6 +127,12 @@ class ControllerComponentTypeNode(DjangoObjectType):
             "modified_at",
         )
         interfaces = (relay.Node,)
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(
+            Q(created_by=info.context.user) | Q(created_by__isnull=True)
+        )
 
 
 class ControllerTaskNode(DjangoObjectType):
@@ -142,6 +159,12 @@ class ControllerTaskNode(DjangoObjectType):
         )
         convert_choices_to_enum = False
         interfaces = (relay.Node,)
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(
+            controller_component__site_entity__site__owner=info.context.user
+        )
 
 
 class ControllerTaskEnumNode(ObjectType):
@@ -196,6 +219,10 @@ class PeripheralComponentNode(DjangoObjectType):
         description="Combines other parameters and data point types to create controller commands."
     )
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(site_entity__site__owner=info.context.user)
+
     @staticmethod
     def resolve_parameters(peripheral_component, _):
         """The parameter fields combines all parameters"""
@@ -247,6 +274,13 @@ class DataPointTypeNode(DjangoObjectType):
         )
         interfaces = (relay.Node,)
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        """Limit results to those create by themselves and global ones."""
+        return queryset.filter(
+            Q(created_by=info.context.user) | Q(created_by__isnull=True)
+        )
+
 
 class DataPointNode(DjangoObjectType):
     class Meta:
@@ -258,6 +292,13 @@ class DataPointNode(DjangoObjectType):
             "data_point_type": ["exact"],
         }
         interfaces = (relay.Node,)
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        """Limit results to the site owner."""
+        return queryset.filter(
+            peripheral_component__site_entity__site__owner=info.context.user
+        )
 
 
 class DataPointByDayNode(ObjectType):
@@ -277,7 +318,7 @@ class DataPointByDayNode(ObjectType):
             data_point_type_id,
             kwargs.get("from_date"),
             kwargs.get("before_date"),
-        )
+        ).filter(peripheral_component__site_entity__site__owner=info.context.user)[:100]
 
     @classmethod
     def as_list_field(cls) -> "graphene.List":
@@ -307,10 +348,10 @@ class DataPointByHourNode(ObjectType):
             data_point_type_id,
             kwargs.get("from_time"),
             kwargs.get("before_time"),
-        )
+        ).filter(peripheral_component__site_entity__site__owner=info.context.user)[:100]
 
     @classmethod
-    def as_list_field(cls) -> "graphene.List":
+    def as_list_field(cls) -> graphene.List:
         return graphene.List(
             cls,
             peripheral_component=graphene.ID(required=True),

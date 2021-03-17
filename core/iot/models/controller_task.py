@@ -1,8 +1,8 @@
-from asgiref.sync import async_to_sync
+import uuid
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Type
-import uuid
 
+from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, models, transaction
@@ -27,7 +27,7 @@ class ControllerTaskManager(models.Manager):
             task_type=task_type,
             state=self.model.State.STARTING.value,
             parameters=parameters,
-            run_until=run_until
+            run_until=run_until,
         )
         try:
             controller_task.full_clean()
@@ -70,7 +70,7 @@ class ControllerTaskManager(models.Manager):
                 controller_task.controller_component.channel_name, task_commands
             )
         return controller_task
-    
+
     def to_commands(cls, tasks: List[Type["ControllerTask"]]) -> Dict:
         """Convert a list of tasks to commands. Ignores tasks that cannot be converted
         to commands"""
@@ -313,7 +313,7 @@ class ControllerTask(models.Model):
                     "uuid": str(self.id),
                     "type": self.task_type,
                     "duration_ms": int((self.run_until - now).total_seconds() * 1000),
-                    **self.parameters
+                    **self.parameters,
                 }
             return {
                 "uuid": str(self.id),

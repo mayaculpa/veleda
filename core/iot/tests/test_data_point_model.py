@@ -323,7 +323,7 @@ class DataPointAggregationTests(TestCase):
             before_time=hour_one + timedelta(hours=10),
         )
         # Ensure that the data is returned from newest to oldest
-        hour_one_dps = data_points[-1]
+        hour_one_dps = list(data_points)[-1]
         self.assertEqual(hour_one_dps["time_hour"], hour_one)
         self.assertEqual(hour_one_dps["avg"], 1.0)
         self.assertEqual(hour_one_dps["min"], 0.0)
@@ -341,7 +341,7 @@ class DataPointAggregationTests(TestCase):
             from_time=hour_one,
             before_time=hour_one + timedelta(hours=10),
         )
-        hour_one_dps = data_points[-1]
+        hour_one_dps = list(data_points)[-1]
         self.assertEqual(hour_one_dps["time_hour"], hour_one)
         self.assertEqual(hour_one_dps["avg"], 2.0)
         self.assertEqual(hour_one_dps["min"], 0.0)

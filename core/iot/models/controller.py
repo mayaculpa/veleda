@@ -1,13 +1,11 @@
-from accounts.models import User
 import binascii
 import os
 import uuid
 from typing import Dict, List, Optional
 
+from accounts.models import User
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.db import models
-
 from iot.models.site import SiteEntity
 
 
@@ -21,7 +19,7 @@ class ControllerComponentType(models.Model):
         max_length=255, help_text="The name of this type, e.g., ESP32 or RasberryPi4"
     )
     created_by = models.ForeignKey(
-        get_user_model(),
+        User,
         on_delete=models.CASCADE,
         blank=True,
         null=True,

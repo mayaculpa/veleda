@@ -255,8 +255,8 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = 587
 
-# DEFAULT_FROM_EMAIL = "notification@" + os.environ.get("CORE_DOMAIN", "localhost")
-
+DEFAULT_FROM_EMAIL = os.environ.get("NOTIFICATION_EMAIL")
+SERVER_EMAIL = os.environ.get("NOTIFICATION_EMAIL")
 
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
