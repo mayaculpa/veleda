@@ -1,5 +1,6 @@
 body {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   background-color: #f7f7f7;
   font-family: 'Lato', sans-serif;
 }
@@ -10,12 +11,11 @@ body {
 
 .main.container {
   margin-top: 7em;
+  flex: 1 0 auto;
 }
 
 .ui.footer.segment {
   margin: 5em 0em 0em;
   padding: 5em 0em;
-  position: absolute;
-  bottom: 0;
-  width: 100%;
+  flex-shrink: 0;
 }

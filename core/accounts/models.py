@@ -14,6 +14,7 @@ from django.contrib.auth.models import (
 )
 from django.core.mail import send_mail
 from django.utils import timezone
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 
@@ -106,7 +107,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         except Profile.DoesNotExist:
             return self.email
 
-    def email_user(self, subject, message, from_email=None, **kwargs):
+    def email_user(self, subject, message, from_email=settings.DEFAULT_FROM_EMAIL, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
 

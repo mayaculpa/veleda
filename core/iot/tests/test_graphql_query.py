@@ -18,31 +18,69 @@ class QueryTestCase(GraphQLTestCase):
         self.owner = get_user_model().objects.create_user(
             email="owner@bar.com", password="foo"
         )
+        self.owner_z = get_user_model().objects.create_user(
+            email="ownerB@bar.com", password="foo"
+        )
         self._client.force_login(self.owner)
 
-        self.site = Site.objects.create(name="Site A", owner=self.owner)
-        self.controller = ControllerComponent.objects.create(
-            component_type=ControllerComponentType.objects.create(name="ESP32"),
-            site_entity=SiteEntity.objects.create(name="SomeESP32", site=self.site),
+        self.site_a = Site.objects.create(name="Site A", owner=self.owner)
+        self.site_z = Site.objects.create(name="Site Z", owner=self.owner_z)
+        self.esp32_type = ControllerComponentType.objects.create(name="ESP32")
+        self.espXX_type = ControllerComponentType.objects.create(
+            name="ESPXX", created_by=self.owner
+        )
+        self.espZZ_type = ControllerComponentType.objects.create(
+            name="ESPZZ", created_by=self.owner_z
+        )
+        self.controller_a = ControllerComponent.objects.create(
+            component_type=self.esp32_type,
+            site_entity=SiteEntity.objects.create(name="SomeESP32", site=self.site_a),
+        )
+        self.controller_z = ControllerComponent.objects.create(
+            component_type=self.controller_a.component_type,
+            site_entity=SiteEntity.objects.create(name="AnyESP32", site=self.site_z),
         )
         self.peripheral_a = PeripheralComponent.objects.create(
             peripheral_type=PeripheralComponent.PeripheralType.ANALOG_IN,
-            site_entity=SiteEntity.objects.create(name="PeriA", site=self.site),
-            controller_component=self.controller,
+            site_entity=SiteEntity.objects.create(name="PeriA", site=self.site_a),
+            controller_component=self.controller_a,
             state=PeripheralComponent.State.ADDED,
             other_parameters={},
         )
         self.peripheral_b = PeripheralComponent.objects.create(
             peripheral_type=PeripheralComponent.PeripheralType.ANALOG_IN,
-            site_entity=SiteEntity.objects.create(name="PeriB", site=self.site),
-            controller_component=self.controller,
+            site_entity=SiteEntity.objects.create(name="PeriB", site=self.site_a),
+            controller_component=self.controller_a,
+            state=PeripheralComponent.State.ADDED,
+            other_parameters={},
+        )
+        self.peripheral_z = PeripheralComponent.objects.create(
+            peripheral_type=PeripheralComponent.PeripheralType.DIGITAL_IN,
+            site_entity=SiteEntity.objects.create(name="PeriZ", site=self.site_z),
+            controller_component=self.controller_z,
             state=PeripheralComponent.State.ADDED,
             other_parameters={},
         )
         self.data_point_type_a = DataPointType.objects.create(name="dptA", unit="uA")
-        self.data_point_type_b = DataPointType.objects.create(name="dptB", unit="uB")
+        self.data_point_type_b = DataPointType.objects.create(
+            name="dptB", unit="uB", created_by=self.owner
+        )
+        self.data_point_type_z = DataPointType.objects.create(
+            name="dptZ", unit="uZ", created_by=self.owner_z
+        )
+        self.contrller_task_a = ControllerTask.objects.create(
+            controller_component=self.controller_a,
+            task_type=ControllerTask.TaskType.READ_SENSOR,
+            state=ControllerTask.State.RUNNING,
+        )
+        self.contrller_task_z = ControllerTask.objects.create(
+            controller_component=self.controller_z,
+            task_type=ControllerTask.TaskType.POLL_SENSOR,
+            state=ControllerTask.State.STOPPED,
+        )
         data_points_a = []
         data_points_b = []
+        data_points_z = []
         self.now = datetime.now(tz=timezone.utc)
         for day in range(5):
             for point in range(50):
@@ -66,8 +104,17 @@ class QueryTestCase(GraphQLTestCase):
                         time=dp_time + timedelta(seconds=1),
                     )
                 )
+                data_points_z.append(
+                    DataPoint(
+                        peripheral_component=self.peripheral_z,
+                        data_point_type=self.data_point_type_z,
+                        value=value * 3,
+                        time=dp_time + timedelta(seconds=2),
+                    )
+                )
         DataPoint.objects.bulk_create(data_points_a)
         DataPoint.objects.bulk_create(data_points_b)
+        DataPoint.objects.bulk_create(data_points_z)
 
     def test_controller_task_enums(self):
         response = self.query(
@@ -184,3 +231,73 @@ class QueryTestCase(GraphQLTestCase):
         self.assertEqual(hour_ten_dp["avg"], 56.0)
         self.assertEqual(hour_ten_dp["min"], 54.0)
         self.assertEqual(hour_ten_dp["max"], 58.0)
+
+    def test_site_isolation(self):
+        """Check that queries are isolated according to sites"""
+
+        response = self.query("{allSites{edges{node{id, name}}}}")
+        self.assertResponseNoErrors(response)
+        nodes = json.loads(response.content)["data"]["allSites"]["edges"]
+        self.assertEqual(len(nodes), 1)
+        self.assertEqual(nodes[0]["node"]["name"], self.site_a.name)
+        self.assertEqual(Site.objects.all().count(), 2)
+
+        response = self.query("{allSiteEntities{edges{node{id, name}}}}")
+        self.assertResponseNoErrors(response)
+        nodes = json.loads(response.content)["data"]["allSiteEntities"]["edges"]
+        self.assertEqual(len(nodes), 3)
+        self.assertEqual(SiteEntity.objects.all().count(), 5)
+
+        response = self.query("{allControllerComponents{edges{node{id}}}}")
+        self.assertResponseNoErrors(response)
+        nodes = json.loads(response.content)["data"]["allControllerComponents"]["edges"]
+        self.assertEqual(len(nodes), 1)
+        self.assertEqual(ControllerComponent.objects.all().count(), 2)
+
+        response = self.query("{allPeripheralComponents{edges{node{id}}}}")
+        self.assertResponseNoErrors(response)
+        nodes = json.loads(response.content)["data"]["allPeripheralComponents"]["edges"]
+        self.assertEqual(len(nodes), 2)
+        self.assertEqual(PeripheralComponent.objects.all().count(), 3)
+
+        response = self.query("{allControllerComponentTypes{edges{node{name}}}}")
+        self.assertResponseNoErrors(response)
+        json_data = json.loads(response.content)["data"]
+        nodes = json_data["allControllerComponentTypes"]["edges"]
+        self.assertEqual(len(nodes), 2)
+        self.assertEqual(ControllerComponentType.objects.all().count(), 3)
+
+        response = self.query("{allControllerTasks{edges{node{state}}}}")
+        self.assertResponseNoErrors(response)
+        nodes = json.loads(response.content)["data"]["allControllerTasks"]["edges"]
+        self.assertEqual(len(nodes), 1)
+        self.assertEqual(ControllerTask.objects.all().count(), 2)
+
+        response = self.query("{allDataPointTypes{edges{node{name}}}}")
+        self.assertResponseNoErrors(response)
+        nodes = json.loads(response.content)["data"]["allDataPointTypes"]["edges"]
+        self.assertEqual(len(nodes), 2)
+        self.assertEqual(DataPointType.objects.all().count(), 3)
+
+        gid = to_global_id("PeripheralComponentNode", self.peripheral_a.pk)
+        query = (
+            '{{allDataPoints(peripheralComponent: "{gid}"){{edges{{node{{value}}}}}}}}'
+        )
+        response = self.query(query.format(gid=gid))
+        self.assertResponseNoErrors(response)
+        nodes = json.loads(response.content)["data"]["allDataPoints"]["edges"]
+        self.assertTrue(nodes)
+
+        gid = to_global_id("PeripheralComponentNode", self.peripheral_z.pk)
+        response = self.query(query.format(gid=gid))
+        self.assertResponseNoErrors(response)
+        nodes = json.loads(response.content)["data"]["allDataPoints"]["edges"]
+        self.assertFalse(nodes)
+
+        # Changes logged in user. Test last
+        self._client.force_login(self.owner_z)
+        gid = to_global_id("PeripheralComponentNode", self.peripheral_z.pk)
+        response = self.query(query.format(gid=gid))
+        self.assertResponseNoErrors(response)
+        nodes = json.loads(response.content)["data"]["allDataPoints"]["edges"]
+        self.assertTrue(nodes)

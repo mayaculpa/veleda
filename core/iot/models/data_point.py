@@ -1,26 +1,37 @@
 import uuid
-from datetime import timedelta, datetime, timezone
-from typing import List, Dict, Any
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List
 
-from django.db import models, IntegrityError, transaction
+from accounts.models import User
+from django.db import IntegrityError, models, transaction
 from django.db.models.functions import TruncDay, TruncHour
+from django.db.models.query import QuerySet
 from django.utils.dateparse import parse_datetime
 from graphene.types.datetime import Date
 from graphene.types.uuid import UUID
-
-
 from iot.models.peripheral import PeripheralComponent
 
 
 class DataPointType(models.Model):
     """The type of data stored and the unit the value is stored as."""
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
     name = models.CharField(
         max_length=50, help_text="The name, e.g., air temperature or acidity."
     )
     unit = models.CharField(
         max_length=20, help_text="The unit of the value, e.g., °C or pH."
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        help_text="The user that created the type. Global types have no owner.",
     )
 
     def __str__(self):
@@ -62,9 +73,9 @@ class DataPointManager(models.Manager):
         data_point_type_id: UUID,
         from_date: Date,
         before_date: Date,
-    ) -> "DataPoint":
+    ) -> QuerySet:
         """Aggregates data points by day for a specific date range for the specified
-           peripheral and data point type."""
+        peripheral and data point type."""
 
         series = self.model.objects.filter(
             peripheral_component_id=peripheral_component_id,
@@ -83,8 +94,8 @@ class DataPointManager(models.Manager):
                 max=models.Max("value"),
             )
             .order_by("-day")
-        )[:50]
-        return list(series)
+        )
+        return series
 
     def by_hour(
         self,
@@ -92,9 +103,9 @@ class DataPointManager(models.Manager):
         data_point_type_id: UUID,
         from_time: Date,
         before_time: Date,
-    ) -> "DataPoint":
+    ) -> QuerySet:
         """Aggregates data points by day for a specific date range for the specified
-           peripheral and data point type."""
+        peripheral and data point type."""
 
         series = self.model.objects.filter(
             peripheral_component_id=peripheral_component_id,
@@ -113,8 +124,8 @@ class DataPointManager(models.Manager):
                 max=models.Max("value"),
             )
             .order_by("-time_hour")
-        )[:50]
-        return list(series)
+        )
+        return series
 
 
 class DataPoint(models.Model):
