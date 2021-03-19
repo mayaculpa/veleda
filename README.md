@@ -7,7 +7,7 @@
 
 Test drive on core.openfarming.ai.
 
-A data analytics and control platform for IoT systems. It integrates with the [sdg-controller firmware][1] to dynamically add peripherals and then measure and control them. In the second version, currently under development, InfluxDB was replaced with TimescaleDB, the REST API with GraphQL and the MQTT broker with WebSockets. The application is structured to separate the IoT aspect from the domain aspect (hydroponic greenhouses) to allow it to subsequently be broken out into a **standalone service**. This will allow domain specific IoT solutions to be written.
+A data analytics and control platform for IoT systems. It integrates with the [sdg-controller firmware][1] for ESP32s to dynamically add peripherals and then measure and control them. In the second version, currently under development, InfluxDB was replaced with TimescaleDB, the REST API with GraphQL and the MQTT broker with WebSockets. The application is structured to separate the IoT aspect from the domain aspect (hydroponic greenhouses) to allow it to subsequently be broken out into a **standalone service**. This will allow domain specific IoT solutions to be written.
 
 For the current roadmap, it will be used to visualize and allow the analysis of data covering the growth aspects of hydroponically grown plants. It is being developed as part of the [OpenFarmingAI research project][7] and will be receiving a project website in the coming weeks.
 
@@ -17,7 +17,11 @@ Aspects that are under development include an AR application to stream realtime 
 
 ## ⚠️⚠️⚠️ Current Development Status ⚠️⚠️⚠️
 
-In the current refactoring state it is recommended to follow the [core service documentation](./core/README.md). For a high-level overview, see the [Device Stacc post](https://hackernoon.com/device-stacc-a-reconfigurable-iot-platform-6j4e322p) on Hackernoon.
+The stage of MVP (Minimal Viable Product) has been reached an can be tested on core.openfarming.ai. Future releases will be released on a separate domain. Data loss may still occur, but LEDs can be toggled, BME280 air sensor polled and the data queried.
+
+More information on the core web service can be found in its [documentation](./core/README.md). For a high-level overview, see the [Device Stacc post](https://hackernoon.com/device-stacc-a-reconfigurable-iot-platform-6j4e322p) on Hackernoon.
+
+A for-payment service will be provided (next to a free tier) once everything has settled more and I don't feel ashamed to ask for money.
 
 ## Roadmap ##
 
@@ -68,7 +72,16 @@ Allow images to be passed to an AI to infer plant state. To be implemented as an
 | FastAPI Service            | TensorFlow Model           |
 | TBD                        | TBD                        |
 
-### Alpha 6 (IoT/GH): Add RPi and Azure Kinect Edge Node
+### Alpha 6 (IoT): Add a Flash Tool
+
+Allow ESPs to be registered and flashed with a downloadable tool.
+
+| ![dj](./doc/images/dj.png) | ![ESP](./doc/images/esp.png) | ![OA](./doc/images/oa.png) | ![Win](./doc/images/win.png) | ![Lin](./doc/images/lin.png) |
+| -------------------------- | ---------------------------- | -------------------------- | ---------------------------- | ---------------------------- |
+| Backend                    | ESP Flash Tool               | OAuth Client               | Windows App                  | Linux App                    |
+| TBD                        | TBD                          | TBD                        | TBD                          | TBD                          |
+
+### Alpha 7 (IoT/GH): Add RPi and Azure Kinect Edge Node
 
 Allow Raspberry Pis and cameras to be integrated.
 
@@ -77,13 +90,13 @@ Allow Raspberry Pis and cameras to be integrated.
 | RPi Controller               | WebSocket API              | Backend                    |
 | TBD                          | TBD                        | TBD                        |
 
-### Alpha 7 (IoT): Visualization and Data Performance
+### Alpha 8 (IoT): Visualization and Data Performance
 
 Add Grafana integration to visualize data points. Rework TimescaleDB as an unmanaged model to improve compression and use its API.
 
 | ![OA](./doc/images/oa.png) | ![Gf](./doc/images/gf.png) | ![Ts](./doc/images/ts.png) |
 | -------------------------- | -------------------------- | -------------------------- |
-| OAuth                      | Grafana                    | TimescaleDB                |
+| OAuth Server               | Grafana                    | TimescaleDB                |
 | Done: 23.01.19             | TBD                        | TBD                        |
 
 ### Beta 1 (IoT): Management UI
