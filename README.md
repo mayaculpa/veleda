@@ -15,13 +15,30 @@ For the current roadmap, it will be used to visualize and allow the analysis of 
 
 Aspects that are under development include an AR application to stream realtime data, a VR application to act as a learning platform for hydroponics and an AI to segment leaves and analyze a plants current health.
 
-## ⚠️⚠️⚠️ Current Development Status ⚠️⚠️⚠️
+- [SmartDigitalGarden / DeviceStacc Server](#smartdigitalgarden--devicestacc-server)
+  - [⚠️ Current Development Status](#️-current-development-status)
+  - [Roadmap](#roadmap)
+    - [✅ Alpha 1 (IoT): MVP Without Using the Admin Interface](#-alpha-1-iot-mvp-without-using-the-admin-interface)
+    - [🔀 Alpha 2 (GH): Add Image Handling](#-alpha-2-gh-add-image-handling)
+    - [Alpha 3 (IoT): GraphQL Subscriptions](#alpha-3-iot-graphql-subscriptions)
+    - [Alpha 4 (IoT): Add Calibration Workflow](#alpha-4-iot-add-calibration-workflow)
+    - [Alpha 5 (GH): Add AI Inference API](#alpha-5-gh-add-ai-inference-api)
+    - [Alpha 6 (IoT): Add a Flash Tool](#alpha-6-iot-add-a-flash-tool)
+    - [Alpha 7 (IoT/GH): Add RPi and Azure Kinect Edge Node](#alpha-7-iotgh-add-rpi-and-azure-kinect-edge-node)
+    - [Alpha 8 (IoT): Visualization and Data Performance](#alpha-8-iot-visualization-and-data-performance)
+    - [Beta 1 (IoT): Management UI](#beta-1-iot-management-ui)
+  - [Requirements](#requirements)
+    - [Required](#required)
+    - [Optional](#optional)
+  - [Starting the Services](#starting-the-services)
 
-The stage of MVP (Minimal Viable Product) has been reached an can be tested on core.openfarming.ai. Future releases will be released on a separate domain. Data loss may still occur, but LEDs can be toggled, BME280 air sensor polled and the data queried.
+## ⚠️ Current Development Status 
+
+The stage of MVP (Minimal Viable Product) has been reached an can be tested on core.openfarming.ai. This means LEDs can be toggled, BME280 air sensor polled and the data queried as well as GUIs covering the core functionality. Future releases will be released on a separate domain.
 
 More information on the core web service can be found in its [documentation](./core/README.md). For a high-level overview, see the [Device Stacc post](https://hackernoon.com/device-stacc-a-reconfigurable-iot-platform-6j4e322p) on Hackernoon.
 
-A for-payment service will be provided (next to a free tier) once everything has settled more and I don't feel ashamed to ask for money.
+A for-payment service will be provided (next to a free tier) once everything has settled more and I don't feel ashamed to charging for it. Proprietary code will be limited to features required for payment and larger teams, similar to Gitlab's approach.
 
 ## Roadmap ##
 
@@ -40,10 +57,10 @@ Create a minimal stack that allows the platform to be useful. Allow reading and 
 
 Allow images to be uploaded and queried.
 
-| ![gql](./doc/images/gql.png) | ![dj](./doc/images/dj.png) |
-| ---------------------------- | -------------------------- |
-| GraphQL                      | Backend                    |
-| TBD                          | TBD                        |
+| ![dj](./doc/images/dj.png) | ![gql](./doc/images/gql.png) |
+| -------------------------- | ---------------------------- |
+| Backend                    | GraphQL                      |
+| TBD                        | TBD                          |
 
 ### Alpha 3 (IoT): GraphQL Subscriptions
 
