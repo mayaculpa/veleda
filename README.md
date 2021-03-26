@@ -57,10 +57,10 @@ Create a minimal stack that allows the platform to be useful. Allow reading and 
 
 Allow images to be uploaded and queried.
 
-| ![dj](./doc/images/dj.png) | ![gql](./doc/images/gql.png) |
-| -------------------------- | ---------------------------- |
-| Backend                    | GraphQL                      |
-| TBD                        | TBD                          |
+| ![dj](./doc/images/dj.png) | ![s3](./doc/images/s3.png) | ![gql](./doc/images/gql.png) |
+| -------------------------- | -------------------------- | ---------------------------- |
+| Backend                    | S3 Storage                 | GraphQL                      |
+| TBD                        | TBD                        | TBD                          |
 
 ### Alpha 3 (IoT): GraphQL Subscriptions
 
