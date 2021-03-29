@@ -8,3 +8,6 @@ db.sqlite3
 .coverage
 htmlcov/
 staticfiles
+
+# MinIO client
+/mc

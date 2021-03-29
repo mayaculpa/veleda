@@ -7,6 +7,7 @@ from greenhouse.models import (
     PlantComponent,
     PlantFamily,
     PlantGenus,
+    PlantImage,
     PlantSpecies,
     TrackingImage,
     WaterCycle,
@@ -122,6 +123,18 @@ class PlantSpeciesNode(DjangoObjectType):
             "common_name",
             "binomial_name",
         )
+
+
+class PlantImageNode(DjangoObjectType):
+    class Meta:
+        model = PlantImage
+        interfaces = (graphene.relay.Node,)
+        filter_fields = {"id", "plant"}
+        fields = ("image", "plant", "created_at", "modified_at")
+    
+    @staticmethod
+    def resolve_image(plant_image, args):
+        return plant_image.image.url
 
 
 class TrackingImageNode(DjangoObjectType):

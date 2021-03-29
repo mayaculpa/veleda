@@ -27,6 +27,7 @@ Aspects that are under development include an AR application to stream realtime 
     - [Alpha 7 (IoT/GH): Add RPi and Azure Kinect Edge Node](#alpha-7-iotgh-add-rpi-and-azure-kinect-edge-node)
     - [Alpha 8 (IoT): Visualization and Data Performance](#alpha-8-iot-visualization-and-data-performance)
     - [Beta 1 (IoT): Management UI](#beta-1-iot-management-ui)
+    - [Beta 2 (IoT): Team Management](#beta-2-iot-team-management)
   - [Requirements](#requirements)
     - [Required](#required)
     - [Optional](#optional)
@@ -55,12 +56,12 @@ Create a minimal stack that allows the platform to be useful. Allow reading and 
 
 ### 🔀 Alpha 2 (GH): Add Image Handling
 
-Allow images to be uploaded and queried.
+Allow images to be uploaded to an S3 storage server (MinIO) and queried.
 
-| ![dj](./doc/images/dj.png) | ![s3](./doc/images/s3.png) | ![gql](./doc/images/gql.png) |
-| -------------------------- | -------------------------- | ---------------------------- |
-| Backend                    | S3 Storage                 | GraphQL                      |
-| TBD                        | TBD                        | TBD                          |
+| ![dj](./doc/images/dj.png) | ![minio](./doc/images/minio.png) | ![gql](./doc/images/gql.png) |
+| -------------------------- | -------------------------------- | ---------------------------- |
+| Backend                    | MinIO                            | GraphQL                      |
+| TBD                        | TBD                              | TBD                          |
 
 ### Alpha 3 (IoT): GraphQL Subscriptions
 
@@ -125,6 +126,15 @@ Add an Angular application to replace the Node-RED demo app. Initial test code h
 | Angular Redux              | Angular                    |
 | TBD                        | TBD                        |
 
+### Beta 2 (IoT): Team Management
+
+Add support for creating teams and linking them to sites for authorization.
+
+| ![dj](./doc/images/dj.png) | ![rx](./doc/images/rx.png) | ![ng](./doc/images/ng.png) |
+| -------------------------- | -------------------------- | -------------------------- |
+| Backend                    | Angular Redux              | Angular                    |
+| TBD                        | TBD                        | TBD                        |
+
 ## Requirements
 
 ### Required
@@ -164,6 +174,7 @@ List the individual services with `docker ps`. Key data to the individual servic
 | postgres | User storage       | 5432 | N/A                               |
 | node-red | Demo frontend      | 1880 | [readme](node-red-demo/README.md) |
 | rabbitmq | Async task storage |      | N/A                               |
+| minio    | S3 Storage         | 9000 | N/A                               |
 | traefik  | Reverse proxy      |      | N/A                               |
 
 The data is stored in volumes. List all active volumes with `docker volume ls`.

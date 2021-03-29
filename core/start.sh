@@ -46,6 +46,8 @@ source_debug_env_variables() {
   source ../postgres/secrets.postgres
   source ../redis/env.redis
   source ../redis/secrets.redis
+  source ../minio/env.minio
+  source ../minio/secrets.minio
   DJANGO_DEBUG=True
   
   echo "Updating the service hostnames to localhost"
@@ -55,6 +57,7 @@ source_debug_env_variables() {
   unset RABBITMQ_DEFAULT_PASS
   export DAPHNE_HOST="$CORE_DOMAIN"
   export REDIS_HOST="127.0.0.1"
+  export MINIO_HOST="127.0.0.1"
   
   set +a
 }
@@ -91,12 +94,26 @@ start_docker_services() {
     docker run \
       --rm \
       --name sdg-server-dev-redis \
-      -p $REDIS_HOST:6379:6379 \
+      -p $REDIS_HOST:$REDIS_PORT:$REDIS_PORT \
       -d \
       redis:5 \
       "redis-server" "--requirepass" "$REDIS_PASSWORD"
   else
     echo "Redis docker service already running"
+  fi
+  if [[ ! "$(docker ps -a | grep sdg-server-dev-minio)" ]]; then
+    echo "Starting MinIO docker service"
+    docker run \
+      --rm \
+      --name sdg-server-dev-minio \
+      -p 9000:9000 \
+      -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
+      -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
+      -d \
+      minio/minio:RELEASE.2021-03-26T00-00-41Z \
+      "server" "/data"
+  else
+    echo "MinIO docker service already running"
   fi
 }
 
@@ -117,6 +134,18 @@ stop_docker_services() {
   else
     echo "Redis database already stopped"
   fi
+  if [[ "$(docker ps -a | grep sdg-server-dev-minio)" ]]; then
+    docker stop sdg-server-dev-minio
+  else
+    echo "MinIO storage already stopped"
+  fi
+}
+
+get_minio_client() {
+  if [[ ! -f "mc" ]]; then
+    wget https://dl.min.io/client/mc/release/linux-amd64/mc
+    chmod +x mc
+  fi
 }
 
 if [[ $1 == "help" ]]; then
@@ -134,6 +163,7 @@ if [[ $DJANGO_DEBUG != "False" ]]; then
       echo "Starting in debug mode"
       source_debug_env_variables
       start_docker_services
+      get_minio_client
     fi
   else
     echo "Starting in docker debug mode"
@@ -168,10 +198,52 @@ while ! nc -z $RABBITMQ_HOST 5672; do
 done
 
 echo "Waiting for Redis to launch on 6379..."
-while ! nc -z $REDIS_HOST 6379; do
+while ! nc -z $REDIS_HOST $REDIS_PORT; do
   echo "Waiting..."
   sleep 0.5 # wait for half a second before checking again
 done
+
+echo "Waiting for MinIO to launch on 9000..."
+while ! nc -z $MINIO_HOST $MINIO_PORT; do
+  echo "Waiting..."
+  sleep 0.5 # wait for half a second before checking again
+done
+
+# Add the MinIO server URL
+./mc alias set core-s3-server \
+  "http://$MINIO_HOST:$MINIO_PORT" \
+  "$MINIO_ROOT_USER" \
+  "$MINIO_ROOT_PASSWORD"
+# If the user does not exist add them and the respective policy
+if ! ./mc admin user list core-s3-server | grep -q "$AWS_ACCESS_KEY_ID"; then
+  echo "Adding user $AWS_ACCESS_KEY_ID and bucket policy to MinIO server"
+  ./mc admin user add core-s3-server "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY"
+  ./mc mb "core-s3-server/$AWS_STORAGE_BUCKET_NAME"
+  cat > "s3-policy.json" << EOL
+   {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ListObjectsInBucket",
+            "Effect": "Allow",
+            "Action": ["s3:ListBucket"],
+            "Resource": ["arn:aws:s3:::${AWS_STORAGE_BUCKET_NAME}"]
+        },
+        {
+            "Sid": "AllObjectActions",
+            "Effect": "Allow",
+            "Action": "s3:*Object",
+            "Resource": ["arn:aws:s3:::${AWS_STORAGE_BUCKET_NAME}/*"]
+        }
+    ]
+  }
+EOL
+  ./mc admin policy add core-s3-server "readwrite-$AWS_STORAGE_BUCKET_NAME" "s3-policy.json"
+  rm "s3-policy.json"
+  ./mc admin policy set core-s3-server "readwrite-$AWS_STORAGE_BUCKET_NAME" "user=$AWS_ACCESS_KEY_ID"
+else
+  echo "MinIO user $AWS_ACCESS_KEY_ID already exists"
+fi
 
 # Migrate the database and seed values for new dev databases
 echo "Performing database migration"

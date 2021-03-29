@@ -81,6 +81,23 @@ services:
       - backend
     volumes:
       - postgres-data-12:/var/lib/postgresql/data
+    
+  minio:
+    image: minio/minio:RELEASE.2021-03-26T00-00-41Z
+    container_name: "sdg-server-${DEPLOY_TYPE}-minio"
+    restart: unless-stopped
+    command:
+      server /data
+    logging:
+      options:
+        max-size: '2m'
+        max-file: '10'
+    env_file:
+      - 'minio/secrets.minio'
+    networks:
+      - backend
+    volumes:
+      - minio-data:/data
 
   redis:
     image: redis:6.0.8-alpine
@@ -125,5 +142,7 @@ volumes:
     name: "sdg-server-${DEPLOY_TYPE}-grafana-config"
   postgres-data-12:
     name: "sdg-server-${DEPLOY_TYPE}-postgres-data-12"
+  minio-data:
+    name: "sdg-server-${DEPLOY_TYPE}-minio-data"
   rabbitmq-data:
     name: "sdg-server-${DEPLOY_TYPE}-rabbitmq-data"

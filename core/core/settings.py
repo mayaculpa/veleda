@@ -349,3 +349,16 @@ SITE_ENTITY_COMPONENTS = [
     "hydroponic_system_component",
     "water_cycle_component",
 ]
+
+# Greenhouse Settings
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = "us-east-1"
+if DEBUG:
+    AWS_S3_ENDPOINT_URL = (
+        f"http://{os.environ.get('MINIO_DOMAIN')}:{os.environ.get('MINIO_PORT')}"
+    )
+else:
+    AWS_S3_ENDPOINT_URL = f"https://{os.environ.get('MINIO_DOMAIN')}"

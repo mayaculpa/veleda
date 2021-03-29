@@ -10,4 +10,10 @@ volumes:
       device: "${PG_VOLUME_PATH}"
   rabbitmq-data:
     name: "sdg-server-${DEPLOY_TYPE}-rabbitmq-data"
-
+  minio-data:
+    name: "sdg-server-${DEPLOY_TYPE}-minio-data"
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "${MINIO_VOLUME_PATH}"
