@@ -18,6 +18,8 @@ services:
       - 'postgres/secrets.postgres'
       - 'redis/env.redis'
       - 'redis/secrets.redis'
+      - 'minio/env.minio'
+      - 'minio/secrets.minio'
     networks:
       - backend
       - frontend
@@ -66,7 +68,7 @@ services:
     - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-minio-secure.entrypoints=websecure"
     - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-minio-secure.service=sdg-server-${DEPLOY_TYPE}-minio-service"
     - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-minio-secure.tls.certresolver=myresolver"
-    - "traefik.http.services.sdg-server-${DEPLOY_TYPE}-minio-service.loadbalancer.server.port=8000"
+    - "traefik.http.services.sdg-server-${DEPLOY_TYPE}-minio-service.loadbalancer.server.port=9000"
     - "traefik.docker.network=gateway"
 
 ## App Backend

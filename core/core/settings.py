@@ -357,8 +357,12 @@ AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_REGION_NAME = "us-east-1"
 if DEBUG:
-    AWS_S3_ENDPOINT_URL = (
-        f"http://{os.environ.get('MINIO_DOMAIN')}:{os.environ.get('MINIO_PORT')}"
-    )
+    S3_URL = f"http://{os.environ.get('MINIO_DOMAIN')}:{os.environ.get('MINIO_PORT')}"
+    AWS_S3_CUSTOM_DOMAIN = S3_URL
+    AWS_S3_ENDPOINT_URL = S3_URL
 else:
-    AWS_S3_ENDPOINT_URL = f"https://{os.environ.get('MINIO_DOMAIN')}"
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get("MINIO_DOMAIN")
+    AWS_S3_ENDPOINT_URL = (
+        f"http://{os.environ.get('MINIO_HOST')}:{os.environ.get('MINIO_PORT')}"
+    )
+
