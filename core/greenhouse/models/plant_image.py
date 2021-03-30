@@ -1,11 +1,12 @@
-from typing import Optional
-import uuid
-from uuid import UUID
 import os.path
+import uuid
+from typing import Optional
+from uuid import UUID
 
-from django.db import models
 from django.core.files import File
+from django.db import models
 from greenhouse.models import PlantComponent
+from greenhouse.storage_backends import PrivateMediaStorage
 
 
 class PlantImageManager(models.Manager):
@@ -39,7 +40,9 @@ class PlantImage(models.Model):
     """An image (photo) of a plant"""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    image = models.ImageField(help_text="The image of a plant.")
+    image = models.ImageField(
+        storage=PrivateMediaStorage, editable=False, help_text="The image of a plant."
+    )
     plant = models.ForeignKey(
         PlantComponent,
         on_delete=models.CASCADE,

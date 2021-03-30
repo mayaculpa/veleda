@@ -1,24 +1,25 @@
-from greenhouse.models.water_cycle import WaterCycle
 from django.contrib import admin
-from django.utils.safestring import mark_safe
-from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
+from django.utils.safestring import mark_safe
+from iot.admin import SiteEntityAdmin
 
 from greenhouse.models import (
     HydroponicSystemComponent,
-    WaterCycleComponent,
-    WaterReservoir,
-    WaterPump,
-    WaterPipe,
-    WaterSensor,
-    WaterValve,
     PlantComponent,
-    PlantSpecies,
     PlantFamily,
     PlantGenus,
+    PlantImage,
+    PlantSpecies,
     TrackingImage,
+    WaterCycle,
+    WaterCycleComponent,
+    WaterPipe,
+    WaterPump,
+    WaterReservoir,
+    WaterSensor,
+    WaterValve,
 )
-from iot.admin import SiteEntityAdmin
 
 
 class HydroponicSystemPeripheralInline(admin.TabularInline):
@@ -58,11 +59,12 @@ class WaterValveInline(admin.TabularInline):
 
 class WaterCycleFlowToInline(admin.TabularInline):
     model = WaterCycleComponent.flows_to_set.through
-    fk_name = 'flows_from'
+    fk_name = "flows_from"
 
 
 class WaterCycleComponentLogInline(admin.TabularInline):
     model = WaterCycleComponent.water_cycle_log_set.through
+
 
 @admin.register(WaterCycleComponent)
 class WaterCycleComponentAdmin(admin.ModelAdmin):
@@ -101,6 +103,11 @@ class PlantSpeciesAdmin(admin.ModelAdmin):
 
 @admin.register(TrackingImage)
 class TrackingImageAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(PlantImage)
+class PlantImageAdmin(admin.ModelAdmin):
     pass
 
 

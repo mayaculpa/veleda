@@ -63,6 +63,14 @@ class PlantSpecies(models.Model):
         return self.common_name
 
 
+class PlantComponentManager(models.Manager):
+    """Handles the plant components instance creation"""
+
+    def get_queryset(self):
+        """Include the site entity as it contains the name"""
+        return super().get_queryset().select_related("site_entity")
+
+
 class PlantComponent(models.Model):
     """The plant aspect of a site entity, such as a basil or tomato plant"""
 
@@ -98,3 +106,8 @@ class PlantComponent(models.Model):
     modified_at = models.DateTimeField(
         auto_now=True, help_text="The datetime of the last update."
     )
+
+    def __str__(self):
+        if self.site_entity.name:
+            return f"Plant of {self.site_entity.name}"
+        return f"Plant of {self.species.common_name} - {str(self.pk)[:5]}"
