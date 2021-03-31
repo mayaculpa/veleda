@@ -1,0 +1,12 @@
+{% if form.errors %}
+<div class="ui error message">
+  <div class="header">
+    Validation error of input data
+  </div>
+  <ul class="list">
+  {% for error in form.non_field_errors %}
+    <li>{{error}}</li>
+  {% endfor %}
+  </ul>
+</div>
+{% endif %}

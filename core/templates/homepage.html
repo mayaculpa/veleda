@@ -51,7 +51,7 @@
 <p>
   <code>Authorization: Token {{ token }}</code>
 </p>
-<form action="{% url 'iot:delete-user-token' token.pk %}" method="POST">
+<form action="{% url 'iot:delete-user-token' %}" method="POST">
   {% csrf_token %}
   <button class="ui labeled icon button">
     <i type="submit" class="trash icon"></i>

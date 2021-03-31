@@ -3,21 +3,17 @@
 {% endblock %} {% block content %}
 <h1 class="ui header">Create Controller</h1>
 
-{% if form.errors %} {% for error in form.non_field_errors %}
-<div class="alert alert-danger">
-  <strong>{{ error|escape }}</strong>
-</div>
-{% endfor %} {% endif %}
+{% include 'partials/form_errors.html' %}
 
 <form action="" method="post" class="ui form">
   {% csrf_token %}
   <div class="two fields">
-    <div class="field">
+    <div class="field {% if form.errors.name %}error{% endif %}">
       <label>Controller Name</label>
       <input type="text" name="name" />
     </div>
     <div style="visibility: hidden; padding: 30px 30px 0 30px">OR</div>
-    <div class="field">
+    <div class="field {% if form.errors.site %}error{% endif %}">
       <label>Assigned Site</label>
       <div class="ui fluid selection dropdown">
         <input type="hidden" name="site" />
@@ -32,7 +28,7 @@
     </div>
   </div>
   <div class="two fields">
-    <div class="field">
+    <div class="field {% if form.errors.controller_component_type %}error{% endif %}">
       <label>Select controller type</label>
       <div class="ui fluid selection dropdown">
         <input type="hidden" name="controller_component_type" />
@@ -46,13 +42,16 @@
       </div>
     </div>
     <div style="padding: 30px 30px 0 30px">OR</div>
-    <div class="field">
+    <div class="field {% if form.errors.new_type_name %}error{% endif %}">
       <label>Create new controller type</label>
       <input type="text" name="new_type_name" />
     </div>
   </div>
 
   <input class="ui button" type="submit" value="Create controller" />
+  <a href="{% url 'iot:controller-list' %}">
+    <div class="ui basic button">Cancel</div>
+  </a>
 </form>
 
 {% endblock %}

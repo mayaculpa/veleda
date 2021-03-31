@@ -2,6 +2,7 @@ from django import forms
 from address.forms import AddressField
 from django.db.models import Q
 from iot.models import Site, ControllerComponentType
+from django.core.exceptions import ValidationError
 
 
 class CreateSiteForm(forms.Form):
@@ -24,3 +25,12 @@ class CreateControllerForm(forms.Form):
             Q(created_by=owner) | Q(created_by__isnull=True)
         )
         self.fields["controller_component_type"].queryset = types
+
+    def clean(self):
+        # Error if neither controller compentent type is specified
+        cleaned_data = super().clean()
+        if not (
+            cleaned_data.get("controller_component_type")
+            or cleaned_data.get("new_type_name")
+        ):
+            raise ValidationError("Please select an existing type or enter a new one")

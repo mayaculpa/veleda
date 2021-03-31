@@ -1,13 +1,15 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 from django.db.models import Count
+from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, reverse
 from django.views.generic.base import View
+from django.db.utils import IntegrityError
 from rest_framework.authtoken.models import Token
 
 from iot.forms import CreateControllerForm, CreateSiteForm
-from iot.models import ControllerAuthToken, ControllerComponent, Site, SiteEntity
-from iot.models.controller import ControllerComponentType
+from iot.models import ControllerComponent, Site, SiteEntity
 
 
 class SiteListView(LoginRequiredMixin, View):
@@ -21,6 +23,9 @@ class SiteListView(LoginRequiredMixin, View):
             .annotate(num_controllers=Count("site_entity__controller_component"))
             .order_by("-num_entities")
         )
+        context["controller_count"] = ControllerComponent.objects.filter(
+            site_entity__site__owner=request.user
+        ).count()
         return render(request, "iot/site_list.html", context)
 
 
@@ -33,7 +38,8 @@ class CreateSiteView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         form = CreateSiteForm(request.POST)
         if form.is_valid():
-            Site.objects.create(**form.cleaned_data, owner=request.user)
+            site = Site.objects.create(**form.cleaned_data, owner=request.user)
+            messages.success(request, f"Created site {site.name}")
             return HttpResponseRedirect(reverse("iot:site-list"))
         return render(request, "iot/create_site.html", {"form": form}, status=400)
 
@@ -42,7 +48,12 @@ class DeleteSiteView(LoginRequiredMixin, View):
     """Allows a user to delete their sites"""
 
     def post(self, request, *args, **kwargs):
-        Site.objects.filter(owner=request.user, pk=kwargs["pk"]).delete()
+        try:
+            site = Site.objects.filter(owner=request.user).get(pk=kwargs["pk"])
+            site.delete()
+            messages.success(request, f"Deleted site {site.name}")
+        except Site.DoesNotExist:
+            messages.error(request, f"Failed deleting site")
         return HttpResponseRedirect(reverse("iot:site-list"))
 
 
@@ -77,21 +88,22 @@ class CreateControllerView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         form = CreateControllerForm(request.user, request.POST)
         if form.is_valid():
-            site_entity = SiteEntity.objects.create(
-                name=form.cleaned_data["name"], site=form.cleaned_data["site"]
-            )
-            if new_type_name := form.cleaned_data["new_type_name"]:
-                controller_component_type = ControllerComponentType.objects.create(
-                    name=new_type_name, created_by=request.user
+            name = form.cleaned_data.get("name")
+            site = form.cleaned_data.get("site")
+            type_name = form.cleaned_data.get("new_type_name")
+            controller_type = form.cleaned_data.get("controller_component_type")
+            if type_name:
+                controller = (
+                    ControllerComponent.objects.create_controller_with_new_type(
+                        name=name, site=site, type_name=type_name
+                    )
                 )
             else:
-                controller_component_type = form.cleaned_data[
-                    "controller_component_type"
-                ]
-            controller_component = ControllerComponent.objects.create(
-                site_entity=site_entity, component_type=controller_component_type
-            )
-            ControllerAuthToken.objects.create(controller=controller_component)
+                controller = ControllerComponent.objects.create_controller(
+                    name=name, site=site, controller_component_type=controller_type
+                )
+            name = controller.site_entity.name
+            messages.success(request, f"Successfully created controller {name}")
             return HttpResponseRedirect(reverse("iot:controller-list"))
         context = {
             "form": form,
@@ -107,7 +119,16 @@ class DeleteControllerView(LoginRequiredMixin, View):
     """Allows a user to delete their controllers"""
 
     def post(self, request, *args, **kwargs):
-        SiteEntity.objects.filter(site__owner=request.user, pk=kwargs["pk"]).delete()
+        """Try to delete controller if it exists and belongs to user"""
+
+        try:
+            site_entity = SiteEntity.objects.filter(site__owner=request.user).get(
+                pk=kwargs["pk"]
+            )
+            site_entity.delete()
+            messages.success(request, f"Deleted controller {site_entity.name}")
+        except SiteEntity.DoesNotExist:
+            messages.error(request, "Failed to delete controller")
         return HttpResponseRedirect(reverse("iot:controller-list"))
 
 
@@ -115,7 +136,14 @@ class CreateUserTokenView(LoginRequiredMixin, View):
     """Allows a user to create a user authentication token."""
 
     def post(self, request, *args, **kwargs):
-        Token.objects.create(user=request.user, key=Token.generate_key())
+        try:
+            with transaction.atomic():
+                Token.objects.create(user=request.user, key=Token.generate_key())
+            messages.success(request, "Created user authentication token")
+        except IntegrityError:
+            Token.objects.filter(user=request.user).delete()
+            Token.objects.create(user=request.user, key=Token.generate_key())
+            messages.success(request, "Replaced user authentication token")
         return HttpResponseRedirect(reverse("index"))
 
 
@@ -123,5 +151,9 @@ class DeleteUserTokenView(LoginRequiredMixin, View):
     """Allows a user to delete a user authentication token."""
 
     def post(self, request, *args, **kwargs):
-        Token.objects.filter(user=request.user, key=kwargs["pk"]).delete()
+        count, _ = Token.objects.filter(user=request.user).delete()
+        if count:
+            messages.success(request, "Deleted authentication token")
+        else:
+            messages.error(request, "No authentication token found")
         return HttpResponseRedirect(reverse("index"))

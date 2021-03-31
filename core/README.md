@@ -6,6 +6,7 @@ The Django application acts as the backend for the admin site, the WebSockets, t
 
 - [Core Service](#core-service)
   - [Installation](#installation)
+  - [Deeper Documentation](#deeper-documentation)
   - [Development with the SDG Controller and the Node-RED Demo](#development-with-the-sdg-controller-and-the-node-red-demo)
     - [Changes to Core Service](#changes-to-core-service)
     - [Changes to SDG Controller](#changes-to-sdg-controller)
@@ -35,6 +36,12 @@ This starts Django in development mode at [localhost:8000](http://localhost:8000
     DJANGO_SUPERUSER_PASSWORD
 
 The `DJANGO_DEBUG` variable in `env.core` is only respected when starting from the root Docker Compose file.
+
+## Deeper Documentation
+
+- [Data Points](./doc/data_points.md)
+- [GraphQL Mutations](./doc/graphql_mutations.md)
+- [Greenhouse API](./doc/greenhouse_api.md)
 
 ## Development with the SDG Controller and the Node-RED Demo
 
