@@ -1,9 +1,13 @@
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.serializers import ModelSerializer
+from rest_framework.fields import UUIDField, ImageField
 from greenhouse.models import PlantImage
 
 
 class PlantImageSerializer(ModelSerializer):
+    id = UUIDField(required=False)
+    image = ImageField()
+
     class Meta:
         model = PlantImage
         fields = ("id", "image", "plant")
@@ -17,5 +21,6 @@ class PlantImageSerializer(ModelSerializer):
             plant_id=validated_data["plant"].pk,
             site_id=validated_data["plant"].site_entity.site_id,
             image=validated_data["image"],
+            image_id=validated_data.get("id"),
         )
         return plant_image
