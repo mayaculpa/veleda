@@ -15,7 +15,7 @@ class PlantFamily(models.Model):
         verbose_name_plural = "Plant families"
 
     def __str__(self):
-        return f"{self.name.capitalize()} family"
+        return f"{self.name} family"
 
 
 class PlantGenus(models.Model):
@@ -35,7 +35,7 @@ class PlantGenus(models.Model):
         verbose_name_plural = "Plant genera"
 
     def __str__(self):
-        return f"{self.name.capitalize()} genus"
+        return f"{self.name} genus"
 
 
 class PlantSpecies(models.Model):
@@ -106,6 +106,8 @@ class PlantComponent(models.Model):
     modified_at = models.DateTimeField(
         auto_now=True, help_text="The datetime of the last update."
     )
+
+    objects = PlantComponentManager()
 
     def __str__(self):
         if self.site_entity.name:

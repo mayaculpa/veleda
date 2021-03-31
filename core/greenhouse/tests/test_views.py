@@ -94,3 +94,10 @@ class TestPlantImage(TestCase):
 
         response = self.client.post(url, {"plant": self.plant_a.pk})
         self.assertEqual(response.status_code, 400)
+
+        # Test uploading with for other user
+        self.client.force_login(self.owner_z)
+        with open("image.png", "rb") as file:
+            data = {"plant": self.plant_a.pk, "image": file}
+            response = self.client.post(url, data)
+        self.assertTrue(response.status_code >= 400 and response.status_code < 500)
