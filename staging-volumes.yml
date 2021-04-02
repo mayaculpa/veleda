@@ -5,4 +5,5 @@ volumes:
     name: "sdg-server-${DEPLOY_TYPE}-postgres-data-12"
   rabbitmq-data:
     name: "sdg-server-${DEPLOY_TYPE}-rabbitmq-data"
-
+  minio-data:
+    name: "sdg-server-${DEPLOY_TYPE}-minio-data"

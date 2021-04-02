@@ -56,7 +56,7 @@
 </a>
 <h2>Go To</h2>
 <a href="{% url 'iot:controller-list' %}">
-  <button class="ui labeled icon button positive">
+  <button class="ui labeled icon button {% if not controller_count %}positive{% endif %}">
     <i class="microchip icon"></i>
     Controllers
   </button>

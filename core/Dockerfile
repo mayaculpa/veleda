@@ -20,6 +20,7 @@ ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
 USER $USERNAME
 
 # Install the dependencies
+RUN wget -nv https://dl.min.io/client/mc/release/linux-amd64/mc && chmod +x mc
 COPY Pipfile Pipfile.lock ./
 RUN python3 -m pip install --user pipenv && pipenv install
 

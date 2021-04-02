@@ -19,6 +19,8 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     # IoT URLs
     path("iot/", include("iot.urls", namespace="iot")),
+    # Greenhouse URLs
+    path("greenhouse/", include("greenhouse.urls", namespace="greenhouse")),
     # API Endpoints
     path(
         "graphiql/",

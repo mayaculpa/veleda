@@ -13,6 +13,7 @@ from greenhouse.graphql.nodes import (
     PlantComponentNode,
     PlantFamilyNode,
     PlantGenusNode,
+    PlantImageNode,
     PlantSpeciesNode,
     TrackingImageNode,
     WaterComponentEnumNode,
@@ -48,6 +49,9 @@ class Query(object):
 
     plant_species = graphene.relay.Node.Field(PlantSpeciesNode)
     all_plant_species = DjangoFilterConnectionField(PlantSpeciesNode)
+
+    plant_image = graphene.relay.Node.Field(PlantImageNode)
+    all_plant_images = DjangoFilterConnectionField(PlantImageNode)
 
     tracking_image = graphene.relay.Node.Field(TrackingImageNode)
     all_tracking_images = DjangoFilterConnectionField(TrackingImageNode)

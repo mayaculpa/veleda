@@ -5,22 +5,21 @@
 {{ form.media }} {% endblock %} {% block content %}
 <h1 class="ui header">Site Setup</h1>
 
-{% if form.errors %} {% for error in form.non_field_errors %}
-<div class="alert alert-danger">
-  <strong>{{ error|escape }}</strong>
-</div>
-{% endfor %} {% endif %}
+{% include 'partials/form_errors.html' %}
 
 <form action="" method="post" class="ui form">
   {% csrf_token %}
-  <div class="field">
+  <div class="field {% if form.errors.name %}error{% endif %}">
     <label>Site Name</label>
     <input type="text" name="name" />
   </div>
-  <div class="field">
+  <div class="field {% if form.errors.address %}error{% endif %}">
     <label>Address</label>
     <input type="text" name="address" />
   </div>
   <input class="ui button" type="submit" value="Create Site" />
+  <a href="{% url 'iot:site-list' %}">
+    <div class="ui basic button">Cancel</div>
+  </a>
 </form>
 {% endblock %}

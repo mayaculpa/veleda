@@ -15,7 +15,7 @@ class PlantFamily(models.Model):
         verbose_name_plural = "Plant families"
 
     def __str__(self):
-        return f"{self.name.capitalize()} family"
+        return f"{self.name} family"
 
 
 class PlantGenus(models.Model):
@@ -35,7 +35,7 @@ class PlantGenus(models.Model):
         verbose_name_plural = "Plant genera"
 
     def __str__(self):
-        return f"{self.name.capitalize()} genus"
+        return f"{self.name} genus"
 
 
 class PlantSpecies(models.Model):
@@ -61,6 +61,14 @@ class PlantSpecies(models.Model):
 
     def __str__(self):
         return self.common_name
+
+
+class PlantComponentManager(models.Manager):
+    """Handles the plant components instance creation"""
+
+    def get_queryset(self):
+        """Include the site entity as it contains the name"""
+        return super().get_queryset().select_related("site_entity")
 
 
 class PlantComponent(models.Model):
@@ -98,3 +106,10 @@ class PlantComponent(models.Model):
     modified_at = models.DateTimeField(
         auto_now=True, help_text="The datetime of the last update."
     )
+
+    objects = PlantComponentManager()
+
+    def __str__(self):
+        if self.site_entity.name:
+            return f"Plant of {self.site_entity.name}"
+        return f"Plant of {self.species.common_name} - {str(self.pk)[:5]}"

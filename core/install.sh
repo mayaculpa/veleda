@@ -6,9 +6,9 @@ set -e
 cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 # Install package requirements
-requiredAptPackages="python3-pip libpq-dev postgresql-client-12"
-echo "Installing system packages: $requiredAptPackages"
-sudo apt install python3-pip libpq-dev postgresql-client-12
+REQUIRED_APT_PACKAGES="python3-pip libpq-dev postgresql-client-12"
+echo "Installing system packages: $REQUIRED_APT_PACKAGES"
+sudo apt install $REQUIRED_APT_PACKAGES
 
 # Install Pipenv and Python packages. The CI has no user profile.
 # Do not install the dev packages in production
@@ -26,7 +26,7 @@ fi
 
 # Copy default secret files
 echo "Checking secret files and copying from defaults if missing"
-secretFiles=("./secrets.core" "./secrets.rabbitmq" "../postgres/secrets.postgres" "../redis/secrets.redis")
+secretFiles=("./secrets.core" "./secrets.rabbitmq" "../postgres/secrets.postgres" "../redis/secrets.redis" "../minio/secrets.minio")
 for secretFile in ${secretFiles[@]}; do
   if [[ -f $secretFile ]]; then
     echo "Found $secretFile"
