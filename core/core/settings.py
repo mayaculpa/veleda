@@ -367,4 +367,5 @@ else:
     AWS_S3_ENDPOINT_URL = (
         f"http://{os.environ.get('MINIO_HOST')}:{os.environ.get('MINIO_PORT')}"
     )
+    AWS_S3_SECURE_URLS = True
     AWS_S3_URL_PROTOCOL = "https:"

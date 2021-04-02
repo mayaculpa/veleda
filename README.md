@@ -19,15 +19,17 @@ Aspects that are under development include an AR application to stream realtime 
   - [⚠️ Current Development Status](#️-current-development-status)
   - [Roadmap](#roadmap)
     - [✅ Alpha 1 (IoT): MVP Without Using the Admin Interface](#-alpha-1-iot-mvp-without-using-the-admin-interface)
-    - [🔀 Alpha 2 (GH): Add Image Handling](#-alpha-2-gh-add-image-handling)
-    - [Alpha 3 (IoT): GraphQL Subscriptions](#alpha-3-iot-graphql-subscriptions)
-    - [Alpha 4 (IoT): Add Calibration Workflow](#alpha-4-iot-add-calibration-workflow)
-    - [Alpha 5 (GH): Add AI Inference API](#alpha-5-gh-add-ai-inference-api)
-    - [Alpha 6 (IoT): Add a Flash Tool](#alpha-6-iot-add-a-flash-tool)
+    - [✅ Alpha 2 (GH): Add Image Handling](#-alpha-2-gh-add-image-handling)
+    - [🔀 Alpha 3 (IoT): GraphQL Subscriptions](#-alpha-3-iot-graphql-subscriptions)
+    - [Alpha 4 (GH): Add AI Inference API](#alpha-4-gh-add-ai-inference-api)
+    - [Alpha 5 (IoT): Add a Flash Tool](#alpha-5-iot-add-a-flash-tool)
+    - [Alpha 6 (IoT): Simple Rules Engine](#alpha-6-iot-simple-rules-engine)
     - [Alpha 7 (IoT/GH): Add RPi and Azure Kinect Edge Node](#alpha-7-iotgh-add-rpi-and-azure-kinect-edge-node)
     - [Alpha 8 (IoT): Visualization and Data Performance](#alpha-8-iot-visualization-and-data-performance)
+    - [Alpha 9 (IoT): Add Calibration Workflow](#alpha-9-iot-add-calibration-workflow)
     - [Beta 1 (IoT): Management UI](#beta-1-iot-management-ui)
     - [Beta 2 (IoT): Team Management](#beta-2-iot-team-management)
+    - [Beta 3 (IoT): Rules Engine UI](#beta-3-iot-rules-engine-ui)
   - [Requirements](#requirements)
     - [Required](#required)
     - [Optional](#optional)
@@ -54,16 +56,16 @@ Create a minimal stack that allows the platform to be useful. Allow reading and 
 | Authentication               | Controller FW              | WebSocket API              | GraphQL API                  | Node-RED Demo              | Setup UI                   |
 | Done: 05.02.19               | Done: 25.01.21             | Done: 15.11.20             | Done: 09.12.20               | Done: 25.01.21             | Done: 13.03.21             |
 
-### 🔀 Alpha 2 (GH): Add Image Handling
+### ✅ Alpha 2 (GH): Add Image Handling
 
 Allow images to be uploaded to an S3 storage server (MinIO) and queried.
 
 | ![dj](./doc/images/dj.png) | ![minio](./doc/images/minio.png) | ![gql](./doc/images/gql.png) |
 | -------------------------- | -------------------------------- | ---------------------------- |
 | Backend                    | MinIO                            | GraphQL                      |
-| TBD                        | TBD                              | TBD                          |
+| Done: 02.04.21             | Done: 30.03.21                   | Done: 29.03.21               |
 
-### Alpha 3 (IoT): GraphQL Subscriptions
+### 🔀 Alpha 3 (IoT): GraphQL Subscriptions
 
 Allow GraphQL subscriptions to be created on data points.
 
@@ -72,16 +74,7 @@ Allow GraphQL subscriptions to be created on data points.
 | Backend                    | GraphQL                      |
 | TBD                        | TBD                          |
 
-### Alpha 4 (IoT): Add Calibration Workflow
-
-Allow calibrations to be performed. Add further drivers for controller peripherals.
-
-| ![uc](./doc/images/uc.png) | ![NR](./doc/images/nr.png) |
-| -------------------------- | -------------------------- |
-| FW Drivers                 | NodeRED UI                 |
-| TBD                        | TBD                        |
-
-### Alpha 5 (GH): Add AI Inference API
+### Alpha 4 (GH): Add AI Inference API
 
 Allow images to be passed to an AI to infer plant state. To be implemented as an external Docker service.
 
@@ -90,7 +83,7 @@ Allow images to be passed to an AI to infer plant state. To be implemented as an
 | FastAPI Service            | TensorFlow Model           |
 | TBD                        | TBD                        |
 
-### Alpha 6 (IoT): Add a Flash Tool
+### Alpha 5 (IoT): Add a Flash Tool
 
 Allow ESPs to be registered and flashed with a downloadable tool.
 
@@ -98,6 +91,16 @@ Allow ESPs to be registered and flashed with a downloadable tool.
 | -------------------------- | ---------------------------- | -------------------------- | ---------------------------- | ---------------------------- |
 | Backend                    | ESP Flash Tool               | OAuth Client               | Windows App                  | Linux App                    |
 | TBD                        | TBD                          | TBD                        | TBD                          | TBD                          |
+
+### Alpha 6 (IoT): Simple Rules Engine
+
+Create rules that are evaluated against data points and can trigger actions such as controller commands.
+
+| ![dj](./doc/images/dj.png) | ![rds](./doc/images/rds.png) | ![gql](./doc/images/gql.png) |
+| -------------------------- | ---------------------------- | ---------------------------- |
+| Backend                    | Redis                        | GraphQL                      |
+| TBD                        | TBD                          | TBD                          |
+
 
 ### Alpha 7 (IoT/GH): Add RPi and Azure Kinect Edge Node
 
@@ -117,6 +120,15 @@ Add Grafana integration to visualize data points. Rework TimescaleDB as an unman
 | OAuth Server               | Grafana                    | TimescaleDB                |
 | Done: 23.01.19             | TBD                        | TBD                        |
 
+### Alpha 9 (IoT): Add Calibration Workflow
+
+Allow calibrations to be performed. Add further drivers for controller peripherals.
+
+| ![uc](./doc/images/uc.png) | ![NR](./doc/images/nr.png) |
+| -------------------------- | -------------------------- |
+| FW Drivers                 | NodeRED UI                 |
+| TBD                        | TBD                        |
+
 ### Beta 1 (IoT): Management UI
 
 Add an Angular application to replace the Node-RED demo app. Initial test code has been written in the planner app.
@@ -134,6 +146,16 @@ Add support for creating teams and linking them to sites for authorization.
 | -------------------------- | -------------------------- | -------------------------- |
 | Backend                    | Angular Redux              | Angular                    |
 | TBD                        | TBD                        | TBD                        |
+
+### Beta 3 (IoT): Rules Engine UI
+
+Add a graphical UI to allow rules to be written and managed.
+
+| ![rx](./doc/images/rx.png) | ![ng](./doc/images/ng.png) |
+| -------------------------- | -------------------------- |
+| Angular Redux              | Angular                    |
+| TBD                        | TBD                        |
+
 
 ## Requirements
 
