@@ -5,7 +5,7 @@
 
 ![Device Stacc](./core/doc/cover_new.png)
 
-Test drive on core.openfarming.ai.
+Test drive on [core.openfarming.ai](https://core.openfarming.ai/).
 
 A data analytics and control platform for IoT systems. It integrates with the [sdg-controller firmware][1] for ESP32s to dynamically add peripherals and then measure and control them. In the second version, currently under development, InfluxDB was replaced with TimescaleDB, the REST API with GraphQL and the MQTT broker with WebSockets. The application is structured to separate the IoT aspect from the domain aspect (hydroponic greenhouses) to allow it to subsequently be broken out into a **standalone service**. This will allow domain specific IoT solutions to be written.
 
