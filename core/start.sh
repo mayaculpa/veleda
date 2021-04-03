@@ -215,10 +215,10 @@ done
   "$MINIO_ROOT_USER" \
   "$MINIO_ROOT_PASSWORD"
 # If the user does not exist add them and the respective policy
-if ! ./mc admin user list core-s3-server | grep -q "$AWS_ACCESS_KEY_ID"; then
-  echo "Adding user $AWS_ACCESS_KEY_ID and bucket policy to MinIO server"
-  ./mc admin user add core-s3-server "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY"
-  ./mc mb "core-s3-server/$AWS_STORAGE_BUCKET_NAME"
+if ! ./mc admin user list core-s3-server | grep -q "$MINIO_ACCESS_KEY_ID"; then
+  echo "Adding user $MINIO_ACCESS_KEY_ID and bucket policy to MinIO server"
+  ./mc admin user add core-s3-server "$MINIO_ACCESS_KEY_ID" "$MINIO_SECRET_ACCESS_KEY"
+  ./mc mb "core-s3-server/$MINIO_STORAGE_BUCKET_NAME"
   cat > "s3-policy.json" << EOL
    {
     "Version": "2012-10-17",
@@ -227,22 +227,22 @@ if ! ./mc admin user list core-s3-server | grep -q "$AWS_ACCESS_KEY_ID"; then
             "Sid": "ListObjectsInBucket",
             "Effect": "Allow",
             "Action": ["s3:ListBucket"],
-            "Resource": ["arn:aws:s3:::${AWS_STORAGE_BUCKET_NAME}"]
+            "Resource": ["arn:aws:s3:::${MINIO_STORAGE_BUCKET_NAME}"]
         },
         {
             "Sid": "AllObjectActions",
             "Effect": "Allow",
             "Action": "s3:*Object",
-            "Resource": ["arn:aws:s3:::${AWS_STORAGE_BUCKET_NAME}/*"]
+            "Resource": ["arn:aws:s3:::${MINIO_STORAGE_BUCKET_NAME}/*"]
         }
     ]
   }
 EOL
-  ./mc admin policy add core-s3-server "readwrite-$AWS_STORAGE_BUCKET_NAME" "s3-policy.json"
+  ./mc admin policy add core-s3-server "readwrite-$MINIO_STORAGE_BUCKET_NAME" "s3-policy.json"
   rm "s3-policy.json"
-  ./mc admin policy set core-s3-server "readwrite-$AWS_STORAGE_BUCKET_NAME" "user=$AWS_ACCESS_KEY_ID"
+  ./mc admin policy set core-s3-server "readwrite-$MINIO_STORAGE_BUCKET_NAME" "user=$MINIO_ACCESS_KEY_ID"
 else
-  echo "MinIO user $AWS_ACCESS_KEY_ID already exists"
+  echo "MinIO user $MINIO_ACCESS_KEY_ID already exists"
 fi
 
 # Migrate the database and seed values for new dev databases
