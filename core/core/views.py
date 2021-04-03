@@ -1,18 +1,22 @@
-from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin
+import rest_framework
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from graphene_django.views import GraphQLView
 from oauth2_provider.views.generic import ScopedProtectedResourceView
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.settings import api_settings
 
 
 def index(request):
     context = {}
     if request.user.is_authenticated:
-        context["token"] = Token.objects.filter(user=request.user).first()
+        context["token"] = Token.objects.get(user=request.user)
     return render(request, "homepage.html", context)
 
 
@@ -28,30 +32,21 @@ class UserInfo(ScopedProtectedResourceView):
                     "username": request.user.username,
                 }
             )
-        else:
-            return JsonResponse({"error": "Unknown user"})
+        return JsonResponse({"error": "Unknown user"})
 
 
-class TokenLoginRequiredMixin(AccessMixin):
-    """A login required mixin that allows token authentication."""
+class DRFAuthenticatedGraphQLView(GraphQLView):
+    """Add DRF authentication to classes (session, token, OAuth2) to the GraphQL view."""
 
-    def dispatch(self, request, *args, **kwargs):
-        """If token was provided, ignore authenticated status."""
-        http_auth = request.META.get("HTTP_AUTHORIZATION")
+    def parse_body(self, request):
+        if isinstance(request, rest_framework.request.Request):
+            return request.data
+        return super().parse_body(request)
 
-        if http_auth and "Token" in http_auth:
-            pass
-
-        elif not request.user.is_authenticated:
-            return self.handle_no_permission()
-
-        return super().dispatch(request, *args, **kwargs)
-
-
-@method_decorator(csrf_exempt, name="dispatch")
-class TokenGraphQLView(TokenLoginRequiredMixin, GraphQLView):
-    authentication_classes = [TokenAuthentication]
-
-
-class SessionGraphQLView(LoginRequiredMixin, GraphQLView):
-    pass
+    @classmethod
+    def as_view(cls, *args, **kwargs):
+        view = super().as_view(*args, **kwargs)
+        view = permission_classes((IsAuthenticated,))(view)
+        view = authentication_classes(api_settings.DEFAULT_AUTHENTICATION_CLASSES)(view)
+        view = api_view(["GET", "POST"])(view)
+        return view

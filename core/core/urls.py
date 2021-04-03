@@ -1,5 +1,4 @@
 import debug_toolbar
-from django.conf import settings
 from django.contrib import admin
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -7,8 +6,8 @@ from django.urls import include, path
 from django.views.generic.base import RedirectView
 from rest_framework.authtoken.views import obtain_auth_token
 
-from . import oauth2_views
-from . import views as root_views
+from core import oauth2_views
+from core import views as root_views
 
 urlpatterns = [
     path("", root_views.index, name="index"),
@@ -23,13 +22,8 @@ urlpatterns = [
     path("greenhouse/", include("greenhouse.urls", namespace="greenhouse")),
     # API Endpoints
     path(
-        "graphiql/",
-        root_views.SessionGraphQLView.as_view(graphiql=True),
-        name="graphiql",
-    ),
-    path(
         "graphql/",
-        root_views.TokenGraphQLView.as_view(graphiql=False),
+        root_views.DRFAuthenticatedGraphQLView.as_view(graphiql=True),
         name="graphql",
     ),
     path("api-token-auth/", obtain_auth_token, name="api_token_auth"),

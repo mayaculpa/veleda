@@ -25,7 +25,7 @@
   </button>
 </a>
 {% endif %} {% if user.is_authenticated %}
-<a class="item" href="{% url 'graphiql' %}">
+<a class="item" href="{% url 'graphql' %}">
   <button class="ui labeled icon button">
     <i class="database icon"></i>
     GraphiQL
@@ -39,13 +39,12 @@
 </a>
 <h2>User Auth Tokens (Node-RED / GraphQL)</h2>
 <p>
-  To access the GraphQL API, not the <a href="/graphiql">GraphiQL web page</a>,
-  use a user auth token. These are different from the controller tokens that are
-  used by the controllers to connect to the WebSocket API. In your client (<a
-    href="https://flows.nodered.org/node/node-red-contrib-graphql"
-    >Node-RED</a
-  >, <a href="https://stackoverflow.com/a/32982949/6783666">cURL</a>) use the
-  following key in the "Authorization" HTTP header.
+  To access the GraphQL API, either visit the <a href="/graphql">GraphiQL explorer</a>
+  or use a user token (different from the controller tokens) for programmatic access with
+  the same URL. In your client (
+    <a href="https://flows.nodered.org/node/node-red-contrib-graphql">Node-RED</a> or
+    <a href="https://stackoverflow.com/a/32982949/6783666">cURL</a>) use the following
+    key in the "Authorization" HTTP header.
 </p>
 {% if token %}
 <p>
