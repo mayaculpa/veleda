@@ -30,7 +30,7 @@ class HydroponicSystemComponentEnumNode(ObjectType):
     def resolve_hydroponic_system_type(parent, args):
         return [
             TextChoice(value=hs_type.value, label=hs_type.label)
-            for hs_type in HydroponicSystemComponent.hydroponic_system_type
+            for hs_type in HydroponicSystemComponent.HydroponicSystemType
         ]
 
 
@@ -53,6 +53,10 @@ class HydroponicSystemComponentNode(DjangoObjectType):
             "modified_at",
         )
         convert_choices_to_enum = False
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(site_entity__site__owner=info.context.user)
 
 
 class PlantComponentNode(DjangoObjectType):
@@ -83,13 +87,17 @@ class PlantComponentNode(DjangoObjectType):
             "modified_at",
         )
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(site_entity__site__owner=info.context.user)
+
 
 class PlantFamilyNode(DjangoObjectType):
     class Meta:
         model = PlantFamily
         interfaces = (graphene.relay.Node,)
         filter_fields = {"name": ["exact", "icontains"]}
-        fields = ("name",)
+        fields = ("name", "genus_set")
 
 
 class PlantGenusNode(DjangoObjectType):
@@ -101,10 +109,7 @@ class PlantGenusNode(DjangoObjectType):
             "family": ["exact"],
             "family__name": ["exact", "icontains"],
         }
-        fields = (
-            "name",
-            "family",
-        )
+        fields = ("name", "family", "species_set")
 
 
 class PlantSpeciesNode(DjangoObjectType):
@@ -119,22 +124,27 @@ class PlantSpeciesNode(DjangoObjectType):
             "genus__family": ["exact"],
             "genus__family__name": ["exact", "icontains"],
         }
-        fields = (
-            "common_name",
-            "binomial_name",
-        )
+        fields = ("common_name", "binomial_name", "genus", "plant_set")
 
 
 class PlantImageNode(DjangoObjectType):
+    image = graphene.String(required=False)
+
     class Meta:
         model = PlantImage
         interfaces = (graphene.relay.Node,)
         filter_fields = {"id", "plant"}
         fields = ("image", "plant", "created_at", "modified_at")
-    
+
     @staticmethod
     def resolve_image(plant_image, args):
-        return plant_image.image.url
+        if plant_image.image:
+            return plant_image.image.url
+        return None
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(plant__site_entity__site__owner=info.context.user)
 
 
 class TrackingImageNode(DjangoObjectType):
@@ -149,12 +159,22 @@ class TrackingImageNode(DjangoObjectType):
         }
         fields = ("image_id", "hydroponic_system", "created_at", "modified_at")
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(
+            hydroponic_system__site_entity__site__owner=info.context.user
+        )
+
 
 class WaterCycleNode(DjangoObjectType):
     class Meta:
         model = WaterCycle
         interfaces = (graphene.relay.Node,)
         filter_fields = {"name": ["exact", "icontains", "istartswith"]}
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(site__owner=info.context.user)
 
 
 class WaterCycleComponentFilter(FilterSet):
@@ -186,12 +206,20 @@ class WaterCycleLogNode(DjangoObjectType):
         filter_fields = ["water_cycle_component", "water_cycle", "since", "until"]
         fields = ("water_cycle_component", "water_cycle", "since", "until")
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(water_cycle__site__owner=info.context.user)
+
 
 class WaterCycleFlowsToNode(DjangoObjectType):
     class Meta:
         model = WaterCycleFlowsTo
         filter_fields = ["flows_from", "flows_to"]
         fields = ("flows_from", "flows_to")
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(flows_from__site_entity__site__owner=info.context.user)
 
 
 class WaterCycleComponentNode(DjangoObjectType):
@@ -210,6 +238,7 @@ class WaterCycleComponentNode(DjangoObjectType):
             "flows_to_edges",
             "flows_from_set",
             "flows_from_edges",
+            "types",
             "water_reservoir",
             "water_pump",
             "water_pipe",
@@ -222,6 +251,10 @@ class WaterCycleComponentNode(DjangoObjectType):
     @staticmethod
     def resolve_types(water_cycle_component, args):
         return water_cycle_component.get_type_values()
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(site_entity__site__owner=info.context.user)
 
 
 class WaterComponentEnumNode(ObjectType):
@@ -240,6 +273,12 @@ class WaterReservoirNode(DjangoObjectType):
         model = WaterReservoir
         fields = ("max_capacity", "max_water_level")
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(
+            water_cycle_component__site_entity__site__owner=info.context.user
+        )
+
 
 class WaterPumpNode(DjangoObjectType):
     class Meta:
@@ -251,11 +290,23 @@ class WaterPumpNode(DjangoObjectType):
     def resolve_power(water_pump, args):
         return water_pump.power
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(
+            water_cycle_component__site_entity__site__owner=info.context.user
+        )
+
 
 class WaterPipeNode(DjangoObjectType):
     class Meta:
         model = WaterPipe
         fields = ("length",)
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(
+            water_cycle_component__site_entity__site__owner=info.context.user
+        )
 
 
 class WaterSensorNode(DjangoObjectType):
@@ -264,8 +315,20 @@ class WaterSensorNode(DjangoObjectType):
         fields = ("sensor_type",)
         convert_choices_to_enum = False
 
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(
+            water_cycle_component__site_entity__site__owner=info.context.user
+        )
+
 
 class WaterValveNode(DjangoObjectType):
     class Meta:
         model = WaterValve
         fields = ("water_cycle_component",)
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(
+            water_cycle_component__site_entity__site__owner=info.context.user
+        )

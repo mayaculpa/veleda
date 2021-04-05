@@ -54,7 +54,9 @@ class WaterCycleComponentTestsBase(TestCase):
         )
         WaterCycleComponent.objects.create(
             site_entity=self.site_entity,
-            water_cycle=WaterCycle.objects.create(name="SomeCycle"),
+            water_cycle=WaterCycle.objects.create(
+                name="SomeCycle", site=self.site_entity.site
+            ),
         )
         self.site_entity = SiteEntity.objects.get(pk=self.site_entity.pk)
         self.data_point_type = DataPointType.objects.create(name="SomeDPT", unit="mT")
@@ -349,7 +351,17 @@ class WaterCycleComponentTests(WaterCycleComponentTestsBase):
 
 
 class WaterCycleTests(TestCase):
+    """Tests for the water cycle model."""
+    
     def test_water_cycle_name(self):
+        """Test to string for water cycles"""
+
         name = "Some Cycle"
-        water_cycle = WaterCycle.objects.create(name=name)
+        site = Site.objects.create(
+            name="SiteA",
+            owner=get_user_model().objects.create_user(
+                email="owner@bar.com", password="foo"
+            ),
+        )
+        water_cycle = WaterCycle.objects.create(name=name, site=site)
         self.assertIn(name, str(water_cycle))

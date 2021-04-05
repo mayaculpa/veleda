@@ -51,7 +51,9 @@ class WaterCycleComponentTestCases(GraphQLTestCase):
         )
         WaterCycleComponent.objects.create(
             site_entity=self.site_entity,
-            water_cycle=WaterCycle.objects.create(name="SomeCycle"),
+            water_cycle=WaterCycle.objects.create(
+                name="SomeCycle", site=self.site_entity.site
+            ),
         )
         self.site_entity = SiteEntity.objects.get(pk=self.site_entity.pk)
         self.data_point_type = DataPointType.objects.create(name="SomeDPT", unit="mT")

@@ -4,7 +4,7 @@ from typing import List, Tuple, Optional
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from iot.models import ControllerTask, DataPoint, SiteEntity
+from iot.models import ControllerTask, DataPoint, SiteEntity, Site
 
 
 class WaterCycleComponentException(Exception):
@@ -16,6 +16,12 @@ class WaterCycle(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=128, help_text="The name of the water cycle")
+    site = models.ForeignKey(
+        Site,
+        on_delete=models.CASCADE,
+        related_name="water_cycle_set",
+        help_text="To which site it belongs to.",
+    )
 
     def __str__(self):
         return f"Water cycle: {self.name}"
@@ -28,11 +34,13 @@ class WaterCycleLog(models.Model):
         "WaterCycleComponent",
         on_delete=models.CASCADE,
         related_name="water_cycle_log_edges",
+        help_text="Which water cycle component was logged.",
     )
     water_cycle = models.ForeignKey(
         WaterCycle,
         on_delete=models.CASCADE,
         related_name="water_cycle_component_log_edges",
+        help_text="To which water cycle it was assigned to.",
     )
     since = models.DateTimeField(
         default=datetime.now,
@@ -52,11 +60,13 @@ class WaterCycleFlowsTo(models.Model):
         "WaterCycleComponent",
         on_delete=models.CASCADE,
         related_name="flows_to_edges",
+        help_text="From which water cycle the water flows.",
     )
     flows_to = models.ForeignKey(
         "WaterCycleComponent",
         on_delete=models.CASCADE,
         related_name="flows_from_edges",
+        help_text="To which water cycle the water flows."
     )
 
 
