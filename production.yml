@@ -10,6 +10,8 @@ services:
       options:
         max-size: '2m'
         max-file: '10'
+    environment:
+      - DEPLOY_TYPE=${DEPLOY_TYPE}
     env_file:
       - 'core/env.core'
       - 'core/secrets.core'
@@ -25,6 +27,9 @@ services:
       - frontend
     depends_on:
       - postgres
+      - minio
+      - redis
+      - rabbitmq
     labels:
     - "traefik.enable=true"
     - "traefik.http.routers.sdg-server-${DEPLOY_TYPE}-core.rule=Host(`${CORE_DOMAIN}`)"

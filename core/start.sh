@@ -209,11 +209,16 @@ while ! nc -z $MINIO_HOST $MINIO_PORT; do
   sleep 0.5 # wait for half a second before checking again
 done
 
-# Add the MinIO server URL
+# Add the MinIO server. Construct the URL for staging/prod or dev environment
+if [[ $DJANGO_DEBUG == "False" ]]; then
+  MINIO_URL="http://sdg-server-$DEPLOY_TYPE-$MINIO_HOST:$MINIO_PORT"
+else
+  MINIO_URL="http://$MINIO_HOST:$MINIO_PORT"
+fi
 ./mc alias set core-s3-server \
-  "http://$MINIO_HOST:$MINIO_PORT" \
-  "$MINIO_ROOT_USER" \
-  "$MINIO_ROOT_PASSWORD"
+    "$MINIO_URL" \
+    "$MINIO_ROOT_USER" \
+    "$MINIO_ROOT_PASSWORD"
 # If the user does not exist add them and the respective policy
 if ! ./mc admin user list core-s3-server | grep -q "$MINIO_ACCESS_KEY_ID"; then
   echo "Adding user $MINIO_ACCESS_KEY_ID and bucket policy to MinIO server"
