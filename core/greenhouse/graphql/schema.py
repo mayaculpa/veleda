@@ -45,7 +45,7 @@ class Query(object):
     all_plant_families = DjangoFilterConnectionField(PlantFamilyNode)
 
     plant_genus = graphene.relay.Node.Field(PlantGenusNode)
-    all_plant_genera = DjangoFilterConnectionField(PlantFamilyNode)
+    all_plant_genera = DjangoFilterConnectionField(PlantGenusNode)
 
     plant_species = graphene.relay.Node.Field(PlantSpeciesNode)
     all_plant_species = DjangoFilterConnectionField(PlantSpeciesNode)
@@ -68,6 +68,10 @@ class Query(object):
     water_pipe = graphene.relay.Node.Field(WaterPipeNode)
     water_sensor = graphene.relay.Node.Field(WaterSensorNode)
     water_valve = graphene.relay.Node.Field(WaterValveNode)
+
+    @staticmethod
+    def resolve_hydroponic_system_enums(parent, args):
+        return HydroponicSystemComponentEnumNode()
 
 
 class Mutation:

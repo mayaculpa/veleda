@@ -26,7 +26,8 @@ Aspects that are under development include an AR application to stream realtime 
     - [Alpha 6 (IoT): Simple Rules Engine](#alpha-6-iot-simple-rules-engine)
     - [Alpha 7 (IoT/GH): Add RPi and Azure Kinect Edge Node](#alpha-7-iotgh-add-rpi-and-azure-kinect-edge-node)
     - [Alpha 8 (IoT): Visualization and Data Performance](#alpha-8-iot-visualization-and-data-performance)
-    - [Alpha 9 (IoT): Add Calibration Workflow](#alpha-9-iot-add-calibration-workflow)
+    - [Alpha 9 (IoT): Controller Rate Limiting](#alpha-9-iot-controller-rate-limiting)
+    - [Alpha 10 (IoT): Add Calibration Workflow](#alpha-10-iot-add-calibration-workflow)
     - [Beta 1 (IoT): Management UI](#beta-1-iot-management-ui)
     - [Beta 2 (IoT): Team Management](#beta-2-iot-team-management)
     - [Beta 3 (IoT): Rules Engine UI](#beta-3-iot-rules-engine-ui)
@@ -37,7 +38,7 @@ Aspects that are under development include an AR application to stream realtime 
 
 ## ⚠️ Current Development Status 
 
-The stage of MVP (Minimal Viable Product) has been reached an can be tested on core.openfarming.ai. This means LEDs can be toggled, BME280 air sensor polled and the data queried as well as GUIs covering the core functionality. Future releases will be released on a separate domain.
+The stage of MVP (Minimal Viable Product) has been reached an can be tested on core.openfarming.ai. This means LEDs can be toggled, BME280 air sensor polled and the data queried as well as GUIs covering the core functionality.
 
 More information on the core web service can be found in its [documentation](./core/README.md). For a high-level overview, see the [Device Stacc post](https://hackernoon.com/device-stacc-a-reconfigurable-iot-platform-6j4e322p) on Hackernoon.
 
@@ -120,7 +121,16 @@ Add Grafana integration to visualize data points. Rework TimescaleDB as an unman
 | OAuth Server               | Grafana                    | TimescaleDB                |
 | Done: 23.01.19             | TBD                        | TBD                        |
 
-### Alpha 9 (IoT): Add Calibration Workflow
+### Alpha 9 (IoT): Controller Rate Limiting
+
+Add a rate limiter on the WebSocket interface to handle malfunctioning controllers.
+
+| ![WS](./doc/images/ws.png) | ![dj](./doc/images/dj.png) | ![rds](./doc/images/rds.png) |
+| -------------------------- | -------------------------- | ---------------------------- |
+| WebSocket API              | Backend                    | Redis                        |
+| TBD                        | TBD                        | TBD                          |
+
+### Alpha 10 (IoT): Add Calibration Workflow
 
 Allow calibrations to be performed. Add further drivers for controller peripherals.
 
