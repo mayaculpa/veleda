@@ -46,6 +46,7 @@ class PlantImage(models.Model):
     plant = models.ForeignKey(
         PlantComponent,
         on_delete=models.CASCADE,
+        related_name="plant_image_set",
         help_text="The primary plant in the image.",
     )
     created_at = models.DateTimeField(

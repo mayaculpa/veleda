@@ -80,6 +80,8 @@ class PlantComponentNode(DjangoObjectType):
             "modified_at": ["exact", "lt", "gt"],
         }
         fields = (
+            "hydroponic_system",
+            "plant_image_set",
             "site_entity",
             "spot_number",
             "species",
