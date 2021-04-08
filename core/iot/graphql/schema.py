@@ -23,6 +23,8 @@ from iot.graphql.mutations import (
     CreatePeripheralComponent,
 )
 
+from iot.graphql.subscriptions import MySubscription
+
 
 class Query:
     """Query commands for the iot GraphQL schema"""
@@ -69,7 +71,7 @@ class Query:
     @staticmethod
     def resolve_data_points_by_day(parent, info, **kwargs):
         return DataPointByDayNode.resolve(parent, info, **kwargs)
-    
+
     @staticmethod
     def resolve_data_points_by_hour(parent, info, **kwargs):
         return DataPointByHourNode.resolve(parent, info, **kwargs)
@@ -83,3 +85,9 @@ class Mutation:
     stop_controller_task = StopControllerTask.Field()
 
     create_peripheral_component = CreatePeripheralComponent.Field()
+
+
+class Subscription(graphene.ObjectType):
+    """Root GraphQL subscription."""
+
+    my_subscription = MySubscription.Field()

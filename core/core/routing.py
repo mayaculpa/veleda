@@ -3,21 +3,27 @@ from django.core.asgi import get_asgi_application
 from django.urls import path
 
 from iot.consumers import ControllerConsumer
-from iot.utils import TokenAuthMiddleware
+from iot.utils import PathAuthMiddleware, TokenAuthMiddleware
+from iot.consumers import MyGraphqlWsConsumer
 
 application = ProtocolTypeRouter(
     {
         "http": get_asgi_application(),
-        "websocket": TokenAuthMiddleware(
+        "websocket": PathAuthMiddleware(
             URLRouter(
                 [
                     path(
-                        "ws-api/v1/farms/controllers/",
+                        TokenAuthMiddleware.controller_ws_path,
                         ControllerConsumer.as_asgi(),
                         name="ws-controller",
-                    )
+                    ),
+                    path(
+                        "graphql/",
+                        MyGraphqlWsConsumer.as_asgi(),
+                        name="graphql-subscription",
+                    ),
                 ]
             )
-        )
+        ),
     }
 )
