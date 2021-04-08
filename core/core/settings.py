@@ -356,16 +356,14 @@ AWS_ACCESS_KEY_ID = os.environ.get("MINIO_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("MINIO_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.environ.get("MINIO_STORAGE_BUCKET_NAME")
 AWS_S3_REGION_NAME = "us-east-1"
+AWS_S3_ENDPOINT_URL=os.environ.get("MINIO_URL")
 if DEBUG:
-    S3_URL = f"{os.environ.get('MINIO_DOMAIN')}:{os.environ.get('MINIO_PORT')}"
-    AWS_S3_CUSTOM_DOMAIN = S3_URL
-    AWS_S3_ENDPOINT_URL = f"http://{S3_URL}"
+    AWS_S3_CUSTOM_DOMAIN = (
+        f"{os.environ.get('MINIO_DOMAIN')}:{os.environ.get('MINIO_PORT')}"
+    )
     AWS_S3_SECURE_URLS = False # Old way for unsecure URLs (still required)
     AWS_S3_URL_PROTOCOL = "http:" # New way for unsecure URLs
 else:
     AWS_S3_CUSTOM_DOMAIN = os.environ.get("MINIO_DOMAIN")
-    AWS_S3_ENDPOINT_URL = (
-        f"http://{os.environ.get('MINIO_HOST')}:{os.environ.get('MINIO_PORT')}"
-    )
     AWS_S3_SECURE_URLS = True
     AWS_S3_URL_PROTOCOL = "https:"

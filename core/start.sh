@@ -211,9 +211,9 @@ done
 
 # Add the MinIO server. Construct the URL for staging/prod or dev environment
 if [[ $DJANGO_DEBUG == "False" ]]; then
-  MINIO_URL="http://sdg-server-$DEPLOY_TYPE-$MINIO_HOST:$MINIO_PORT"
+  export MINIO_URL="http://sdg-server-$DEPLOY_TYPE-$MINIO_HOST:$MINIO_PORT"
 else
-  MINIO_URL="http://$MINIO_HOST:$MINIO_PORT"
+  export MINIO_URL="http://$MINIO_HOST:$MINIO_PORT"
 fi
 ./mc alias set core-s3-server \
     "$MINIO_URL" \
