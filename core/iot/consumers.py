@@ -118,7 +118,7 @@ class ControllerConsumer(WebsocketConsumer):
         self.send(json.dumps(request))
 
 
-class MyGraphqlWsConsumer(channels_graphql_ws.GraphqlWsConsumer):
+class GraphqlConsumer(channels_graphql_ws.GraphqlWsConsumer):
     """Channels WebSocket consumer which provides GraphQL API."""
     schema = graphql_schema
 
@@ -129,6 +129,9 @@ class MyGraphqlWsConsumer(channels_graphql_ws.GraphqlWsConsumer):
     # strict_ordering = True
 
     async def on_connect(self, payload):
-        """New client connection handler."""
-        # You can `raise` from here to reject the connection.
-        print("New client connected!")
+        """Only accept authenticated users."""
+
+        if self.scope["user"].is_authenticated:
+            self.accept()
+        else:
+            self.close()

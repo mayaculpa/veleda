@@ -6,5 +6,5 @@ class GreenhouseConfig(AppConfig):
 
     name = 'greenhouse'
 
-    def ready(self) -> None:
+    def ready(self):
         import greenhouse.signals # pylint: disable=import-outside-toplevel

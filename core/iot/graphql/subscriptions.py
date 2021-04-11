@@ -1,34 +1,74 @@
 import channels_graphql_ws
 import graphene
+from graphql_relay import from_global_id
+
+from iot.models import DataPoint
+from iot.graphql.nodes import DataPointNode
 
 
-class MySubscription(channels_graphql_ws.Subscription):
+class DataPointSubscription(channels_graphql_ws.Subscription):
     """Simple GraphQL subscription."""
 
-    # Subscription payload.
-    event = graphene.String()
+    data_point = graphene.Field(DataPointNode)
 
     class Arguments:
         """That is how subscription arguments are defined."""
 
-        arg1 = graphene.String()
-        arg2 = graphene.String()
+        peripheral_ids = graphene.List(graphene.ID, required=False)
+        data_point_type_ids = graphene.List(graphene.ID, required=False)
 
     @staticmethod
-    def subscribe(root, info, arg1, arg2):
+    def subscribe(root, info, **kwargs):
         """Called when user subscribes."""
 
-        # Return the list of subscription group names.
-        return ["group42"]
+        topics = []
+
+        if peripheral_ids := kwargs.get("peripheral_ids"):
+            topics.extend(
+                [
+                    DataPointSubscription._to_data_point_group(from_global_id(i)[1])
+                    for i in peripheral_ids
+                ]
+            )
+        if data_point_type_ids := kwargs.get("data_point_type_ids"):
+            topics.extend(
+                [
+                    DataPointSubscription._to_data_point_group(from_global_id(i)[1])
+                    for i in data_point_type_ids
+                ]
+            )
+
+        if topics:
+            return topics
+        return None
 
     @staticmethod
-    def publish(payload, info, arg1, arg2):
+    def publish(payload, info, **kwargs):
         """Called to notify the client."""
 
-        # Here `payload` contains the `payload` from the `broadcast()`
-        # invocation (see below). You can return `MySubscription.SKIP`
-        # if you wish to suppress the notification to a particular
-        # client. For example, this allows to avoid notifications for
-        # the actions made by this particular client.
+        return DataPointSubscription(data_point=payload["data_point"])
 
-        return MySubscription(event=f"Hello: {payload}")
+    @classmethod
+    def new_data_point(cls, data_point):
+        """Notify subscribers querying for the peripheral and data point type"""
+
+        group = cls._get_peripheral_group(data_point)
+        DataPointSubscription.broadcast_sync(
+            group=group, payload={"data_point": data_point}
+        )
+        group = cls._get_data_point_type_group(data_point)
+        DataPointSubscription.broadcast_sync(
+            group=group, payload={"data_point": data_point}
+        )
+
+    @staticmethod
+    def _get_peripheral_group(data_point: DataPoint) -> str:
+        return f"data_point:{data_point.peripheral_component_id}"
+
+    @staticmethod
+    def _get_data_point_type_group(data_point: DataPoint) -> str:
+        return f"data_point:{data_point.data_point_type_id}"
+
+    @staticmethod
+    def _to_data_point_group(uuid: str) -> str:
+        return f"data_point:{uuid}"

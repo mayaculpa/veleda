@@ -4,7 +4,7 @@ from django.urls import path
 
 from iot.consumers import ControllerConsumer
 from iot.utils import PathAuthMiddleware, TokenAuthMiddleware
-from iot.consumers import MyGraphqlWsConsumer
+from iot.consumers import GraphqlConsumer
 
 application = ProtocolTypeRouter(
     {
@@ -19,7 +19,7 @@ application = ProtocolTypeRouter(
                     ),
                     path(
                         "graphql/",
-                        MyGraphqlWsConsumer.as_asgi(),
+                        GraphqlConsumer.as_asgi(),
                         name="graphql-subscription",
                     ),
                 ]
