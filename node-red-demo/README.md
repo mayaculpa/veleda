@@ -13,6 +13,7 @@ To start a local Node-RED instance use the following command. It creates a Docke
 Open a web browser at `127.0.0.1:1880` to see the Node-RED backend. First of all, the required node packages have to be installed. To install them, open the hamburger menu in the top right and select `Manage palette`. Select the `Install` tab and install the following nodes:
 
 - node-red-dashboard
+- node-red-contrib-moment
 - node-red-contrib-graphql
 
 Next, import the Node-RED flows. Open the hamburger menu in the top right and select `Import`. Press `select a file to import` and choose the `flows.json` file in this directory. Then press import. The flows will be placed in the Home and other tabs. The `Flow 1` flow may be deleted by double clicking the tab and then selecting `Delete`.
