@@ -16,7 +16,10 @@ from rest_framework.settings import api_settings
 def index(request):
     context = {}
     if request.user.is_authenticated:
-        context["token"] = Token.objects.get(user=request.user)
+        try:
+            context["token"] = Token.objects.get(user=request.user)
+        except Token.DoesNotExist:
+            context["token"] = None
     return render(request, "homepage.html", context)
 
 

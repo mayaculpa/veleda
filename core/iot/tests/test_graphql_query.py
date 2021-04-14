@@ -232,6 +232,90 @@ class QueryTestCase(GraphQLTestCase):
         self.assertEqual(hour_ten_dp["min"], 54.0)
         self.assertEqual(hour_ten_dp["max"], 58.0)
 
+    def test_data_point_ordering(self):
+        """Test that the ordering is respected."""
+
+        peripheral_gid = to_global_id("PeripheralComponentNode", self.peripheral_a.pk)
+        data_point_type_gid = to_global_id(
+            "DataPointTypeNode", self.data_point_type_a.pk
+        )
+        query = """
+            {{ allDataPoints(
+                orderBy: "{}", peripheralComponent: "{}", dataPointType: "{}"
+            ) {{
+                edges {{ node {{
+                  time, value
+                }} }}
+            }} }}
+            """
+        response = self.query(query.format("time", peripheral_gid, data_point_type_gid))
+        self.assertResponseNoErrors(response)
+        output = json.loads(response.content)["data"]["allDataPoints"]["edges"]
+        data_points = [i["node"] for i in output]
+        self.assertEqual(data_points[0]["time"], "2021-04-14T00:00:00+00:00")
+
+        response = self.query(
+            query.format("-time", peripheral_gid, data_point_type_gid)
+        )
+        self.assertResponseNoErrors(response)
+        output = json.loads(response.content)["data"]["allDataPoints"]["edges"]
+        data_points = [i["node"] for i in output]
+        self.assertEqual(data_points[0]["time"], "2021-04-18T16:20:00+00:00")
+
+    def test_data_point_day_ordering(self):
+        """Test that the ordering is respected."""
+
+        peripheral_gid = to_global_id("PeripheralComponentNode", self.peripheral_a.pk)
+        data_point_type_gid = to_global_id(
+            "DataPointTypeNode", self.data_point_type_a.pk
+        )
+        query = """
+            {{ dataPointsByDay(
+                ascending: {}, peripheralComponent: "{}", dataPointType: "{}"
+            ) {{
+                day, avg
+              }}
+            }}
+            """
+        response = self.query(query.format("true", peripheral_gid, data_point_type_gid))
+        self.assertResponseNoErrors(response)
+        data_points = json.loads(response.content)["data"]["dataPointsByDay"]
+        self.assertEqual(data_points[0]["day"], "2021-04-14")
+
+        response = self.query(
+            query.format("false", peripheral_gid, data_point_type_gid)
+        )
+        self.assertResponseNoErrors(response)
+        data_points = json.loads(response.content)["data"]["dataPointsByDay"]
+        self.assertEqual(data_points[0]["day"], "2021-04-18")
+
+    def test_data_point_hour_ordering(self):
+        """Test that the ordering is respected."""
+
+        peripheral_gid = to_global_id("PeripheralComponentNode", self.peripheral_a.pk)
+        data_point_type_gid = to_global_id(
+            "DataPointTypeNode", self.data_point_type_a.pk
+        )
+        query = """
+            {{ dataPointsByHour(
+                ascending: {}, peripheralComponent: "{}", dataPointType: "{}"
+            ) {{
+                timeHour, avg
+              }}
+            }}
+            """
+        response = self.query(query.format("true", peripheral_gid, data_point_type_gid))
+        self.assertResponseNoErrors(response)
+        data_points = json.loads(response.content)["data"]["dataPointsByHour"]
+        self.assertEqual(data_points[0]["timeHour"], "2021-04-14T00:00:00+00:00")
+
+        response = self.query(
+            query.format("false", peripheral_gid, data_point_type_gid)
+        )
+        self.assertResponseNoErrors(response)
+        data_points = json.loads(response.content)["data"]["dataPointsByHour"]
+        self.assertEqual(data_points[0]["timeHour"], "2021-04-18T16:00:00+00:00")
+
     def test_site_isolation(self):
         """Check that queries are isolated according to sites"""
 
