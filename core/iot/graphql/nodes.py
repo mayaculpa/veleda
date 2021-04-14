@@ -342,7 +342,7 @@ class DataPointByDayNode(ObjectType):
             data_point_type=graphene.ID(required=True),
             from_date=graphene.Date(),
             before_date=graphene.Date(),
-            ascending=graphene.Boolean(),
+            ascending=graphene.Boolean(required=False),
         )
 
 
@@ -377,5 +377,5 @@ class DataPointByHourNode(ObjectType):
             data_point_type=graphene.ID(required=True),
             from_time=graphene.DateTime(),
             before_time=graphene.DateTime(),
-            ascending=graphene.Boolean(),
+            ascending=graphene.Boolean(required=False),
         )

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from accounts.models import User
 from django.db import IntegrityError, models, transaction
@@ -71,9 +71,9 @@ class DataPointManager(models.Manager):
         self,
         peripheral_component_id: UUID,
         data_point_type_id: UUID,
-        from_date: Date,
-        before_date: Date,
-        ascending: bool,
+        from_date: Optional[Date] = None,
+        before_date: Optional[Date] = None,
+        ascending: Optional[bool] = False,
     ) -> QuerySet:
         """Aggregates data points by day for a specific date range for the specified
         peripheral and data point type."""
@@ -105,9 +105,9 @@ class DataPointManager(models.Manager):
         self,
         peripheral_component_id: UUID,
         data_point_type_id: UUID,
-        from_time: Date,
-        before_time: Date,
-        ascending: bool,
+        from_time: Optional[Date] = None,
+        before_time: Optional[Date] = None,
+        ascending: Optional[bool] = False,
     ) -> QuerySet:
         """Aggregates data points by day for a specific date range for the specified
         peripheral and data point type."""
