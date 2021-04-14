@@ -73,6 +73,7 @@ class DataPointManager(models.Manager):
         data_point_type_id: UUID,
         from_date: Date,
         before_date: Date,
+        ascending: bool,
     ) -> QuerySet:
         """Aggregates data points by day for a specific date range for the specified
         peripheral and data point type."""
@@ -93,9 +94,12 @@ class DataPointManager(models.Manager):
                 min=models.Min("value"),
                 max=models.Max("value"),
             )
-            .order_by("-day")
         )
-        return series
+        if ascending:
+            ordered_series = series.order_by("day")
+        else:
+            ordered_series = series.order_by("-day")
+        return ordered_series
 
     def by_hour(
         self,
@@ -103,6 +107,7 @@ class DataPointManager(models.Manager):
         data_point_type_id: UUID,
         from_time: Date,
         before_time: Date,
+        ascending: bool,
     ) -> QuerySet:
         """Aggregates data points by day for a specific date range for the specified
         peripheral and data point type."""
@@ -123,9 +128,12 @@ class DataPointManager(models.Manager):
                 min=models.Min("value"),
                 max=models.Max("value"),
             )
-            .order_by("-time_hour")
         )
-        return series
+        if ascending:
+            ordered_series = series.order_by("time_hour")
+        else:
+            ordered_series = series.order_by("-time_hour")
+        return ordered_series
 
 
 class DataPoint(models.Model):

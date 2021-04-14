@@ -1,7 +1,7 @@
 import graphene
 from django.conf import settings
 from django.db.models import Q
-from django_filters import BooleanFilter, FilterSet
+from django_filters import BooleanFilter, FilterSet, OrderingFilter
 from graphene import Date, Float, List, ObjectType, String, relay
 from graphene.types.datetime import DateTime
 from graphene_django import DjangoObjectType
@@ -282,15 +282,25 @@ class DataPointTypeNode(DjangoObjectType):
         )
 
 
-class DataPointNode(DjangoObjectType):
+class DataPointFilter(FilterSet):
+    """Filter for DataPointNode that includes ordering."""
+
     class Meta:
         model = DataPoint
-        filter_fields = {
+        fields = {
             "time": ["exact", "lt", "gt"],
             "peripheral_component": ["exact"],
             "peripheral_component__site_entity": ["exact"],
             "data_point_type": ["exact"],
         }
+
+    order_by = OrderingFilter(fields=("time",))
+
+
+class DataPointNode(DjangoObjectType):
+    class Meta:
+        model = DataPoint
+        filterset_class = DataPointFilter
         interfaces = (relay.Node,)
 
     @classmethod
@@ -313,12 +323,16 @@ class DataPointByDayNode(ObjectType):
     def resolve(cls, parent, info, **kwargs):
         peripheral_component_id = from_global_id(kwargs["peripheral_component"])[1]
         data_point_type_id = from_global_id(kwargs["data_point_type"])[1]
-        return DataPoint.objects.by_day(
+        data_points = DataPoint.objects.by_day(
             peripheral_component_id,
             data_point_type_id,
             kwargs.get("from_date"),
             kwargs.get("before_date"),
-        ).filter(peripheral_component__site_entity__site__owner=info.context.user)[:100]
+            kwargs.get("ascending"),
+        )
+        return data_points.filter(
+            peripheral_component__site_entity__site__owner=info.context.user
+        )[:100]
 
     @classmethod
     def as_list_field(cls) -> "graphene.List":
@@ -328,6 +342,7 @@ class DataPointByDayNode(ObjectType):
             data_point_type=graphene.ID(required=True),
             from_date=graphene.Date(),
             before_date=graphene.Date(),
+            ascending=graphene.Boolean(),
         )
 
 
@@ -343,12 +358,16 @@ class DataPointByHourNode(ObjectType):
     def resolve(cls, parent, info, **kwargs):
         peripheral_component_id = from_global_id(kwargs["peripheral_component"])[1]
         data_point_type_id = from_global_id(kwargs["data_point_type"])[1]
-        return DataPoint.objects.by_hour(
+        data_points = DataPoint.objects.by_hour(
             peripheral_component_id,
             data_point_type_id,
-            kwargs.get("from_time"),
-            kwargs.get("before_time"),
-        ).filter(peripheral_component__site_entity__site__owner=info.context.user)[:100]
+            from_time=kwargs.get("from_time"),
+            before_time=kwargs.get("before_time"),
+            ascending=kwargs.get("ascending"),
+        )
+        return data_points.filter(
+            peripheral_component__site_entity__site__owner=info.context.user
+        )[:100]
 
     @classmethod
     def as_list_field(cls) -> graphene.List:
@@ -358,4 +377,5 @@ class DataPointByHourNode(ObjectType):
             data_point_type=graphene.ID(required=True),
             from_time=graphene.DateTime(),
             before_time=graphene.DateTime(),
+            ascending=graphene.Boolean(),
         )
