@@ -252,7 +252,12 @@ class QueryTestCase(GraphQLTestCase):
         self.assertResponseNoErrors(response)
         output = json.loads(response.content)["data"]["allDataPoints"]["edges"]
         data_points = [i["node"] for i in output]
-        self.assertEqual(data_points[0]["time"], "2021-04-14T00:00:00+00:00")
+        data_point_query = DataPoint.objects.filter(
+            peripheral_component=self.peripheral_a.pk,
+            data_point_type=self.data_point_type_a.pk,
+        )
+        data_point = data_point_query.last()
+        self.assertEqual(data_points[0]["time"], data_point.time.isoformat())
 
         response = self.query(
             query.format("-time", peripheral_gid, data_point_type_gid)
@@ -260,7 +265,8 @@ class QueryTestCase(GraphQLTestCase):
         self.assertResponseNoErrors(response)
         output = json.loads(response.content)["data"]["allDataPoints"]["edges"]
         data_points = [i["node"] for i in output]
-        self.assertEqual(data_points[0]["time"], "2021-04-18T16:20:00+00:00")
+        data_point = data_point_query.first()
+        self.assertEqual(data_points[0]["time"], data_point.time.isoformat())
 
     def test_data_point_day_ordering(self):
         """Test that the ordering is respected."""
@@ -280,14 +286,20 @@ class QueryTestCase(GraphQLTestCase):
         response = self.query(query.format("true", peripheral_gid, data_point_type_gid))
         self.assertResponseNoErrors(response)
         data_points = json.loads(response.content)["data"]["dataPointsByDay"]
-        self.assertEqual(data_points[0]["day"], "2021-04-14")
+        data_point_query = DataPoint.objects.filter(
+            peripheral_component=self.peripheral_a.pk,
+            data_point_type=self.data_point_type_a.pk,
+        )
+        time = data_point_query.last().time
+        self.assertEqual(data_points[0]["day"], time.strftime("%Y-%m-%d"))
 
         response = self.query(
             query.format("false", peripheral_gid, data_point_type_gid)
         )
         self.assertResponseNoErrors(response)
         data_points = json.loads(response.content)["data"]["dataPointsByDay"]
-        self.assertEqual(data_points[0]["day"], "2021-04-18")
+        time = data_point_query.first().time
+        self.assertEqual(data_points[0]["day"], time.strftime("%Y-%m-%d"))
 
     def test_data_point_hour_ordering(self):
         """Test that the ordering is respected."""
@@ -307,14 +319,20 @@ class QueryTestCase(GraphQLTestCase):
         response = self.query(query.format("true", peripheral_gid, data_point_type_gid))
         self.assertResponseNoErrors(response)
         data_points = json.loads(response.content)["data"]["dataPointsByHour"]
-        self.assertEqual(data_points[0]["timeHour"], "2021-04-14T00:00:00+00:00")
+        data_point_query = DataPoint.objects.filter(
+            peripheral_component=self.peripheral_a.pk,
+            data_point_type=self.data_point_type_a.pk,
+        )
+        time = data_point_query.last().time.strftime("%Y-%m-%dT%H:00:00+00:00")
+        self.assertEqual(data_points[0]["timeHour"], time)
 
         response = self.query(
             query.format("false", peripheral_gid, data_point_type_gid)
         )
         self.assertResponseNoErrors(response)
         data_points = json.loads(response.content)["data"]["dataPointsByHour"]
-        self.assertEqual(data_points[0]["timeHour"], "2021-04-18T16:00:00+00:00")
+        time = data_point_query.first().time.strftime("%Y-%m-%dT%H:00:00+00:00")
+        self.assertEqual(data_points[0]["timeHour"], time)
 
     def test_site_isolation(self):
         """Check that queries are isolated according to sites"""

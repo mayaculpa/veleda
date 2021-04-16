@@ -54,6 +54,6 @@ class PathAuthMiddleware:
         self.other_app = AuthMiddlewareStack(app)
 
     async def __call__(self, scope, receive, send):
-        if scope["path"] == f"/{TokenAuthMiddleware.controller_ws_path}":
+        if scope["path"] == TokenAuthMiddleware.controller_ws_path:
             return await self.controller_app(scope, receive, send)
         return await self.other_app(scope, receive, send)

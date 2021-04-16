@@ -1,22 +1,18 @@
-from asgiref.sync import sync_to_async
-import uuid
-
-from django.contrib.auth import get_user_model
-from django.test import Client, TransactionTestCase, AsyncClient
-from django.urls import reverse
 from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
+from django.contrib.auth import get_user_model
+from django.test import TransactionTestCase
 
 from core.routing import application
 from iot.models import (
-    Site,
-    SiteEntity,
-    ControllerComponentType,
-    ControllerComponent,
-    ControllerMessage,
     ControllerAuthToken,
+    ControllerComponent,
+    ControllerComponentType,
+    ControllerMessage,
     ControllerTask,
     PeripheralComponent,
+    Site,
+    SiteEntity,
 )
 
 

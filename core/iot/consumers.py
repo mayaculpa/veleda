@@ -121,17 +121,10 @@ class ControllerConsumer(WebsocketConsumer):
 class GraphqlConsumer(channels_graphql_ws.GraphqlWsConsumer):
     """Channels WebSocket consumer which provides GraphQL API."""
     schema = graphql_schema
-
-    # Uncomment to send keepalive message every 42 seconds.
-    # send_keepalive_every = 42
-
-    # Uncomment to process requests sequentially (useful for tests).
-    # strict_ordering = True
-
-    async def on_connect(self, payload):
-        """Only accept authenticated users."""
-
-        if self.scope["user"].is_authenticated:
-            self.accept()
+    
+    async def connect(self):
+        """If the user is not authenticated, close the connection."""
+        if not self.scope["user"].is_authenticated:
+            await self.close()
         else:
-            self.close()
+            await super().connect()
