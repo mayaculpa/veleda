@@ -23,7 +23,10 @@ from iot.graphql.mutations import (
     CreatePeripheralComponent,
 )
 
-from iot.graphql.subscriptions import DataPointSubscription
+from iot.graphql.subscriptions import (
+    ControllerMessageSubscription,
+    DataPointSubscription,
+)
 
 
 class Query:
@@ -91,3 +94,4 @@ class Subscription(graphene.ObjectType):
     """Root GraphQL subscription."""
 
     data_point_subscription = DataPointSubscription.Field()
+    controller_message_subscription = ControllerMessageSubscription.Field()

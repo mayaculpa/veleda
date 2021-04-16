@@ -3,12 +3,13 @@ from datetime import datetime, timedelta, timezone
 from functools import reduce
 
 from django.contrib.auth import get_user_model
+from graphene_django.utils.testing import GraphQLTestCase
+from graphql_relay.node.node import to_global_id
+
 from iot.models import ControllerComponentType, ControllerTask, PeripheralComponent
 from iot.models.controller import ControllerComponent
 from iot.models.data_point import DataPoint, DataPointType
 from iot.models.site import Site, SiteEntity
-from graphene_django.utils.testing import GraphQLTestCase
-from graphql_relay.node.node import to_global_id
 
 
 class QueryTestCase(GraphQLTestCase):
@@ -26,10 +27,10 @@ class QueryTestCase(GraphQLTestCase):
         self.site_a = Site.objects.create(name="Site A", owner=self.owner)
         self.site_z = Site.objects.create(name="Site Z", owner=self.owner_z)
         self.esp32_type = ControllerComponentType.objects.create(name="ESP32")
-        self.espXX_type = ControllerComponentType.objects.create(
+        self.esp_xx_type = ControllerComponentType.objects.create(
             name="ESPXX", created_by=self.owner
         )
-        self.espZZ_type = ControllerComponentType.objects.create(
+        self.esp_zz_type = ControllerComponentType.objects.create(
             name="ESPZZ", created_by=self.owner_z
         )
         self.controller_a = ControllerComponent.objects.create(
@@ -140,7 +141,7 @@ class QueryTestCase(GraphQLTestCase):
         for task_type in output["taskTypes"]:
             self.assertIn(task_type["value"], ControllerTask.TaskType)
 
-    def test_controller_task_enums(self):
+    def test_peripheral_component_enums(self):
         response = self.query(
             """
             {
