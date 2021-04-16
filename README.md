@@ -35,6 +35,7 @@ Aspects that are under development include an AR application to stream realtime 
     - [Required](#required)
     - [Optional](#optional)
   - [Starting the Services](#starting-the-services)
+  - [Acknowledgements](#acknowledgements)
 
 ## ⚠️ Current Development Status 
 
@@ -210,6 +211,10 @@ List the individual services with `docker ps`. Key data to the individual servic
 | traefik  | Reverse proxy      |      | N/A                               |
 
 The data is stored in volumes. List all active volumes with `docker volume ls`.
+
+## Acknowledgements
+
+This work is supported by the German Federal Ministry of Education and Research as part of the Open Photonik Pro grant initiative (project [OpenFarmingAI][7]).
 
 [1]: https://github.com/protohaus/sdg-controller
 [2]: https://docs.docker.com/install/linux/docker-ce/ubuntu/

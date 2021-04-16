@@ -1,5 +1,6 @@
 import json
 
+import channels_graphql_ws
 from channels.generic.websocket import WebsocketConsumer
 
 from iot.serializers import ControllerMessageSerializer
@@ -9,6 +10,7 @@ from iot.models import (
     DataPoint,
     PeripheralComponent,
 )
+from core.schema import schema as graphql_schema
 
 
 class ControllerConsumer(WebsocketConsumer):
@@ -114,3 +116,15 @@ class ControllerConsumer(WebsocketConsumer):
             task_commands=message["commands"], request_id=message["request_id"]
         )
         self.send(json.dumps(request))
+
+
+class GraphqlConsumer(channels_graphql_ws.GraphqlWsConsumer):
+    """Channels WebSocket consumer which provides GraphQL API."""
+    schema = graphql_schema
+    
+    async def connect(self):
+        """If the user is not authenticated, close the connection."""
+        if not self.scope["user"].is_authenticated:
+            await self.close()
+        else:
+            await super().connect()

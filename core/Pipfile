@@ -36,9 +36,10 @@ graphene-django = "~=2.13.0"
 django-filter = "~=2.4.0"
 django-log-request-id = "~=1.6.0"
 django-debug-toolbar = "~=3.2"
-django-storages = "*"
-boto3 = "*"
-pillow = "*"
+django-storages = "~=1.11"
+boto3 = "~=1.17"
+pillow = "~=8.2"
+django-channels-graphql-ws = "~=0.8"
 
 [requires]
 python_version = "3.8"

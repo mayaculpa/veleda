@@ -1,12 +1,14 @@
 from channels.auth import AuthMiddlewareStack
 from channels.db import database_sync_to_async
-from iot.models import ControllerAuthToken, ControllerComponent
+from iot.models import ControllerComponent
 
 
 class TokenAuthMiddleware:
     """
     A token auth middleware for controllers
     """
+
+    controller_ws_path = "ws-api/v1/farms/controllers/"
 
     def __init__(self, app):
         self.app = app
@@ -43,3 +45,15 @@ class TokenAuthMiddleware:
                 except ControllerComponent.DoesNotExist:
                     pass
         return None
+
+class PathAuthMiddleware:
+    """Map middleware according to path"""
+
+    def __init__(self, app):
+        self.controller_app = TokenAuthMiddleware(app)
+        self.other_app = AuthMiddlewareStack(app)
+
+    async def __call__(self, scope, receive, send):
+        if scope["path"] == TokenAuthMiddleware.controller_ws_path:
+            return await self.controller_app(scope, receive, send)
+        return await self.other_app(scope, receive, send)

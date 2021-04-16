@@ -6,9 +6,11 @@ from graphene import Date, Float, List, ObjectType, String, relay
 from graphene.types.datetime import DateTime
 from graphene_django import DjangoObjectType
 from graphql_relay.node.node import from_global_id
+
 from iot.models import (
     ControllerComponent,
     ControllerComponentType,
+    ControllerMessage,
     ControllerTask,
     DataPoint,
     DataPointType,
@@ -184,6 +186,35 @@ class ControllerTaskEnumNode(ObjectType):
             TextChoice(value=task_type.value, label=task_type.label)
             for task_type in ControllerTask.TaskType
         ]
+
+
+class ControllerMessageNode(DjangoObjectType):
+    class Meta:
+        model = ControllerMessage
+        filter_fields = {
+            "controller": ["exact"],
+            "created_at": ["exact", "lt", "gt"],
+            "request_id": ["exact"],
+        }
+        fields = ("controller", "message", "request_id", "message_type", "created_at")
+
+    message_type = graphene.String(description="The message type.")
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(controller__site_entity__site__owner=info.context.user)
+
+    @staticmethod
+    def resolve_type(controller_message, _):
+        return controller_message.get_type()
+
+
+class ControllerMessageEnumNode(ObjectType):
+    types = List(TextChoice)
+
+    @staticmethod
+    def resolve_types(parent, args):
+        return [TextChoice(value=i, label=i) for i in ControllerMessage.TYPES]
 
 
 class PeripheralComponentNode(DjangoObjectType):

@@ -215,12 +215,18 @@ class QueryTestCase(GraphQLTestCase):
     def test_plant_components(self):
         """Test that plant components are returned correctly"""
 
+        PlantImage.objects.create(plant=self.plant_a)
+        PlantImage.objects.create(plant=self.plant_a)
+        PlantImage.objects.create(plant=self.plant_z)
         response = self.query(
             """
             { allPlantComponents {
                 edges { node {
                     id
                     siteEntity { name }
+                    hydroponicSystem { id }
+                    plantImageSet { edges { node { id } } }
+                    spotNumber
                 } }
             } }
             """
@@ -234,6 +240,11 @@ class QueryTestCase(GraphQLTestCase):
         self.assertFalse(
             any(from_global_id(i["id"])[1] == str(self.plant_z.pk) for i in output)
         )
+        plant = output[0]
+        self.assertEqual(plant["siteEntity"]["name"], self.plant_a.site_entity.name)
+        hs_id = from_global_id(plant["hydroponicSystem"]["id"])[1]
+        self.assertEqual(hs_id, str(self.nft_system_a.pk))
+        self.assertEqual(len(plant["plantImageSet"]["edges"]), 2)
 
     def test_plant_family(self):
         """Test if plant families are returned."""

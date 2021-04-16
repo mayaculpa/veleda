@@ -1,2 +1,2 @@
 [MESSAGES CONTROL]
-disable=unused-argument,too-few-public-methods
+disable=unused-argument,too-few-public-methods,django-not-configured,missing-module-docstring,missing-class-docstring,missing-function-docstring,django-not-configured
