@@ -5,7 +5,9 @@
 
 ![Device Stacc](./core/doc/cover_new.png)
 
-Test drive on [core.openfarming.ai](https://core.openfarming.ai/).
+| [Homepage][11] | [Test drive][10] | [Twitter][12] |
+| -------------- | ---------------- | ------------- |
+|                |                  |               |
 
 A data analytics and control platform for IoT systems. It integrates with the [sdg-controller firmware][1] for ESP32s to dynamically add peripherals and then measure and control them. In the second version, currently under development, InfluxDB was replaced with TimescaleDB, the REST API with GraphQL and the MQTT broker with WebSockets. The application is structured to separate the IoT aspect from the domain aspect (hydroponic greenhouses) to allow it to subsequently be broken out into a **standalone service**. This will allow domain specific IoT solutions to be written.
 
@@ -20,8 +22,8 @@ Aspects that are under development include an AR application to stream realtime 
   - [Roadmap](#roadmap)
     - [✅ Alpha 1 (IoT): MVP Without Using the Admin Interface](#-alpha-1-iot-mvp-without-using-the-admin-interface)
     - [✅ Alpha 2 (GH): Add Image Handling](#-alpha-2-gh-add-image-handling)
-    - [🔀 Alpha 3 (IoT): GraphQL Subscriptions](#-alpha-3-iot-graphql-subscriptions)
-    - [Alpha 4 (GH): Add AI Inference API](#alpha-4-gh-add-ai-inference-api)
+    - [✅ Alpha 3 (IoT): GraphQL Subscriptions](#-alpha-3-iot-graphql-subscriptions)
+    - [🔀 Alpha 4 (GH): Add AI Inference API](#-alpha-4-gh-add-ai-inference-api)
     - [Alpha 5 (IoT): Add a Flash Tool](#alpha-5-iot-add-a-flash-tool)
     - [Alpha 6 (IoT): Simple Rules Engine](#alpha-6-iot-simple-rules-engine)
     - [Alpha 7 (IoT/GH): Add RPi and Azure Kinect Edge Node](#alpha-7-iotgh-add-rpi-and-azure-kinect-edge-node)
@@ -67,16 +69,16 @@ Allow images to be uploaded to an S3 storage server (MinIO) and queried.
 | Backend                    | MinIO                            | GraphQL                      |
 | Done: 02.04.21             | Done: 30.03.21                   | Done: 29.03.21               |
 
-### 🔀 Alpha 3 (IoT): GraphQL Subscriptions
+### ✅ Alpha 3 (IoT): GraphQL Subscriptions
 
 Allow GraphQL subscriptions to be created on data points.
 
 | ![dj](./doc/images/dj.png) | ![gql](./doc/images/gql.png) |
 | -------------------------- | ---------------------------- |
 | Backend                    | GraphQL                      |
-| TBD                        | TBD                          |
+| Done: 16.04.21             | Done: 16.04.21               |
 
-### Alpha 4 (GH): Add AI Inference API
+### 🔀 Alpha 4 (GH): Add AI Inference API
 
 Allow images to be passed to an AI to infer plant state. To be implemented as an external Docker service.
 
@@ -225,3 +227,6 @@ This work is supported by the German Federal Ministry of Education and Research 
 [7]: https://www.photonikforschung.de/projekte/open-innovation/projekt/openfarmingai.html
 [8]: https://semantic-ui.com/introduction/getting-started.html#installing
 [9]: https://www.protohaus.org/
+[10]: https://core.openfarming.ai/
+[11]: https://www.devicesta.cc/
+[12]: https://twitter.com/DeviceStacc
