@@ -5,9 +5,9 @@
 
 ![Device Stacc](./core/doc/cover_new.png)
 
-| [Homepage][11] | [Test drive][10] | [Twitter][12] |
-| -------------- | ---------------- | ------------- |
-|                |                  |               |
+| [Homepage][11] | [Test drive][10] | [Twitter][12] | [Research Project][13] | [Protohaus][14] |
+| -------------- | ---------------- | ------------- | ---------------------- | --------------- |
+|                |                  |               |                        |                 |
 
 A data analytics and control platform for IoT systems. It integrates with the [sdg-controller firmware][1] for ESP32s to dynamically add peripherals and then measure and control them. In the second version, currently under development, InfluxDB was replaced with TimescaleDB, the REST API with GraphQL and the MQTT broker with WebSockets. The application is structured to separate the IoT aspect from the domain aspect (hydroponic greenhouses) to allow it to subsequently be broken out into a **standalone service**. This will allow domain specific IoT solutions to be written.
 
@@ -230,3 +230,5 @@ This work is supported by the German Federal Ministry of Education and Research 
 [10]: https://core.openfarming.ai/
 [11]: https://www.devicesta.cc/
 [12]: https://twitter.com/DeviceStacc
+[13]: https://openfarming.ai/
+[14]: https://www.protohaus.org/

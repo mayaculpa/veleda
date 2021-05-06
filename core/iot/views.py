@@ -100,7 +100,9 @@ class CreateControllerView(LoginRequiredMixin, View):
                 )
             else:
                 controller = ControllerComponent.objects.create_controller(
-                    name=name, site=site, controller_component_type=controller_type
+                    name=name,
+                    site_id=site.pk,
+                    controller_component_type_id=controller_type.pk,
                 )
             name = controller.site_entity.name
             messages.success(request, f"Successfully created controller {name}")

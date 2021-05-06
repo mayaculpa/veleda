@@ -2,12 +2,13 @@ import graphene
 from django.conf import settings
 from django.db.models import Q
 from django_filters import BooleanFilter, FilterSet, OrderingFilter
-from graphene import Date, Float, List, ObjectType, String, relay
+from graphene import Boolean, Date, Float, List, ObjectType, String, relay
 from graphene.types.datetime import DateTime
 from graphene_django import DjangoObjectType
 from graphql_relay.node.node import from_global_id
 
 from iot.models import (
+    ControllerAuthToken,
     ControllerComponent,
     ControllerComponentType,
     ControllerMessage,
@@ -19,6 +20,7 @@ from iot.models import (
     Site,
     SiteEntity,
 )
+from iot.models.firmware_images import FirmwareImage
 
 
 class TextChoice(ObjectType):
@@ -102,6 +104,7 @@ class ControllerComponentNode(DjangoObjectType):
         fields = (
             "site_entity",
             "component_type",
+            "auth_token",
             "peripheral_component_set",
             "created_at",
             "modified_at",
@@ -113,15 +116,27 @@ class ControllerComponentNode(DjangoObjectType):
         return queryset.filter(site_entity__site__owner=info.context.user)
 
 
-class ControllerComponentTypeNode(DjangoObjectType):
+class ControllerComponentTypeFilter(FilterSet):
+    """Filter for DataPointNode that includes ordering."""
+
+    is_global = BooleanFilter("created_by", lookup_expr="isnull")
+
     class Meta:
         model = ControllerComponentType
-        filter_fields = {
+        fields = {
             "id": ["exact"],
             "name": ["exact", "icontains", "istartswith"],
             "created_at": ["exact", "lt", "gt"],
             "modified_at": ["exact", "lt", "gt"],
         }
+
+
+class ControllerComponentTypeNode(DjangoObjectType):
+    is_global = Boolean()
+
+    class Meta:
+        model = ControllerComponentType
+        filterset_class = ControllerComponentTypeFilter
         fields = (
             "id",
             "name",
@@ -135,6 +150,18 @@ class ControllerComponentTypeNode(DjangoObjectType):
         return queryset.filter(
             Q(created_by=info.context.user) | Q(created_by__isnull=True)
         )
+
+    @staticmethod
+    def resolve_is_global(controller_component_type: ControllerComponentType, args):
+        return not bool(controller_component_type.created_by)
+
+
+class ControllerAuthTokenNode(DjangoObjectType):
+    class Meta:
+        model = ControllerAuthToken
+        filter_fields = ("key",)
+        fields = ("key", "controller", "created_at")
+        interfaces = (relay.Node,)
 
 
 class ControllerTaskNode(DjangoObjectType):
@@ -410,3 +437,29 @@ class DataPointByHourNode(ObjectType):
             before_time=graphene.DateTime(),
             ascending=graphene.Boolean(required=False),
         )
+
+
+class FirmwareImageNode(DjangoObjectType):
+    file = graphene.String(required=False)
+    hash_sha3__512 = graphene.String(required=True)
+
+    class Meta:
+        model = FirmwareImage
+        filter_fields = {
+            "name": ["exact", "icontains", "istartswith"],
+            "version": ["exact"],
+            "created_at": ["exact", "lt", "gt"],
+            "modified_at": ["exact", "lt", "gt"],
+        }
+        fields = ("name", "version", "created_at", "modified_at")
+        interfaces = (relay.Node,)
+
+    @staticmethod
+    def resolve_file(firmware_image, args):
+        if firmware_image.file:
+            return firmware_image.file.url
+        return None
+
+    @staticmethod
+    def resolve_hash_sha3__512(firmware_image, args):
+        return firmware_image.hash_sha3_512.hex()

@@ -5,12 +5,13 @@ from uuid import UUID
 
 from django.core.files import File
 from django.db import models
+
 from greenhouse.models import PlantComponent
-from greenhouse.storage_backends import PrivateMediaStorage
+from iot.storage_backends import PrivateMediaStorage
 
 
 class PlantImageManager(models.Manager):
-    """Handles creating plant images"""
+    """Handles creating plant images."""
 
     def create_image(
         self,
@@ -24,16 +25,21 @@ class PlantImageManager(models.Manager):
         if not image_id:
             image_id = uuid.uuid4()
         plant_image = PlantImage(id=image_id, plant_id=plant_id)
-        extension = os.path.splitext(image.name)[1][1:]
-        file_path = self._gen_file_path(site_id, image_id, extension)
-        plant_image.image.save(file_path, image)
+        filename = self.generate_filename(image, image_id)
+        plant_image.image.save(filename, image)
         return plant_image
 
-    def _gen_file_path(self, site_id, image_id, file_ending: str) -> str:
-        """Generate an image path according to the site and image IDs."""
+    @staticmethod
+    def generate_filename(file: File, image_id: UUID) -> str:
+        extension = os.path.splitext(file.name)[1][1:]
+        return f"{image_id}.{extension}"
 
-        app_label = PlantComponent._meta.app_label
-        return f"{app_label}/plant_image/{site_id}/{image_id}.{file_ending}"
+    @staticmethod
+    def generate_path(instance: "PlantImage", filename: str) -> str:
+        """Create file path for a given instance and file name."""
+        app_label = instance._meta.app_label
+        site_id = instance.plant.site_entity.site_id
+        return f"{app_label}/plant_image/{site_id}/{filename}"
 
 
 class PlantImage(models.Model):
@@ -41,7 +47,10 @@ class PlantImage(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     image = models.ImageField(
-        storage=PrivateMediaStorage, editable=False, help_text="The image of a plant."
+        storage=PrivateMediaStorage,
+        upload_to=PlantImageManager.generate_path,
+        editable=False,
+        help_text="The image of a plant.",
     )
     plant = models.ForeignKey(
         PlantComponent,

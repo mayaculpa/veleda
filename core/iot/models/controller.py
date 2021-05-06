@@ -2,10 +2,12 @@ import binascii
 import os
 import uuid
 from typing import Dict, List, Optional
+from uuid import UUID
 
-from accounts.models import User
 from django.conf import settings
 from django.db import models
+
+from accounts.models import User
 from iot.models.site import Site, SiteEntity
 
 
@@ -34,7 +36,7 @@ class ControllerComponentType(models.Model):
     )
 
     def __str__(self):
-        return f"{self.name}"
+        return self.name
 
 
 class ControllerComponentManager(models.Manager):
@@ -42,20 +44,20 @@ class ControllerComponentManager(models.Manager):
 
     def create_controller_with_new_type(self, name: str, site: Site, type_name: str):
         """Create a new controller with a new controller component type."""
-
         controller_component_type = ControllerComponentType.objects.create(
             name=type_name, created_by=site.owner
         )
-        return self.create_controller(name, site, controller_component_type)
+        return self.create_controller(name, site.pk, controller_component_type)
 
     def create_controller(
-        self, name: str, site: Site, controller_component_type: ControllerComponentType
+        self, name: str, site_id: UUID, controller_component_type_id: UUID
     ):
         """Create a new controller."""
-
-        site_entity = SiteEntity.objects.create(name=name, site=site)
+        if not name:
+            raise ValueError("Name cannot be blank")
+        site_entity = SiteEntity.objects.create(name=name, site_id=site_id)
         controller_component = self.model.objects.create(
-            site_entity=site_entity, component_type=controller_component_type
+            site_entity=site_entity, component_type_id=controller_component_type_id
         )
         ControllerAuthToken.objects.create(controller=controller_component)
         return controller_component
@@ -89,6 +91,11 @@ class ControllerComponent(models.Model):
     )
 
     objects = ControllerComponentManager()
+
+    def cycle_auth_token(self) -> "ControllerAuthToken":
+        """Generate a new auth token and invalidate the old one."""
+        self.auth_token.delete()
+        return ControllerAuthToken.objects.create(controller=self)
 
     def __str__(self):
         return f"Controller of {self.site_entity.name}"

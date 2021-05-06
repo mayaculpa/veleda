@@ -203,18 +203,19 @@ while ! nc -z $REDIS_HOST $REDIS_PORT; do
   sleep 0.5 # wait for half a second before checking again
 done
 
-echo "Waiting for MinIO to launch on 9000..."
-while ! nc -z $MINIO_HOST $MINIO_PORT; do
-  echo "Waiting..."
-  sleep 0.5 # wait for half a second before checking again
-done
-
 # Add the MinIO server. Construct the URL for staging/prod or dev environment
 if [[ $DJANGO_DEBUG == "False" ]]; then
   export MINIO_URL="http://sdg-server-$DEPLOY_TYPE-$MINIO_HOST:$MINIO_PORT"
 else
   export MINIO_URL="http://$MINIO_HOST:$MINIO_PORT"
 fi
+
+echo "Waiting for MinIO to launch on 9000..."
+while ! wget -q "$MINIO_URL/minio/health/cluster"; do
+  echo "Waiting..."
+  sleep 0.5 # wait for half a second before checking again
+done
+
 ./mc alias set core-s3-server \
     "$MINIO_URL" \
     "$MINIO_ROOT_USER" \

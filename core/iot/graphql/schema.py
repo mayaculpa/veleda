@@ -2,6 +2,7 @@ import graphene
 from graphene_django.filter import DjangoFilterConnectionField
 
 from iot.graphql.nodes import (
+    FirmwareImageNode,
     SiteNode,
     SiteEntityNode,
     ControllerComponentNode,
@@ -17,6 +18,8 @@ from iot.graphql.nodes import (
 )
 
 from iot.graphql.mutations import (
+    CreateControllerComponent,
+    CycleControllerAuthToken,
     StartControllerTask,
     RestartControllerTask,
     StopControllerTask,
@@ -63,6 +66,9 @@ class Query:
     data_points_by_day = DataPointByDayNode.as_list_field()
     data_points_by_hour = DataPointByHourNode.as_list_field()
 
+    firmware_image = graphene.relay.Node.Field(FirmwareImageNode)
+    all_firmware_images = DjangoFilterConnectionField(FirmwareImageNode)
+
     @staticmethod
     def resolve_controller_task_enums(parent, args):
         return ControllerTaskEnumNode()
@@ -82,6 +88,9 @@ class Query:
 
 class Mutation:
     """Mutation commands for the iot GraphQL schema"""
+
+    create_controller_component = CreateControllerComponent.Field()
+    cycle_controller_auth_token = CycleControllerAuthToken.Field()
 
     start_controller_task = StartControllerTask.Field()
     restart_controller_task = RestartControllerTask.Field()

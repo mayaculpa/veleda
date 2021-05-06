@@ -27,7 +27,7 @@ from greenhouse.graphql.nodes import (
 )
 
 
-class Query(object):
+class Query:
     """Query commands for the greenhouse GraphQL schema"""
 
     hydroponic_system_component = graphene.relay.Node.Field(

@@ -4,7 +4,7 @@ from django.conf import settings
 
 class PrivateMediaStorage(S3Boto3Storage):
     """Extend S3 with signed URLs for custom domains."""
-    
+
     custom_domain = False
 
     def url(self, name, parameters=None, expire=None, http_method=None):

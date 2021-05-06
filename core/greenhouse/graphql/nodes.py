@@ -1,4 +1,5 @@
 import graphene
+from django.db.models import Q
 from django_filters import BooleanFilter, FilterSet
 from graphene.types.objecttype import ObjectType
 from graphene_django import DjangoObjectType
@@ -164,7 +165,8 @@ class TrackingImageNode(DjangoObjectType):
     @classmethod
     def get_queryset(cls, queryset, info):
         return queryset.filter(
-            hydroponic_system__site_entity__site__owner=info.context.user
+            Q(hydroponic_system__site_entity__site__owner=info.context.user)
+            | Q(site__owner=info.context.user)
         )
 
 

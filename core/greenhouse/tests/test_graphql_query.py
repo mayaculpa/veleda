@@ -366,7 +366,10 @@ class QueryTestCase(GraphQLTestCase):
         """Test if tracking images are queried correctly."""
 
         tracking_image_a = TrackingImage.objects.create(
-            image_id="ID_A", hydroponic_system=self.nft_system_a, site=self.site_a
+            image_id="ID_A", hydroponic_system=self.nft_system_a
+        )
+        tracking_image_b = TrackingImage.objects.create(
+            image_id="ID_B", site=self.site_a
         )
         TrackingImage.objects.create(image_id="ID_Z", site=self.site_z)
         response = self.query(
@@ -383,13 +386,10 @@ class QueryTestCase(GraphQLTestCase):
         self.assertResponseNoErrors(response)
         output = json.loads(response.content)["data"]["allTrackingImages"]["edges"]
         tracking_images = [i["node"] for i in output]
-        self.assertEqual(len(tracking_images), 1)
-        self.assertEqual(
-            from_global_id(tracking_images[0]["id"])[1], str(tracking_image_a.pk)
-        )
-        self.assertEqual(tracking_images[0]["imageId"], tracking_image_a.image_id)
-        nft_id = from_global_id(tracking_images[0]["hydroponicSystem"]["id"])[1]
-        self.assertEqual(nft_id, str(self.nft_system_a.pk))
+        self.assertEqual(len(tracking_images), 2)
+        image_ids = [i["imageId"] for i in tracking_images]
+        self.assertIn(tracking_image_a.image_id, image_ids)
+        self.assertIn(tracking_image_b.image_id, image_ids)
 
     def test_water_cycle(self):
         """Test querying water cycle and logs."""

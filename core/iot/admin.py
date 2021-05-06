@@ -1,8 +1,12 @@
-from django.contrib import admin
-from django.utils.safestring import mark_safe
-from django.urls import reverse
+from typing import Any
 
-from .models import (
+from django import forms
+from django.contrib import admin
+from django.urls import reverse
+from django.utils.safestring import mark_safe
+from semantic_version.base import Version
+
+from iot.models import (
     ControllerAuthToken,
     ControllerComponent,
     ControllerComponentType,
@@ -10,13 +14,14 @@ from .models import (
     ControllerTask,
     DataPoint,
     DataPointType,
+    FirmwareImage,
     PeripheralComponent,
     PeripheralDataPointType,
     Site,
     SiteEntity,
 )
-
-# Register your models here.
+from iot.models.controller import _generate_auth_token
+from iot.models.firmware_images import FirmwareImageManager
 
 
 @admin.register(Site)
@@ -119,11 +124,57 @@ class DataPointAdmin(admin.ModelAdmin):
 @admin.register(ControllerAuthToken)
 class ControllerAuthTokenAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
-        form = super(ControllerAuthTokenAdmin, self).get_form(request, obj, **kwargs)
-        form.base_fields["key"].initial = ControllerAuthToken.generate_key()
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields["key"].initial = _generate_auth_token()
         return form
 
 
 @admin.register(ControllerMessage)
 class ControllerMessageAdmin(admin.ModelAdmin):
     pass
+
+
+class FirmwareImageAdminForm(forms.ModelForm):
+    class Meta:
+        model = FirmwareImage
+        fields = ("name", "version", "file")
+
+    def clean_file(self):
+        """Only allow creating, not updating instances."""
+        if self.instance and self.instance.created_at:
+            raise forms.ValidationError(
+                "You cannot modify the file. Please create a new instance."
+            )
+        return self.cleaned_data["file"]
+
+    def clean_version(self):
+        """Check if it is a valid version number."""
+        version = self.cleaned_data["version"]
+        try:
+            Version(version)
+        except ValueError as err:
+            raise forms.ValidationError("Invalid semantic version number") from err
+        return version
+
+    def save(self, commit: bool = True) -> Any:
+        """Overrides to check semantic version, generate the hash and filename."""
+        Version(self.instance.version)
+        self.instance.hash_sha3_512 = FirmwareImageManager.generate_hash_digest(
+            self.instance.file
+        )
+        self.instance.file.name = FirmwareImageManager.generate_filename(
+            self.instance.file, self.instance.name, self.instance.version
+        )
+        return super().save(commit=commit)
+
+
+@admin.register(FirmwareImage)
+class FirmwareImageAdmin(admin.ModelAdmin):
+    form = FirmwareImageAdminForm
+    readonly_fields = ("sha_hash",)
+
+    def sha_hash(self, obj: FirmwareImage):
+        """Convert the binary SHA3 hash to hex."""
+        return obj.hash_sha3_512.hex()
+
+    sha_hash.short_description = "Hash (SHA3-512)"
